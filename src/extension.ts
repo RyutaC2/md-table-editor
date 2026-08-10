@@ -1,26 +1,35 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { findTableAtOffset } from './core/parser';
+import { TableCodeLensProvider } from './extension/codeLens';
+import { registerCommands } from './extension/commands';
+import { TablePanelManager } from './extension/panelManager';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
-
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "md-table-editor" is now active!');
-
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('md-table-editor.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from md_table_editor!');
-	});
-
-	context.subscriptions.push(disposable);
+export function activate(context: vscode.ExtensionContext): void {
+  const panels = new TablePanelManager(context);
+  const codeLens = new TableCodeLensProvider();
+  context.subscriptions.push(
+    panels,
+    codeLens,
+    vscode.languages.registerCodeLensProvider({ language: 'markdown' }, codeLens),
+    vscode.window.registerWebviewPanelSerializer('md-table-editor.tableEditor', panels),
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      if (event.document.languageId === 'markdown') {
+        codeLens.refresh();
+      }
+    }),
+    vscode.window.onDidChangeActiveTextEditor((editor) => updateTableContext(editor)),
+    vscode.window.onDidChangeTextEditorSelection((event) => updateTableContext(event.textEditor)),
+  );
+  registerCommands(context, panels);
+  void updateTableContext(vscode.window.activeTextEditor);
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+async function updateTableContext(editor: vscode.TextEditor | undefined): Promise<void> {
+  const insideTable = editor?.document.languageId === 'markdown'
+    && Boolean(findTableAtOffset(editor.document.getText(), editor.document.offsetAt(editor.selection.active)));
+  await vscode.commands.executeCommand('setContext', 'mdTableEditor.inTable', insideTable);
+}
+
+export function deactivate(): void {
+  // VS Code disposes all subscriptions registered in the extension context.
+}

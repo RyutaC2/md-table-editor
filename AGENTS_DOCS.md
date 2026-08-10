@@ -131,7 +131,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 ## 現在の実装状態
 
-Desktop/Web用の拡張機能バンドル、React Webview、日英のコマンド表示、VSIX生成、公開メタデータを実装しました。`src/core` には表の検出、セル分割、書式を保持した直列化、挿入雛形、行列操作、配置、ソート、列幅計算を VS Code 非依存の純粋関数として実装しています。`src/extension.ts` の Hello World コマンドと初期統合テストは、実コマンドの追加時に削除します。
+Desktop/Web用のビルドと公開基盤、および `src/core` の表解析・変換を実装しました。VS Code側には CodeLens、編集・挿入コマンド、QuickPick、右側Webview、パネルの再利用と復元、文書バージョン検証、WorkspaceEditによる即時反映、ソース選択同期を実装しています。Hello World雛形は削除済みです。Webviewはプロトコルから初期状態を受け取れる段階で、実際のグリッド操作は後続コミットで実装します。
 
 ## 設計意図
 
