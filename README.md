@@ -57,6 +57,8 @@ Markdown テーブルは、セル数が増えるほどパイプや区切り行�
 
 不連続範囲のコピーは行いません。不連続選択中に貼り付けた場合は、主セルを開始位置として貼り付けます。
 
+ツールバーは、履歴、行操作、列操作、表示操作の順にグループ化されています。各操作にはMaterial Symbolsのアイコンとラベルを表示し、画面幅が狭い場合はアイコンとツールチップへ自動的に切り替わります。列見出しのメニューからは配置とソートを実行できます。
+
 ## 対応するMarkdown
 
 VS Code組み込みプレビューとGitHubの双方で表として解釈されるGFM Tableを対象とします。外側パイプ、空セル、配置、エスケープされたパイプ、一般的なインラインMarkdownを扱います。fenced code block内の表記は対象になりません。
@@ -101,3 +103,5 @@ VS Codeでこのリポジトリを開き、F5または `Run Extension` からExt
 ## ライセンス
 
 [MIT License](./LICENSE)
+
+UIアイコンにはGoogle Material Symbols由来のSVGを使用しています。第三者ライセンスは [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) に記載しています。

@@ -6,6 +6,8 @@ import { applyOperation, cloneSnapshot } from '../core/operations';
 import type { Alignment, TableOperation, TableSnapshot } from '../core/types';
 import { displayWidth } from '../core/width';
 import type { CellPosition, EditorState, ExtensionMessage, PersistedPanelState, WebviewMessage } from '../shared/protocol';
+import { Icon } from './icons';
+import type { IconName } from './icons';
 import './styles.css';
 
 interface VSCodeApi {
@@ -173,6 +175,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const [notice, setNotice] = useState<string>();
   const [draggedRows, setDraggedRows] = useState<number[]>([]);
   const [draggedColumns, setDraggedColumns] = useState<number[]>([]);
+  const [scrollPosition, setScrollPosition] = useState({ left: 0, top: 0 });
   const scrollRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -444,18 +447,26 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   return (
     <main className="app">
       <nav className="toolbar" aria-label="Table operations">
-        <button type="button" onClick={() => vscode.postMessage({ type: 'undo' })}>{text.undo}</button>
-        <button type="button" onClick={() => vscode.postMessage({ type: 'redo' })}>{text.redo}</button>
-        <span className="separator" />
-        <button type="button" onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row) }, { row: Math.max(1, primary.row), column: primary.column })}>{text.rowBefore}</button>
-        <button type="button" onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row + 1) }, { row: Math.max(1, primary.row + 1), column: primary.column })}>{text.rowAfter}</button>
-        <button type="button" disabled={selectedRows.every((row) => row === 0)} onClick={() => perform({ type: 'deleteRows', indexes: selectedRows }, { row: Math.max(0, primary.row - 1), column: primary.column })}>{text.deleteRow}</button>
-        <span className="separator" />
-        <button type="button" onClick={() => perform({ type: 'insertColumn', index: primary.column }, primary)}>{text.columnBefore}</button>
-        <button type="button" onClick={() => perform({ type: 'insertColumn', index: primary.column + 1 }, { row: primary.row, column: primary.column + 1 })}>{text.columnAfter}</button>
-        <button type="button" disabled={snapshot.widths.length <= 1} onClick={() => perform({ type: 'deleteColumns', indexes: selectedColumns }, { row: primary.row, column: Math.max(0, primary.column - 1) })}>{text.deleteColumn}</button>
-        <span className="separator" />
-        <button type="button" onClick={() => perform({ type: 'autoFit' })}>{text.autoFit}</button>
+        <div className="toolbar-group" aria-label="History">
+          <ToolbarButton icon="undo" label={text.undo} onClick={() => vscode.postMessage({ type: 'undo' })} />
+          <ToolbarButton icon="redo" label={text.redo} onClick={() => vscode.postMessage({ type: 'redo' })} />
+        </div>
+        <div className="toolbar-divider" />
+        <div className="toolbar-group" aria-label="Rows">
+          <ToolbarButton icon="addRow" label={text.rowBefore} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row) }, { row: Math.max(1, primary.row), column: primary.column })} />
+          <ToolbarButton icon="addRow" label={text.rowAfter} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row + 1) }, { row: Math.max(1, primary.row + 1), column: primary.column })} />
+          <ToolbarButton danger icon="removeRow" label={text.deleteRow} disabled={selectedRows.every((row) => row === 0)} onClick={() => perform({ type: 'deleteRows', indexes: selectedRows }, { row: Math.max(0, primary.row - 1), column: primary.column })} />
+        </div>
+        <div className="toolbar-divider" />
+        <div className="toolbar-group" aria-label="Columns">
+          <ToolbarButton icon="addColumn" label={text.columnBefore} onClick={() => perform({ type: 'insertColumn', index: primary.column }, primary)} />
+          <ToolbarButton icon="addColumn" label={text.columnAfter} onClick={() => perform({ type: 'insertColumn', index: primary.column + 1 }, { row: primary.row, column: primary.column + 1 })} />
+          <ToolbarButton danger icon="removeColumn" label={text.deleteColumn} disabled={snapshot.widths.length <= 1} onClick={() => perform({ type: 'deleteColumns', indexes: selectedColumns }, { row: primary.row, column: Math.max(0, primary.column - 1) })} />
+        </div>
+        <div className="toolbar-divider" />
+        <div className="toolbar-group toolbar-group-last" aria-label="Display">
+          <ToolbarButton icon="autoFit" label={text.autoFit} onClick={() => perform({ type: 'autoFit' })} />
+        </div>
       </nav>
       {state.oversized && <div className="banner" role="status">{text.large}</div>}
       {notice && <button type="button" className="notice" onClick={() => setNotice(undefined)}>{notice}</button>}
@@ -471,12 +482,17 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
         onCut={(event) => copy(event, true)}
         onPaste={paste}
       >
-        <div ref={scrollRef} className="grid-scroll">
+        <div
+          ref={scrollRef}
+          className="grid-scroll"
+          onScroll={(event) => setScrollPosition({ left: event.currentTarget.scrollLeft, top: event.currentTarget.scrollTop })}
+        >
           <div className="grid-canvas" style={{ width: canvasWidth, height: canvasHeight }}>
-            <div className="corner" aria-hidden="true" />
+            <div className="corner" aria-hidden="true" style={{ left: scrollPosition.left, top: scrollPosition.top }} />
             <div
               className="header-row-heading"
               role="rowheader"
+              style={{ left: scrollPosition.left, top: scrollPosition.top + columnHeaderHeight }}
               onPointerDown={() => {
                 const start = { row: 0, column: 0 };
                 const end = { row: 0, column: snapshot.widths.length - 1 };
@@ -511,11 +527,11 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                       const end = { row: snapshot.rows.length - 1, column };
                       setPrimary(start); setAnchor(start); setRanges(event.ctrlKey || event.metaKey ? [...ranges, { start, end }] : [{ start, end }]);
                     }}
-                    style={{ transform: `translateX(${rowHeaderWidth + virtualColumn.start}px)`, width }}
+                    style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top, width }}
                   >
                     <span>{columnName(column)}</span>
                     <details className="column-menu" onPointerDown={(event) => event.stopPropagation()}>
-                      <summary aria-label={`${text.alignment} ${columnName(column)}`}>⋮</summary>
+                      <summary aria-label={`${text.alignment} ${columnName(column)}`}><Icon name="more" size={18} /></summary>
                       <div className="column-menu-items">
                         {(['none', 'left', 'center', 'right'] as Alignment[]).map((alignment) => (
                           <button key={alignment} type="button" aria-pressed={snapshot.alignments[column] === alignment} onClick={() => perform({ type: 'setAlignment', column, alignment }, primary)}>{text[alignment]}</button>
@@ -530,7 +546,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     className={`cell header-cell ${ranges.some((range) => selected(range, 0, column)) ? 'selected' : ''} ${sameCell(primary, { row: 0, column }) ? 'primary' : ''}`}
                     role="columnheader"
                     aria-label={`${text.header} ${columnName(column)}`}
-                    style={{ transform: `translateX(${rowHeaderWidth + virtualColumn.start}px)`, width }}
+                    style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top + columnHeaderHeight, width }}
                     onPointerDown={(event) => { setDragging(true); chooseCell({ row: 0, column }, event); }}
                     onPointerEnter={() => dragging && chooseCell({ row: 0, column }, { shiftKey: true })}
                     onDoubleClick={() => beginEdit({ row: 0, column })}
@@ -551,7 +567,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     className="row-heading"
                     role="rowheader"
                     draggable
-                    style={{ transform: `translateY(${top}px)`, height: virtualRow.size }}
+                    style={{ left: scrollPosition.left, top, height: virtualRow.size }}
                     onDragStart={(event) => {
                       const indexes = selectedRows.includes(row) ? selectedRows.filter((index) => index > 0) : [row];
                       if (!contiguous(indexes)) {
@@ -583,7 +599,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                         role="gridcell"
                         aria-rowindex={row + 1}
                         aria-colindex={column + 1}
-                        style={{ transform: `translate(${rowHeaderWidth + virtualColumn.start}px, ${top}px)`, width: virtualColumn.size, height: virtualRow.size }}
+                        style={{ left: rowHeaderWidth + virtualColumn.start, top, width: virtualColumn.size, height: virtualRow.size }}
                         onPointerDown={(event) => { setDragging(true); chooseCell(cell, event); }}
                         onPointerEnter={() => dragging && chooseCell(cell, { shiftKey: true })}
                         onDoubleClick={() => beginEdit(cell)}
@@ -601,6 +617,34 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
         </div>
       </div>
     </main>
+  );
+}
+
+function ToolbarButton({
+  danger = false,
+  disabled = false,
+  icon,
+  label,
+  onClick,
+}: {
+  danger?: boolean;
+  disabled?: boolean;
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+}): React.JSX.Element {
+  return (
+    <button
+      type="button"
+      className={`toolbar-button${danger ? ' toolbar-button-danger' : ''}`}
+      disabled={disabled}
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+    >
+      <Icon name={icon} />
+      <span className="toolbar-button-label">{label}</span>
+    </button>
   );
 }
 
