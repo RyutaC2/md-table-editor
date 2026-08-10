@@ -47,6 +47,7 @@ npm run compile
 | `npm run compile` | 型チェック、Lint、開発用ビルド |
 | `npm run check-types` | TypeScriptの型チェック |
 | `npm run lint` | ESLintの実行 |
+| `npm run test:unit` | Markdown表の純粋ロジックを単体テスト |
 | `npm test` | 拡張機能テストの実行 |
 | `npm run package` | 配布用ビルド |
 | `npm run package:vsix` | 配布用VSIXの生成 |

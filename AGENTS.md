@@ -49,6 +49,7 @@
 ```text
 npm run check-types
 npm run lint
+npm run test:unit
 npm test
 npm run package
 ```

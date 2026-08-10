@@ -71,6 +71,7 @@
     "pretest": "npm run compile-tests && npm run compile",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
+    "test:unit": "tsc -p tsconfig.unit.json && mocha --ui tdd \"out-unit/test/core/**/*.test.js\"",
     "test": "vscode-test"
   },
   "dependencies": {

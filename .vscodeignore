@@ -3,6 +3,7 @@
 .vscode-test/**
 src/**
 out/**
+out-unit/**
 *.map
 AGENTS.md
 AGENTS_DOCS.md
