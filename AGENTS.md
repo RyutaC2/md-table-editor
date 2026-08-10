@@ -53,6 +53,7 @@ npm run check-types
 npm run lint
 npm run test:unit
 npm test
+npm run test:web
 npm run package
 ```
 
@@ -73,6 +74,8 @@ npm run package
 - 変更内容が多い場合のみ、本文に箇条書きの補足を追加してください。README、AGENTS_DOCS、AGENTS の更新内容は、コミットメッセージの本文に記載する必要はありません。
 - 大規模な実装は解析、VS Code連携、Webview、テストなど責務単位で細かくコミットし、各コミットを単独で理解できる状態にしてください。
 - コミット前に対象差分を確認し、生成物、秘密情報、無関係なユーザー変更を含めないでください。
+- `main` とPull Requestでは `.github/workflows/ci.yml` により、Node.js 22でDesktop/Webの統合テストとVSIX生成まで確認してください。
+- ローカル統合テストがOS共有ライブラリ不足で実行できない場合は、エラー内容を `AGENTS_DOCS.md` と作業報告へ記録し、単体テストやCIを省略する理由にはしないでください。
 
 例:
 

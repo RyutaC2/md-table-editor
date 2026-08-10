@@ -65,14 +65,15 @@
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
-    "package:vsix": "npm run package && vsce package --no-dependencies",
+    "package:vsix": "vsce package --no-dependencies",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
     "test:unit": "tsc -p tsconfig.unit.json && mocha --ui tdd \"out-unit/test/core/**/*.test.js\"",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "test:web": "npm run compile-tests && npm run compile && vscode-test-web --extensionDevelopmentPath=. --extensionTestsPath=out/test/extension.test.js --browser=chromium --headless --esm=false"
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.14.9",
@@ -89,6 +90,7 @@
     "@types/vscode": "^1.125.0",
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.0.0",
+    "@vscode/test-web": "^0.0.81",
     "@vscode/vsce": "^3.9.2",
     "esbuild": "^0.28.1",
     "eslint": "^10.5.0",

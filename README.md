@@ -1,64 +1,103 @@
 # Markdown Grid Editor
 
-Markdown の表を、Visual Studio Code 内で Excel のように編集するための拡張機能です。
+Markdown の表を、Visual Studio Code 内で Excel のように作成・編集する拡張機能です。
 
-Markdown テーブルは、セル数が増えるほどパイプや区切り行の手入力・整形が難しくなります。Markdown Grid Editor はソースを左側、GUIグリッドを右側へ表示し、表を視覚的に作成・編集できるようにします。
+Markdown テーブルは、セル数が増えるほどパイプや区切り行の手入力・整形が難しくなります。Markdown Grid Editor はソースを左側、GUIグリッドを右側へ表示し、Markdown構文を直接整形しなくても表を編集できるようにします。
 
-## 開発状態
+## 主な機能
 
-現在は初回リリース `0.1.0` の検証・配布整備中です。Markdownテーブルの解析、編集・挿入導線、ソース同期、ExcelライクなGUIグリッドの主要操作を実装しました。
+- GFM Markdownテーブルの検出
+- 表ごとのCodeLens `GUIで編集`
+- Markdownエディターの右クリックメニューからGUI編集・新規テーブル挿入
+- Desktop版とWeb版VS Codeに対応する仮想化グリッド
+- セル、矩形範囲、不連続範囲、行、列の選択
+- TSV形式のコピー、切り取り、貼り付けと貼り付け先の自動拡張
+- 行列の追加、削除、ドラッグ移動
+- 列の配置、安定ソート、ドラッグによる幅変更、全列の横幅調整
+- 安全化したインラインMarkdown表示
+- ソースとの即時同期、VS Code標準の保存とUndo/Redo
+- 日本語・英語表示、light・dark・high contrastテーマ、ARIA grid
 
-## 初回リリースで提供する操作
+## 使い方
 
-- 各 Markdown テーブルの直上に表示される `GUIで編集` から編集画面を開く
-- Markdown エディターの右クリックメニューから新しい表を挿入する
-- 左側の Markdown ソースと右側の GUI を同時に表示する
-- セル、複数セル、行、列をキーボードとマウスで選択・編集する
-- TSV形式でコピー、切り取り、貼り付けを行う
-- 行列の追加、削除、並べ替え、配置、ソート、列幅調整を行う
-- 編集確定時にソースへ反映し、通常の Ctrl/Cmd+S でファイルを保存する
-- VS Code 標準の Undo/Redo を利用する
+### 既存テーブルを編集する
 
-セルを選択したまま文字を入力すると既存内容を置換し、EnterまたはF2では既存内容を編集します。矢印キー、Shiftを使った範囲選択、Ctrl/Cmd+C・X・VによるTSV操作に対応しています。行列操作と横幅調整は上部ツールバー、配置とソートは各列見出しのメニューから実行できます。
+1. VS CodeでMarkdownファイルを開きます。
+2. 対象テーブルの直上に表示される `GUIで編集` を選択します。CodeLensを無効にしている場合は、テーブル内を右クリックして同じ操作を選択できます。
+3. 左側にMarkdownソース、右側にGUIグリッドが表示されます。
+4. セルの編集を確定すると、左側のソースへ直ちに反映されます。
+5. ファイルは通常どおり Ctrl/Cmd+S で保存します。
 
-Desktop版 VS Codeに加え、vscode.devとgithub.devを含むWeb版 VS Codeにも対応します。表示言語は日本語と英語です。
+### 新しいテーブルを挿入する
+
+1. Markdownエディター内を右クリックし、`Markdownテーブルを挿入` を選択します。
+2. QuickPickから1～8列・1～8行のサイズを選びます。行数にはヘッダー行を含みます。
+3. 空のテーブルが挿入され、右側GUIの左上ヘッダーセルが編集状態で開きます。
+
+カーソルが既存テーブル内にある場合は、そのテーブル全体の後へ新しいテーブルを挿入します。それ以外では、カーソルを含む行の後へ挿入します。
+
+## 基本操作
+
+| 操作 | キーまたはUI |
+| --- | --- |
+| セル移動 | 矢印キー |
+| 範囲拡張 | Shift+矢印、Shift+クリック、ドラッグ |
+| 不連続選択 | Ctrl/Cmd+クリック |
+| 既存内容を編集 | Enter、F2、ダブルクリック |
+| 内容を置換して編集 | 選択中に文字入力 |
+| 編集確定 | Enter、Tab、フォーカス移動 |
+| 編集破棄 | Esc |
+| 内容をクリア | Delete、Backspace |
+| 表全体を選択 | Ctrl/Cmd+A |
+| コピー・切り取り・貼り付け | Ctrl/Cmd+C・X・V |
+| Undo・Redo | Ctrl/Cmd+Z・Y、ツールバー |
+| 行列の追加・削除 | 上部ツールバー |
+| 配置・ソート | 各列見出しのメニュー |
+| 列幅変更 | 列見出し右端をドラッグ |
+
+不連続範囲のコピーは行いません。不連続選択中に貼り付けた場合は、主セルを開始位置として貼り付けます。
 
 ## 対応するMarkdown
 
-VS Code 組み込みプレビューと GitHub の双方で表として解釈される GFM Table を対象とします。外側パイプ、空セル、配置、エスケープされたパイプ、一般的なインラインMarkdownを扱います。コードブロック内の表記は編集対象になりません。
+VS Code組み込みプレビューとGitHubの双方で表として解釈されるGFM Tableを対象とします。外側パイプ、空セル、配置、エスケープされたパイプ、一般的なインラインMarkdownを扱います。fenced code block内の表記は対象になりません。
 
-## 開発環境
+GUIを開いただけではソースを書き換えません。列数が不均一なデータ行は、最初の編集操作を確定した時点で空セルを補って正規化します。
+
+## 開発
 
 ### 必要な環境
 
 - Visual Studio Code
-- Node.js
+- Node.js 22以上
 - npm
-
-### セットアップ
 
 ```bash
 npm install
 npm run compile
 ```
 
-### 開発用コマンド
-
 | コマンド | 用途 |
 | --- | --- |
-| `npm run compile` | 型チェック、Lint、開発用ビルド |
+| `npm run compile` | 型チェック、Lint、Desktop/Web/Webviewの開発ビルド |
 | `npm run check-types` | TypeScriptの型チェック |
 | `npm run lint` | ESLintの実行 |
 | `npm run test:unit` | Markdown表の純粋ロジックを単体テスト |
-| `npm test` | 拡張機能テストの実行 |
+| `npm test` | Desktop版の拡張機能統合テスト |
+| `npm run test:web` | Web版の拡張機能統合テスト |
 | `npm run package` | 配布用ビルド |
 | `npm run package:vsix` | 配布用VSIXの生成 |
 | `npm run watch` | TypeScriptとesbuildの監視ビルド |
 
-## 初回リリースの対象外
+VS Codeでこのリポジトリを開き、F5または `Run Extension` からExtension Development Hostを起動すると動作確認できます。
 
-フィルター、数式、オートフィル、セル結合、複数行セル、raw HTMLの描画は初回リリースに含みません。Marketplaceへの公開とアイコン作成も、このリポジトリでの初回実装作業には含みません。
+## 対応環境と制限
+
+- VS Code `1.125.0` 以上
+- Windows、macOS、Linux、vscode.dev、github.dev
+- 50列×500行を性能保証対象とし、それを超える表も省略せず編集します。
+- フィルター、数式、オートフィル、セル結合、複数行セル、raw HTML描画には対応していません。
+- テレメトリーは収集しません。
 
 ## ライセンス
 
-MIT Licenseで公開する予定です。
+[MIT License](./LICENSE)

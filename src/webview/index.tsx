@@ -46,6 +46,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     autoFit: 'Auto fit widths', alignment: 'Alignment', none: 'None', left: 'Left', center: 'Center', right: 'Right',
     ascending: 'Sort ascending', descending: 'Sort descending', large: 'Large table: virtualization is enabled and no data is truncated.',
     disjointCopy: 'Copying disjoint ranges is not supported.', header: 'Header', empty: 'Empty table',
+    disjointReorder: 'Disjoint rows or columns cannot be reordered.',
   },
   ja: {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', rowBefore: '前に行を追加', rowAfter: '後に行を追加',
@@ -53,6 +54,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     autoFit: '横幅を整える', alignment: '配置', none: '指定なし', left: '左', center: '中央', right: '右',
     ascending: '昇順で並べ替え', descending: '降順で並べ替え', large: '大きなテーブルです。データを省略せず仮想化して表示しています。',
     disjointCopy: '不連続範囲はコピーできません。', header: 'ヘッダー', empty: '空のテーブル',
+    disjointReorder: '不連続な行または列は並べ替えできません。',
   },
 };
 
@@ -90,6 +92,11 @@ function columnName(index: number): string {
     value = Math.floor(value / 26);
   }
   return name;
+}
+
+function contiguous(indexes: number[]): boolean {
+  const sorted = [...indexes].sort((left, right) => left - right);
+  return sorted.every((value, index) => index === 0 || value === sorted[index - 1] + 1);
 }
 
 function plainText(value: string): string {
@@ -164,8 +171,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const [editing, setEditing] = useState<EditingCell>();
   const [dragging, setDragging] = useState(false);
   const [notice, setNotice] = useState<string>();
-  const [draggedRow, setDraggedRow] = useState<number>();
-  const [draggedColumn, setDraggedColumn] = useState<number>();
+  const [draggedRows, setDraggedRows] = useState<number[]>([]);
+  const [draggedColumns, setDraggedColumns] = useState<number[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -485,13 +492,19 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     className="column-heading"
                     role="columnheader"
                     draggable
-                    onDragStart={() => setDraggedColumn(column)}
+                    onDragStart={(event) => {
+                      const indexes = selectedColumns.includes(column) ? selectedColumns : [column];
+                      if (!contiguous(indexes)) {
+                        event.preventDefault(); setNotice(text.disjointReorder); return;
+                      }
+                      setDraggedColumns(indexes);
+                    }}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={() => {
-                      if (draggedColumn !== undefined && draggedColumn !== column) {
-                        perform({ type: 'moveColumns', indexes: [draggedColumn], target: column }, { row: primary.row, column });
+                      if (draggedColumns.length > 0 && !draggedColumns.includes(column)) {
+                        perform({ type: 'moveColumns', indexes: draggedColumns, target: column }, { row: primary.row, column });
                       }
-                      setDraggedColumn(undefined);
+                      setDraggedColumns([]);
                     }}
                     onPointerDown={(event) => {
                       const start = { row: 0, column };
@@ -539,13 +552,19 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     role="rowheader"
                     draggable
                     style={{ transform: `translateY(${top}px)`, height: virtualRow.size }}
-                    onDragStart={() => setDraggedRow(row)}
+                    onDragStart={(event) => {
+                      const indexes = selectedRows.includes(row) ? selectedRows.filter((index) => index > 0) : [row];
+                      if (!contiguous(indexes)) {
+                        event.preventDefault(); setNotice(text.disjointReorder); return;
+                      }
+                      setDraggedRows(indexes);
+                    }}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={() => {
-                      if (draggedRow !== undefined && draggedRow !== row) {
-                        perform({ type: 'moveRows', indexes: [draggedRow], target: row }, { row, column: primary.column });
+                      if (draggedRows.length > 0 && !draggedRows.includes(row)) {
+                        perform({ type: 'moveRows', indexes: draggedRows, target: row }, { row, column: primary.column });
                       }
-                      setDraggedRow(undefined);
+                      setDraggedRows([]);
                     }}
                     onPointerDown={(event) => {
                       const start = { row, column: 0 };

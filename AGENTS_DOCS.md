@@ -131,7 +131,26 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 ## 現在の実装状態
 
-Desktop/Web用のビルドと公開基盤、`src/core` の表解析・変換、VS Code側の CodeLens、編集・挿入、パネル管理、文書同期を実装しました。Webviewには行列仮想化、単一・矩形・不連続選択、キーボード編集、TSVコピー・切り取り・貼り付け、行列の追加・削除・ドラッグ移動、配置、ソート、列幅変更、全列自動調整、Undo/Redo、安全なインラインMarkdown表示を実装しています。残作業はテスト拡充、CI、配布検証、実機で判明した不具合の修正です。
+初回リリース `0.1.0` の機能実装は完了しています。Desktop/Web用ビルド、表解析・変換、CodeLens、編集・挿入、パネル管理、文書同期、仮想化グリッド、選択・編集、TSV、行列操作、配置、ソート、列幅、Undo/Redo、安全なMarkdown表示を実装済みです。純粋ロジックの単体テスト、Desktop/Web統合テスト設定、GitHub Actions、VSIX生成も用意しています。Marketplaceへの実公開だけは作業対象外です。
+
+### 実装上の補足
+
+- Webviewメッセージ型は `src/shared/protocol.ts` に集約しています。
+- Webviewからは表全体ではなく操作を送ることを基本とし、貼り付けなど複数の構造変更が必要な場合だけ置換スナップショットを送ります。
+- Webview画像はHTTPSまたはワークスペース相対パスだけを表示し、リンクはCtrl/Cmd+クリックかつHTTPSの場合だけVS Codeへ開くよう依頼します。
+- TypeScript 6とMarkdownIt 15の宣言ファイル境界に対応するため `skipLibCheck` を有効にしています。プロジェクト自身のソースにはstrict型チェックを継続します。
+
+### 開発コマンド
+
+- `npm run compile`: 型チェック、Lint、Desktop/Web/Webviewビルド
+- `npm run test:unit`: VS Code非依存ロジックの単体テスト
+- `npm test`: Desktop Extension Host統合テスト
+- `npm run test:web`: Web Extension Host統合テスト
+- `npm run package:vsix`: プロダクションビルドとVSIX生成
+
+### ローカル検証環境
+
+現在の開発コンテナでは `libnspr4.so` がインストールされていないため、ElectronとChromiumを起動するDesktop/Web統合テストは実行環境の共有ライブラリエラーで停止します。型チェック、Lint、単体テスト、全バンドル、VSIX生成はローカルで検証し、統合テストは `playwright install --with-deps chromium` を実行するGitHub Actionsで検証します。
 
 ## 設計意図
 
