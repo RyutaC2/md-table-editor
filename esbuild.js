@@ -54,6 +54,14 @@ async function createContexts() {
       entryNames: '[name]',
       assetNames: '[name]',
     }),
+    esbuild.context({
+      ...shared,
+      entryPoints: ['src/test/webRunner.ts'],
+      format: 'cjs',
+      platform: 'browser',
+      outfile: 'dist/web-test/index.js',
+      external: ['vscode'],
+    }),
   ]);
 }
 
