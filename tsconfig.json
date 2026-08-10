@@ -15,6 +15,7 @@
         "jsx": "react-jsx",
         "resolveJsonModule": true,
         "esModuleInterop": true,
+        "skipLibCheck": true,
         "rootDir": "src",
         "strict": true, /* enable all strict type-checking options */
         /* Additional Checks */

@@ -1,7 +1,10 @@
 :root {
   color-scheme: light dark;
   font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
 }
+
+* { box-sizing: border-box; }
 
 html,
 body,
@@ -9,16 +12,260 @@ body,
   width: 100%;
   height: 100%;
   margin: 0;
+  overflow: hidden;
 }
+
+button,
+input { font: inherit; }
 
 body {
   color: var(--vscode-foreground);
   background: var(--vscode-editor-background);
 }
 
+button {
+  min-height: 28px;
+  padding: 3px 9px;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+button:hover { background: var(--vscode-button-hoverBackground); }
+button:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 1px; }
+button:disabled { cursor: default; opacity: 0.45; }
+
 .loading {
   display: grid;
   min-height: 100%;
   place-content: center;
-  text-align: center;
+}
+
+.app {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+}
+
+.toolbar {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 5px;
+  align-items: center;
+  padding: 6px;
+  overflow-x: auto;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  white-space: nowrap;
+}
+
+.separator {
+  width: 1px;
+  height: 22px;
+  margin: 0 3px;
+  background: var(--vscode-panel-border);
+}
+
+.banner {
+  padding: 5px 10px;
+  color: var(--vscode-editorWarning-foreground);
+  background: var(--vscode-editorWarning-background);
+  border-bottom: 1px solid var(--vscode-editorWarning-border);
+}
+
+.notice {
+  position: fixed;
+  z-index: 100;
+  right: 16px;
+  bottom: 16px;
+  max-width: min(420px, calc(100vw - 32px));
+  color: var(--vscode-notifications-foreground);
+  background: var(--vscode-notifications-background);
+  border: 1px solid var(--vscode-notifications-border);
+  box-shadow: 0 4px 14px var(--vscode-widget-shadow);
+}
+
+.grid-focus {
+  min-height: 0;
+  flex: 1;
+  outline: none;
+}
+
+.grid-focus:focus-visible { box-shadow: inset 0 0 0 1px var(--vscode-focusBorder); }
+
+.grid-scroll {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  contain: strict;
+}
+
+.grid-canvas {
+  position: relative;
+  min-width: 100%;
+  background: var(--vscode-editor-background);
+}
+
+.corner,
+.header-row-heading,
+.column-heading,
+.header-cell {
+  position: sticky;
+  z-index: 5;
+}
+
+.corner {
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: 48px;
+  height: 34px;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+  border-right: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.header-row-heading {
+  top: 34px;
+  left: 0;
+  z-index: 10;
+  display: flex;
+  width: 48px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+  border-right: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  user-select: none;
+}
+
+.column-heading {
+  top: 0;
+  display: flex;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+  border-right: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  user-select: none;
+}
+
+.column-heading[draggable="true"],
+.row-heading[draggable="true"] { cursor: grab; }
+
+.column-menu { position: relative; margin-left: auto; }
+.column-menu summary { padding: 3px 7px; cursor: pointer; list-style: none; }
+.column-menu summary::-webkit-details-marker { display: none; }
+
+.column-menu-items {
+  position: absolute;
+  z-index: 50;
+  top: 26px;
+  right: 0;
+  display: grid;
+  min-width: 155px;
+  gap: 3px;
+  padding: 5px;
+  background: var(--vscode-menu-background);
+  border: 1px solid var(--vscode-menu-border);
+  box-shadow: 0 4px 14px var(--vscode-widget-shadow);
+}
+
+.column-menu-items button {
+  text-align: left;
+  color: var(--vscode-menu-foreground);
+  background: transparent;
+}
+
+.column-menu-items button:hover,
+.column-menu-items button[aria-pressed="true"] {
+  color: var(--vscode-menu-selectionForeground);
+  background: var(--vscode-menu-selectionBackground);
+}
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  z-index: 4;
+  width: 7px;
+  height: 100%;
+  cursor: col-resize;
+}
+
+.row-heading {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  display: flex;
+  width: 48px;
+  align-items: center;
+  justify-content: center;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+  border-right: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  user-select: none;
+}
+
+.cell {
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+  background: var(--vscode-editor-background);
+  border-right: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.header-cell {
+  top: 34px;
+  z-index: 5;
+  height: 40px;
+  font-weight: 600;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+}
+
+.body-cell { position: absolute; }
+
+.cell.selected { background: var(--vscode-editor-selectionBackground); }
+.cell.primary { box-shadow: inset 0 0 0 2px var(--vscode-focusBorder); }
+
+.markdown-cell {
+  display: block;
+  width: 100%;
+  min-height: 100%;
+  padding: 8px 9px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.markdown-cell p { margin: 0; }
+.markdown-cell img { max-width: 100%; max-height: 96px; object-fit: contain; }
+.markdown-cell a { color: var(--vscode-textLink-foreground); text-decoration: underline; }
+.markdown-cell code { font-family: var(--vscode-editor-font-family); }
+
+.cell-input {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-focusBorder);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
+
+@media (forced-colors: active) {
+  .cell.primary { outline: 2px solid Highlight; outline-offset: -2px; }
+  .cell.selected { background: Highlight; color: HighlightText; }
 }

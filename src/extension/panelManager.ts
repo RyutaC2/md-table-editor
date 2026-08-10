@@ -17,6 +17,7 @@ interface TableSession {
   snapshot: TableSnapshot;
   selection?: CellPosition;
   applyingEdit: boolean;
+  startEditing: boolean;
   disposables: vscode.Disposable[];
 }
 
@@ -86,7 +87,7 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
       },
     );
     panel.webview.html = this.html(panel.webview);
-    const session = this.createSession(panel, document, table, sourceColumn);
+    const session = this.createSession(panel, document, table, sourceColumn, startEditing);
     this.sessions.set(session.key, session);
     await this.sendState(session, document, table, startEditing);
     if (table.rows.length > 500 || table.widths.length > 50) {
@@ -110,7 +111,7 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
         localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview'), ...this.workspaceRoots()],
       };
       panel.webview.html = this.html(panel.webview);
-      const session = this.createSession(panel, document, table, vscode.ViewColumn.One);
+      const session = this.createSession(panel, document, table, vscode.ViewColumn.One, false);
       this.sessions.set(session.key, session);
       await this.sendState(session, document, table, false);
     } catch {
@@ -119,7 +120,13 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
     }
   }
 
-  private createSession(panel: vscode.WebviewPanel, document: vscode.TextDocument, table: MarkdownTable, sourceColumn: vscode.ViewColumn): TableSession {
+  private createSession(
+    panel: vscode.WebviewPanel,
+    document: vscode.TextDocument,
+    table: MarkdownTable,
+    sourceColumn: vscode.ViewColumn,
+    startEditing: boolean,
+  ): TableSession {
     const session: TableSession = {
       key: sessionKey(document.uri, table.startOffset),
       panel,
@@ -130,6 +137,7 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
       documentVersion: document.version,
       snapshot: snapshot(table),
       applyingEdit: false,
+      startEditing,
       disposables: [],
     };
     session.disposables.push(
@@ -145,7 +153,8 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
         const document = await vscode.workspace.openTextDocument(session.uri);
         const table = findTableAtOffset(document.getText(), session.tableStartOffset);
         if (table) {
-          await this.sendState(session, document, table, false);
+          await this.sendState(session, document, table, session.startEditing);
+          session.startEditing = false;
         }
         break;
       }
@@ -245,6 +254,7 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
       selection: session.selection,
       language: language(),
       oversized: table.rows.length > 500 || table.widths.length > 50,
+      workspaceResourceBase: this.workspaceResourceBase(session, document.uri),
       startEditing,
     };
     this.post(session, { type: 'load', state });
@@ -350,6 +360,14 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
 
   private workspaceRoots(): vscode.Uri[] {
     return vscode.workspace.workspaceFolders?.map(({ uri }) => uri) ?? [];
+  }
+
+  private workspaceResourceBase(session: TableSession, documentUri: vscode.Uri): string | undefined {
+    const folder = vscode.workspace.getWorkspaceFolder(documentUri);
+    if (!folder) {
+      return undefined;
+    }
+    return session.panel.webview.asWebviewUri(vscode.Uri.joinPath(folder.uri, '/')).toString();
   }
 
   private removeSession(session: TableSession): void {

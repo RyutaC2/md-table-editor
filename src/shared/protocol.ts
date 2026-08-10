@@ -13,6 +13,7 @@ export interface EditorState {
   selection?: CellPosition;
   language: 'en' | 'ja';
   oversized: boolean;
+  workspaceResourceBase?: string;
   startEditing?: boolean;
 }
 
