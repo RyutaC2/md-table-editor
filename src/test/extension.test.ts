@@ -2,6 +2,12 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 
 suite('Markdown Grid Editor extension', () => {
+  suiteSetup(async () => {
+    const extension = vscode.extensions.getExtension('RyutaC2.md-table-editor');
+    assert.ok(extension, 'Development extension was not discovered by VS Code.');
+    await extension.activate();
+  });
+
   test('registers public commands', async () => {
     const commands = await vscode.commands.getCommands(true);
     assert.ok(commands.includes('md-table-editor.editTable'));

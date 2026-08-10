@@ -147,6 +147,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - `npm test`: Desktop Extension Host統合テスト
 - `npm run test:web`: Web Extension Host統合テスト
 - `npm run package:vsix`: プロダクションビルドとVSIX生成
+- 統合テストは開発対象の拡張機能を明示的にactivateしてから、公開コマンドとCodeLens Providerを検証します。
 
 ### ローカル検証環境
 
