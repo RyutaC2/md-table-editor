@@ -1,82 +1,60 @@
-# md-table-editor
+# Markdown Grid Editor
 
-Markdown の表を、Visual Studio Code 上の GUI で編集できる拡張機能を開発しています。
+Markdown の表を、Visual Studio Code 内で Excel のように編集するための拡張機能です。
 
-## 現在の状態
+Markdown テーブルは、セル数が増えるほどパイプや区切り行の手入力・整形が難しくなります。Markdown Grid Editor はソースを左側、GUIグリッドを右側へ表示し、表を視覚的に作成・編集できるようにします。
 
-このリポジトリは、環境構築直後の開発用雛形です。現在実装されているのは、拡張機能の有効化確認とサンプルコマンドだけです。Markdown 表の検出・表示・編集・保存は、まだ利用できません。
+## 開発状態
 
-## 現在確認できる操作
+現在は要件定義が完了し、初回リリース `0.1.0` の実装を開始する段階です。リポジトリ内のコードはまだ VS Code 拡張機能の初期雛形であり、以下の操作は実装完了まで利用できません。
 
-開発環境で拡張機能を起動すると、コマンドパレットから次の操作を確認できます。
+## 初回リリースで提供する操作
 
-1. VS Code でこのリポジトリを開きます。
-2. `F5` を押して「Run Extension」を起動します。
-3. 拡張機能開発ホストでコマンドパレットを開きます。
-4. `Hello World` を実行します。
-5. `Hello World from md_table_editor!` という情報メッセージが表示されます。
+- 各 Markdown テーブルの直上に表示される `GUIで編集` から編集画面を開く
+- Markdown エディターの右クリックメニューから新しい表を挿入する
+- 左側の Markdown ソースと右側の GUI を同時に表示する
+- セル、複数セル、行、列をキーボードとマウスで選択・編集する
+- TSV形式でコピー、切り取り、貼り付けを行う
+- 行列の追加、削除、並べ替え、配置、ソート、列幅調整を行う
+- 編集確定時にソースへ反映し、通常の Ctrl/Cmd+S でファイルを保存する
+- VS Code 標準の Undo/Redo を利用する
 
-このコマンドは拡張機能の動作確認用であり、最終的な表編集機能ではありません。
+Desktop版 VS Codeに加え、vscode.devとgithub.devを含むWeb版 VS Codeにも対応します。表示言語は日本語と英語です。
 
-## 開発環境のセットアップ
+## 対応するMarkdown
+
+VS Code 組み込みプレビューと GitHub の双方で表として解釈される GFM Table を対象とします。外側パイプ、空セル、配置、エスケープされたパイプ、一般的なインラインMarkdownを扱います。コードブロック内の表記は編集対象になりません。
+
+## 開発環境
 
 ### 必要な環境
 
 - Visual Studio Code
-- Node.js と npm
+- Node.js
+- npm
 
-VS Code 拡張機能の対象バージョンは `package.json` の `engines.vscode` で管理しています。
-
-### インストールとビルド
-
-リポジトリのルートで実行してください。
+### セットアップ
 
 ```bash
 npm install
 npm run compile
 ```
 
-`npm run compile` は、TypeScript の型チェック、ESLint、esbuild によるバンドルを順番に実行します。バンドルされた拡張機能は `dist/extension.js` に出力されます。
-
-### テスト
-
-```bash
-npm test
-```
-
-テストコードは `src/test` に配置しています。現在は VS Code 拡張機能テストの初期サンプルが登録されています。
-
-## 開発用コマンド
+### 開発用コマンド
 
 | コマンド | 用途 |
 | --- | --- |
 | `npm run compile` | 型チェック、Lint、開発用ビルド |
-| `npm run check-types` | TypeScript の型チェック |
-| `npm run lint` | ESLint の実行 |
+| `npm run check-types` | TypeScriptの型チェック |
+| `npm run lint` | ESLintの実行 |
 | `npm test` | 拡張機能テストの実行 |
 | `npm run package` | 配布用ビルド |
-| `npm run watch` | TypeScript と esbuild の監視ビルド |
+| `npm run watch` | TypeScriptとesbuildの監視ビルド |
 
-## 今後の実装予定
+## 初回リリースの対象外
 
-- Markdown 表を解析して編集可能なデータとして扱う
-- VS Code 上に表編集用の GUI を表示する
-- セルの追加・削除や内容の編集を行う
-- 編集結果を元の Markdown ファイルへ書き戻す
-- 不正な表記や複雑なセル内容を適切に扱う
+フィルター、数式、オートフィル、セル結合、複数行セル、raw HTMLの描画は初回リリースに含みません。Marketplaceへの公開とアイコン作成も、このリポジトリでの初回実装作業には含みません。
 
-上記は開発予定であり、現時点で提供されている機能ではありません。
+## ライセンス
 
-## 既知の制限
-
-- Markdown 表の編集機能は未実装です。
-- 設定項目は提供していません。
-- `Hello World` コマンドは開発用サンプルです。
-- 公開用のリリース版はまだありません。
-
-## リリースノート
-
-### 0.0.1
-
-- VS Code 拡張機能の初期雛形を作成しました。
-- 拡張機能の有効化確認用に `Hello World` コマンドを追加しました。
+MIT Licenseで公開する予定です。
