@@ -1,71 +1,82 @@
-# md-table-editor README
+# md-table-editor
 
-This is the README for your extension "md-table-editor". After writing up a brief description, we recommend including the following sections.
+Markdown の表を、Visual Studio Code 上の GUI で編集できる拡張機能を開発しています。
 
-## Features
+## 現在の状態
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+このリポジトリは、環境構築直後の開発用雛形です。現在実装されているのは、拡張機能の有効化確認とサンプルコマンドだけです。Markdown 表の検出・表示・編集・保存は、まだ利用できません。
 
-For example if there is an image subfolder under your extension project workspace:
+## 現在確認できる操作
 
-\!\[feature X\]\(images/feature-x.png\)
+開発環境で拡張機能を起動すると、コマンドパレットから次の操作を確認できます。
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+1. VS Code でこのリポジトリを開きます。
+2. `F5` を押して「Run Extension」を起動します。
+3. 拡張機能開発ホストでコマンドパレットを開きます。
+4. `Hello World` を実行します。
+5. `Hello World from md_table_editor!` という情報メッセージが表示されます。
 
-## Requirements
+このコマンドは拡張機能の動作確認用であり、最終的な表編集機能ではありません。
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+## 開発環境のセットアップ
 
-## Extension Settings
+### 必要な環境
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+- Visual Studio Code
+- Node.js と npm
 
-For example:
+VS Code 拡張機能の対象バージョンは `package.json` の `engines.vscode` で管理しています。
 
-This extension contributes the following settings:
+### インストールとビルド
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+リポジトリのルートで実行してください。
 
-## Known Issues
+```bash
+npm install
+npm run compile
+```
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+`npm run compile` は、TypeScript の型チェック、ESLint、esbuild によるバンドルを順番に実行します。バンドルされた拡張機能は `dist/extension.js` に出力されます。
 
-## Release Notes
+### テスト
 
-Users appreciate release notes as you update your extension.
+```bash
+npm test
+```
 
-### 1.0.0
+テストコードは `src/test` に配置しています。現在は VS Code 拡張機能テストの初期サンプルが登録されています。
 
-Initial release of ...
+## 開発用コマンド
 
-### 1.0.1
+| コマンド | 用途 |
+| --- | --- |
+| `npm run compile` | 型チェック、Lint、開発用ビルド |
+| `npm run check-types` | TypeScript の型チェック |
+| `npm run lint` | ESLint の実行 |
+| `npm test` | 拡張機能テストの実行 |
+| `npm run package` | 配布用ビルド |
+| `npm run watch` | TypeScript と esbuild の監視ビルド |
 
-Fixed issue #.
+## 今後の実装予定
 
-### 1.1.0
+- Markdown 表を解析して編集可能なデータとして扱う
+- VS Code 上に表編集用の GUI を表示する
+- セルの追加・削除や内容の編集を行う
+- 編集結果を元の Markdown ファイルへ書き戻す
+- 不正な表記や複雑なセル内容を適切に扱う
 
-Added features X, Y, and Z.
+上記は開発予定であり、現時点で提供されている機能ではありません。
 
----
+## 既知の制限
 
-## Following extension guidelines
+- Markdown 表の編集機能は未実装です。
+- 設定項目は提供していません。
+- `Hello World` コマンドは開発用サンプルです。
+- 公開用のリリース版はまだありません。
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+## リリースノート
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+### 0.0.1
 
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+- VS Code 拡張機能の初期雛形を作成しました。
+- 拡張機能の有効化確認用に `Hello World` コマンドを追加しました。
