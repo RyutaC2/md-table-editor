@@ -1,4 +1,7 @@
 declare module 'mocha/mocha.js' {
-  import Mocha from 'mocha';
-  export default Mocha;
+  const mocha: {
+    setup(options: { ui: 'tdd'; reporter?: undefined }): void;
+    run(callback: (failures: number) => void): void;
+  };
+  export default mocha;
 }

@@ -1,4 +1,4 @@
-import Mocha from 'mocha/mocha.js';
+import mocha from 'mocha/mocha.js';
 import * as vscode from 'vscode';
 
 function ensure(condition: unknown, message: string): asserts condition {
@@ -8,8 +8,7 @@ function ensure(condition: unknown, message: string): asserts condition {
 }
 
 export async function run(): Promise<void> {
-  const mocha = new Mocha({ ui: 'tdd', color: true });
-  mocha.suite.emit('pre-require', globalThis, 'webRunner', mocha);
+  mocha.setup({ ui: 'tdd', reporter: undefined });
 
   suite('Markdown Grid Editor web extension', () => {
     suiteSetup(async () => {
