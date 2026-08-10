@@ -23,6 +23,7 @@
 - Markdown の解析、直列化、幅計算、ソートは VS Code API から分離した純粋関数として実装してください。
 - Webview と拡張機能間のメッセージは判別可能な union 型で定義し、文書バージョンを検証してください。
 - Webview では nonce 付き Content Security Policy を設定し、raw HTML、未検証URL、任意スクリプトを実行しないでください。
+- Webviewの見た目を変更する場合は、Reactコンポーネントと対応するCSSを同時に確認・更新してください。
 - GUI操作は、可能な限り VS Code 標準の文書編集、dirty状態、保存、Undo/Redoへ統合してください。
 
 ## 要件変更

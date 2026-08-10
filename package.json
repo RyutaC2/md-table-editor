@@ -1,23 +1,62 @@
 {
   "name": "md-table-editor",
-  "displayName": "md_table_editor",
-  "description": "You can edit Markdown tables using a GUI interface within VS Code.",
-  "version": "0.0.1",
+  "displayName": "Markdown Grid Editor",
+  "description": "Edit Markdown tables in an Excel-like GUI inside Visual Studio Code.",
+  "version": "0.1.0",
+  "publisher": "RyutaC2",
+  "license": "MIT",
+  "homepage": "https://github.com/RyutaC2/md-table-editor#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RyutaC2/md-table-editor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RyutaC2/md-table-editor/issues"
+  },
   "engines": {
     "vscode": "^1.125.0"
   },
-  "categories": [
-    "Other"
+  "categories": ["Visualization", "Other"],
+  "keywords": ["markdown", "table", "grid", "excel", "editor"],
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onCommand:md-table-editor.editTable",
+    "onCommand:md-table-editor.insertTable",
+    "onWebviewPanel:md-table-editor.tableEditor"
   ],
-  "activationEvents": [],
   "main": "./dist/extension.js",
+  "browser": "./dist/browser/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "md-table-editor.helloWorld",
-        "title": "Hello World"
+        "command": "md-table-editor.editTable",
+        "title": "%command.editTable%",
+        "category": "%extension.category%"
+      },
+      {
+        "command": "md-table-editor.insertTable",
+        "title": "%command.insertTable%",
+        "category": "%extension.category%"
       }
-    ]
+    ],
+    "menus": {
+      "commandPalette": [
+        { "command": "md-table-editor.editTable", "when": "false" },
+        { "command": "md-table-editor.insertTable", "when": "false" }
+      ],
+      "editor/context": [
+        {
+          "command": "md-table-editor.editTable",
+          "when": "editorLangId == markdown && mdTableEditor.inTable",
+          "group": "1_modification@90"
+        },
+        {
+          "command": "md-table-editor.insertTable",
+          "when": "editorLangId == markdown",
+          "group": "1_modification@100"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -26,24 +65,36 @@
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "package:vsix": "npm run package && vsce package --no-dependencies",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "pretest": "npm run compile-tests && npm run compile",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vscode-test"
   },
+  "dependencies": {
+    "@tanstack/react-virtual": "^3.14.9",
+    "markdown-it": "^15.0.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
   "devDependencies": {
-    "@types/vscode": "^1.125.0",
+    "@types/markdown-it": "^14.1.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
-    "typescript-eslint": "^8.61.1",
-    "eslint": "^10.5.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@types/vscode": "^1.125.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
+    "@vscode/vsce": "^3.9.2",
     "esbuild": "^0.28.1",
+    "eslint": "^10.5.0",
+    "mocha": "^11.8.0",
     "npm-run-all": "^4.1.5",
     "typescript": "^6.0.3",
-    "@vscode/test-cli": "^0.0.15",
-    "@vscode/test-electron": "^3.0.0"
+    "typescript-eslint": "^8.61.1"
   },
   "overrides": {
     "diff": "^8.0.4",

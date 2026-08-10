@@ -1,0 +1,5 @@
+{
+  "extension.category": "Markdown Grid Editor",
+  "command.editTable": "GUIで編集",
+  "command.insertTable": "Markdownテーブルを挿入"
+}

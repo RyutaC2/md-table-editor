@@ -6,7 +6,7 @@ Markdown テーブルは、セル数が増えるほどパイプや区切り行�
 
 ## 開発状態
 
-現在は要件定義が完了し、初回リリース `0.1.0` の実装を開始する段階です。リポジトリ内のコードはまだ VS Code 拡張機能の初期雛形であり、以下の操作は実装完了まで利用できません。
+現在は要件定義が完了し、初回リリース `0.1.0` を実装中です。Desktop/Web用のビルド、React Webview、日英ローカライズ、VSIX生成の基盤を整備しています。以下の操作は、各機能の実装完了まで利用できません。
 
 ## 初回リリースで提供する操作
 
@@ -49,6 +49,7 @@ npm run compile
 | `npm run lint` | ESLintの実行 |
 | `npm test` | 拡張機能テストの実行 |
 | `npm run package` | 配布用ビルド |
+| `npm run package:vsix` | 配布用VSIXの生成 |
 | `npm run watch` | TypeScriptとesbuildの監視ビルド |
 
 ## 初回リリースの対象外
