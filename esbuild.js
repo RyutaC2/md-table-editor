@@ -61,6 +61,7 @@ async function createContexts() {
       platform: 'browser',
       outfile: 'dist/web-test/index.js',
       external: ['vscode'],
+      define: { global: 'globalThis' },
     }),
   ]);
 }

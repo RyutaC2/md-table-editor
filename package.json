@@ -73,7 +73,7 @@
     "lint": "eslint src",
     "test:unit": "tsc -p tsconfig.unit.json && mocha --ui tdd \"out-unit/test/core/**/*.test.js\"",
     "test": "vscode-test",
-    "test:web": "npm run compile && vscode-test-web --extensionDevelopmentPath=. --extensionTestsPath=dist/web-test/index.js --browser=chromium --headless --esm=false"
+    "test:web": "npm run compile && vscode-test-web --extensionDevelopmentPath=. --extensionTestsPath=dist/web-test/index.js --browser=chromium --quality=stable --headless --verbose --printServerLog"
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.14.9",

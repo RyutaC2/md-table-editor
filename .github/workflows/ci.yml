@@ -27,6 +27,7 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Web extension tests
+        timeout-minutes: 5
         run: npm run test:web
       - name: Build VSIX
         run: npm run package:vsix
