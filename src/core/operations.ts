@@ -147,6 +147,11 @@ export function applyOperation(current: TableSnapshot, operation: TableOperation
         snapshot.widths[operation.column] = Math.max(3, Math.floor(operation.width));
       }
       break;
+    case 'autoFitColumn':
+      if (operation.column >= 0 && operation.column < columns) {
+        snapshot.widths[operation.column] = Math.max(3, ...snapshot.rows.map((row) => displayWidth(row[operation.column] ?? '')));
+      }
+      break;
     case 'autoFit':
       snapshot.widths = snapshot.widths.map((_, column) => Math.max(3, ...snapshot.rows.map((row) => displayWidth(row[column] ?? ''))));
       break;

@@ -40,5 +40,6 @@ export type TableOperation =
   | { type: 'moveColumns'; indexes: number[]; target: number }
   | { type: 'setAlignment'; column: number; alignment: Alignment }
   | { type: 'setWidth'; column: number; width: number }
+  | { type: 'autoFitColumn'; column: number }
   | { type: 'autoFit' }
   | { type: 'sort'; column: number; direction: 'ascending' | 'descending' };

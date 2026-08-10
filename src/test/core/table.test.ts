@@ -94,6 +94,12 @@ suite('Markdown table core', () => {
     assert.strictEqual(updated.widths[0], 8);
   });
 
+  test('auto-fits only the selected column', () => {
+    const [table] = parseMarkdownTables('| h | value |\n| --- | --- |\n| A | 長い値 |');
+    const updated = applyOperation(table, { type: 'autoFitColumn', column: 1 });
+    assert.deepStrictEqual(updated.widths, [3, 6]);
+  });
+
   test('sorts decorated text stably', () => {
     const [table] = parseMarkdownTables('| n | id |\n| --- | --- |\n| **b** | 1 |\n| b | 2 |\n| a | 3 |');
     const updated = applyOperation(table, { type: 'sort', column: 0, direction: 'ascending' });

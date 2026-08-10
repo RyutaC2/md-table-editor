@@ -27,6 +27,12 @@ interface EditingCell {
   original: string;
 }
 
+interface DropTarget {
+  axis: 'column' | 'row';
+  index: number;
+  side: 'before' | 'after';
+}
+
 type Dictionary = Record<string, string>;
 
 declare function acquireVsCodeApi(): VSCodeApi;
@@ -48,7 +54,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     autoFit: 'Auto fit widths', alignment: 'Alignment', none: 'None', left: 'Left', center: 'Center', right: 'Right',
     ascending: 'Sort ascending', descending: 'Sort descending', large: 'Large table: virtualization is enabled and no data is truncated.',
     disjointCopy: 'Copying disjoint ranges is not supported.', header: 'Header', empty: 'Empty table',
-    disjointReorder: 'Disjoint rows or columns cannot be reordered.',
+    disjointReorder: 'Disjoint rows or columns cannot be reordered.', moveRows: 'Move rows', moveColumns: 'Move columns',
   },
   ja: {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', rowBefore: '前に行を追加', rowAfter: '後に行を追加',
@@ -56,7 +62,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     autoFit: '横幅を整える', alignment: '配置', none: '指定なし', left: '左', center: '中央', right: '右',
     ascending: '昇順で並べ替え', descending: '降順で並べ替え', large: '大きなテーブルです。データを省略せず仮想化して表示しています。',
     disjointCopy: '不連続範囲はコピーできません。', header: 'ヘッダー', empty: '空のテーブル',
-    disjointReorder: '不連続な行または列は並べ替えできません。',
+    disjointReorder: '不連続な行または列は並べ替えできません。', moveRows: '行を移動', moveColumns: '列を移動',
   },
 };
 
@@ -99,6 +105,44 @@ function columnName(index: number): string {
 function contiguous(indexes: number[]): boolean {
   const sorted = [...indexes].sort((left, right) => left - right);
   return sorted.every((value, index) => index === 0 || value === sorted[index - 1] + 1);
+}
+
+function usefulMove(indexes: number[], target: number): boolean {
+  if (indexes.length === 0) {
+    return false;
+  }
+  const first = Math.min(...indexes);
+  const last = Math.max(...indexes);
+  return target < first || target > last + 1;
+}
+
+function dropSide(event: React.DragEvent<HTMLElement>, axis: DropTarget['axis']): DropTarget['side'] {
+  const bounds = event.currentTarget.getBoundingClientRect();
+  const before = axis === 'column'
+    ? event.clientX < bounds.left + bounds.width / 2
+    : event.clientY < bounds.top + bounds.height / 2;
+  return before ? 'before' : 'after';
+}
+
+function dragPreview(event: React.DragEvent<HTMLElement>, label: string, count: number): void {
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', label);
+  const preview = document.createElement('div');
+  preview.className = 'drag-preview';
+  preview.textContent = count > 1 ? `${label} × ${count}` : label;
+  document.body.appendChild(preview);
+  event.dataTransfer.setDragImage(preview, 20, 16);
+  requestAnimationFrame(() => preview.remove());
+}
+
+function alignmentIcon(alignment: Alignment): IconName {
+  const icons: Record<Alignment, IconName> = {
+    none: 'alignNone',
+    left: 'alignLeft',
+    center: 'alignCenter',
+    right: 'alignRight',
+  };
+  return icons[alignment];
 }
 
 function plainText(value: string): string {
@@ -175,6 +219,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const [notice, setNotice] = useState<string>();
   const [draggedRows, setDraggedRows] = useState<number[]>([]);
   const [draggedColumns, setDraggedColumns] = useState<number[]>([]);
+  const [dropTarget, setDropTarget] = useState<DropTarget>();
   const [scrollPosition, setScrollPosition] = useState({ left: 0, top: 0 });
   const scrollRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -425,18 +470,59 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     event.stopPropagation();
     const start = event.clientX;
     const initial = snapshot.widths[column];
+    let preview = initial;
     const move = (moveEvent: PointerEvent): void => {
       const width = Math.max(3, Math.round(initial + (moveEvent.clientX - start) / characterWidth));
-      setSnapshot((current) => applyOperation(current, { type: 'setWidth', column, width }));
+      if (width !== preview) {
+        preview = width;
+        setSnapshot((current) => applyOperation(current, { type: 'setWidth', column, width }));
+      }
     };
     const up = (upEvent: PointerEvent): void => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       const width = Math.max(3, Math.round(initial + (upEvent.clientX - start) / characterWidth));
-      sendOperation({ type: 'setWidth', column, width }, primary);
+      if (width !== initial) {
+        sendOperation({ type: 'setWidth', column, width }, primary);
+      }
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+  };
+
+  const reorderClass = (axis: DropTarget['axis'], index: number): string => {
+    const dragged = axis === 'column' ? draggedColumns : draggedRows;
+    const source = dragged.includes(index) ? ' drag-source' : '';
+    if (dropTarget?.axis !== axis || dropTarget.index !== index) {
+      return source;
+    }
+    return `${source} drop-${axis}-${dropTarget.side}`;
+  };
+
+  const clearReorder = (): void => {
+    setDraggedColumns([]);
+    setDraggedRows([]);
+    setDropTarget(undefined);
+  };
+
+  const updateDropTarget = (event: React.DragEvent<HTMLElement>, axis: DropTarget['axis'], index: number): void => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    setDropTarget({ axis, index, side: dropSide(event, axis) });
+  };
+
+  const completeDrop = (event: React.DragEvent<HTMLElement>, axis: DropTarget['axis'], index: number): void => {
+    event.preventDefault();
+    const indexes = axis === 'column' ? draggedColumns : draggedRows;
+    const target = index + (dropSide(event, axis) === 'after' ? 1 : 0);
+    if (usefulMove(indexes, target)) {
+      if (axis === 'column') {
+        perform({ type: 'moveColumns', indexes, target }, { row: primary.row, column: index });
+      } else {
+        perform({ type: 'moveRows', indexes, target }, { row: index, column: primary.column });
+      }
+    }
+    clearReorder();
   };
 
   const virtualColumns = columnVirtualizer.getVirtualItems();
@@ -447,25 +533,28 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   return (
     <main className="app">
       <nav className="toolbar" aria-label="Table operations">
-        <div className="toolbar-group" aria-label="History">
-          <ToolbarButton icon="undo" label={text.undo} onClick={() => vscode.postMessage({ type: 'undo' })} />
-          <ToolbarButton icon="redo" label={text.redo} onClick={() => vscode.postMessage({ type: 'redo' })} />
+        <div className="toolbar-row">
+          <div className="toolbar-group" aria-label="History">
+            <ToolbarButton icon="undo" label={text.undo} onClick={() => vscode.postMessage({ type: 'undo' })} />
+            <ToolbarButton icon="redo" label={text.redo} onClick={() => vscode.postMessage({ type: 'redo' })} />
+          </div>
+          <div className="toolbar-divider" />
+          <div className="toolbar-group" aria-label="Rows">
+            <ToolbarButton icon="rowBefore" label={text.rowBefore} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row) }, { row: Math.max(1, primary.row), column: primary.column })} />
+            <ToolbarButton icon="rowAfter" label={text.rowAfter} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row + 1) }, { row: Math.max(1, primary.row + 1), column: primary.column })} />
+            <ToolbarButton danger icon="deleteRow" label={text.deleteRow} disabled={selectedRows.every((row) => row === 0)} onClick={() => perform({ type: 'deleteRows', indexes: selectedRows }, { row: Math.max(0, primary.row - 1), column: primary.column })} />
+          </div>
         </div>
-        <div className="toolbar-divider" />
-        <div className="toolbar-group" aria-label="Rows">
-          <ToolbarButton icon="addRow" label={text.rowBefore} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row) }, { row: Math.max(1, primary.row), column: primary.column })} />
-          <ToolbarButton icon="addRow" label={text.rowAfter} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row + 1) }, { row: Math.max(1, primary.row + 1), column: primary.column })} />
-          <ToolbarButton danger icon="removeRow" label={text.deleteRow} disabled={selectedRows.every((row) => row === 0)} onClick={() => perform({ type: 'deleteRows', indexes: selectedRows }, { row: Math.max(0, primary.row - 1), column: primary.column })} />
-        </div>
-        <div className="toolbar-divider" />
-        <div className="toolbar-group" aria-label="Columns">
-          <ToolbarButton icon="addColumn" label={text.columnBefore} onClick={() => perform({ type: 'insertColumn', index: primary.column }, primary)} />
-          <ToolbarButton icon="addColumn" label={text.columnAfter} onClick={() => perform({ type: 'insertColumn', index: primary.column + 1 }, { row: primary.row, column: primary.column + 1 })} />
-          <ToolbarButton danger icon="removeColumn" label={text.deleteColumn} disabled={snapshot.widths.length <= 1} onClick={() => perform({ type: 'deleteColumns', indexes: selectedColumns }, { row: primary.row, column: Math.max(0, primary.column - 1) })} />
-        </div>
-        <div className="toolbar-divider" />
-        <div className="toolbar-group toolbar-group-last" aria-label="Display">
-          <ToolbarButton icon="autoFit" label={text.autoFit} onClick={() => perform({ type: 'autoFit' })} />
+        <div className="toolbar-row">
+          <div className="toolbar-group" aria-label="Columns">
+            <ToolbarButton icon="columnBefore" label={text.columnBefore} onClick={() => perform({ type: 'insertColumn', index: primary.column }, primary)} />
+            <ToolbarButton icon="columnAfter" label={text.columnAfter} onClick={() => perform({ type: 'insertColumn', index: primary.column + 1 }, { row: primary.row, column: primary.column + 1 })} />
+            <ToolbarButton danger icon="deleteColumn" label={text.deleteColumn} disabled={snapshot.widths.length <= 1} onClick={() => perform({ type: 'deleteColumns', indexes: selectedColumns }, { row: primary.row, column: Math.max(0, primary.column - 1) })} />
+          </div>
+          <div className="toolbar-divider" />
+          <div className="toolbar-group" aria-label="Display">
+            <ToolbarButton icon="autoFit" label={text.autoFit} onClick={() => perform({ type: 'autoFit' })} />
+          </div>
         </div>
       </nav>
       {state.oversized && <div className="banner" role="status">{text.large}</div>}
@@ -505,7 +594,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
               return (
                 <React.Fragment key={virtualColumn.key}>
                   <div
-                    className="column-heading"
+                    className={`column-heading${reorderClass('column', column)}`}
                     role="columnheader"
                     draggable
                     onDragStart={(event) => {
@@ -513,15 +602,12 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                       if (!contiguous(indexes)) {
                         event.preventDefault(); setNotice(text.disjointReorder); return;
                       }
+                      dragPreview(event, `${text.moveColumns}: ${indexes.map(columnName).join(', ')}`, indexes.length);
                       setDraggedColumns(indexes);
                     }}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={() => {
-                      if (draggedColumns.length > 0 && !draggedColumns.includes(column)) {
-                        perform({ type: 'moveColumns', indexes: draggedColumns, target: column }, { row: primary.row, column });
-                      }
-                      setDraggedColumns([]);
-                    }}
+                    onDragOver={(event) => updateDropTarget(event, 'column', column)}
+                    onDrop={(event) => completeDrop(event, 'column', column)}
+                    onDragEnd={clearReorder}
                     onPointerDown={(event) => {
                       const start = { row: 0, column };
                       const end = { row: snapshot.rows.length - 1, column };
@@ -530,26 +616,70 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top, width }}
                   >
                     <span>{columnName(column)}</span>
-                    <details className="column-menu" onPointerDown={(event) => event.stopPropagation()}>
-                      <summary aria-label={`${text.alignment} ${columnName(column)}`}><Icon name="more" size={18} /></summary>
+                    <details
+                      className="column-menu"
+                      draggable={false}
+                      onDragStart={(event) => event.stopPropagation()}
+                      onPointerDown={(event) => event.stopPropagation()}
+                    >
+                      <summary aria-label={`${text.alignment} ${columnName(column)}`}><Icon name={alignmentIcon(snapshot.alignments[column])} size={18} /></summary>
                       <div className="column-menu-items">
                         {(['none', 'left', 'center', 'right'] as Alignment[]).map((alignment) => (
-                          <button key={alignment} type="button" aria-pressed={snapshot.alignments[column] === alignment} onClick={() => perform({ type: 'setAlignment', column, alignment }, primary)}>{text[alignment]}</button>
+                          <button
+                            key={alignment}
+                            type="button"
+                            className="column-menu-item"
+                            aria-pressed={snapshot.alignments[column] === alignment}
+                            onClick={(event) => {
+                              event.currentTarget.closest('details')?.removeAttribute('open');
+                              perform({ type: 'setAlignment', column, alignment }, primary);
+                            }}
+                          >
+                            <Icon name={alignmentIcon(alignment)} />
+                            <span>{text[alignment]}</span>
+                            {snapshot.alignments[column] === alignment && <Icon name="check" size={16} />}
+                          </button>
                         ))}
-                        <button type="button" onClick={() => perform({ type: 'sort', column, direction: 'ascending' }, primary)}>↑ {text.ascending}</button>
-                        <button type="button" onClick={() => perform({ type: 'sort', column, direction: 'descending' }, primary)}>↓ {text.descending}</button>
+                        <div className="column-menu-separator" />
+                        <button
+                          type="button"
+                          className="column-menu-item"
+                          onClick={(event) => {
+                            event.currentTarget.closest('details')?.removeAttribute('open');
+                            perform({ type: 'sort', column, direction: 'ascending' }, primary);
+                          }}
+                        ><Icon name="sortAscending" /><span>{text.ascending}</span></button>
+                        <button
+                          type="button"
+                          className="column-menu-item"
+                          onClick={(event) => {
+                            event.currentTarget.closest('details')?.removeAttribute('open');
+                            perform({ type: 'sort', column, direction: 'descending' }, primary);
+                          }}
+                        ><Icon name="sortDescending" /><span>{text.descending}</span></button>
                       </div>
                     </details>
-                    <span className="resize-handle" onPointerDown={(event) => resizeColumn(column, event)} />
+                    <span
+                      className="resize-handle"
+                      title={text.autoFit}
+                      onPointerDown={(event) => resizeColumn(column, event)}
+                      onDoubleClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        perform({ type: 'autoFitColumn', column }, primary);
+                      }}
+                    />
                   </div>
                   <div
-                    className={`cell header-cell ${ranges.some((range) => selected(range, 0, column)) ? 'selected' : ''} ${sameCell(primary, { row: 0, column }) ? 'primary' : ''}`}
+                    className={`cell header-cell${reorderClass('column', column)} ${ranges.some((range) => selected(range, 0, column)) ? 'selected' : ''} ${sameCell(primary, { row: 0, column }) ? 'primary' : ''}`}
                     role="columnheader"
                     aria-label={`${text.header} ${columnName(column)}`}
                     style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top + columnHeaderHeight, width }}
                     onPointerDown={(event) => { setDragging(true); chooseCell({ row: 0, column }, event); }}
                     onPointerEnter={() => dragging && chooseCell({ row: 0, column }, { shiftKey: true })}
                     onDoubleClick={() => beginEdit({ row: 0, column })}
+                    onDragOver={(event) => draggedColumns.length > 0 && updateDropTarget(event, 'column', column)}
+                    onDrop={(event) => draggedColumns.length > 0 && completeDrop(event, 'column', column)}
                   >
                     {editing && sameCell(editing.cell, { row: 0, column })
                       ? <CellInput ref={inputRef} editing={editing} setEditing={setEditing} commit={commitEdit} />
@@ -564,7 +694,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
               return (
                 <React.Fragment key={virtualRow.key}>
                   <div
-                    className="row-heading"
+                    className={`row-heading${reorderClass('row', row)}`}
                     role="rowheader"
                     draggable
                     style={{ left: scrollPosition.left, top, height: virtualRow.size }}
@@ -573,15 +703,12 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                       if (!contiguous(indexes)) {
                         event.preventDefault(); setNotice(text.disjointReorder); return;
                       }
+                      dragPreview(event, `${text.moveRows}: ${indexes.map((index) => index + 1).join(', ')}`, indexes.length);
                       setDraggedRows(indexes);
                     }}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={() => {
-                      if (draggedRows.length > 0 && !draggedRows.includes(row)) {
-                        perform({ type: 'moveRows', indexes: draggedRows, target: row }, { row, column: primary.column });
-                      }
-                      setDraggedRows([]);
-                    }}
+                    onDragOver={(event) => updateDropTarget(event, 'row', row)}
+                    onDrop={(event) => completeDrop(event, 'row', row)}
+                    onDragEnd={clearReorder}
                     onPointerDown={(event) => {
                       const start = { row, column: 0 };
                       const end = { row, column: snapshot.widths.length - 1 };
@@ -595,7 +722,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     return (
                       <div
                         key={`${row}:${column}`}
-                        className={`cell body-cell ${ranges.some((range) => selected(range, row, column)) ? 'selected' : ''} ${sameCell(primary, cell) ? 'primary' : ''}`}
+                        className={`cell body-cell${reorderClass('row', row)}${reorderClass('column', column)} ${ranges.some((range) => selected(range, row, column)) ? 'selected' : ''} ${sameCell(primary, cell) ? 'primary' : ''}`}
                         role="gridcell"
                         aria-rowindex={row + 1}
                         aria-colindex={column + 1}
@@ -603,6 +730,20 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                         onPointerDown={(event) => { setDragging(true); chooseCell(cell, event); }}
                         onPointerEnter={() => dragging && chooseCell(cell, { shiftKey: true })}
                         onDoubleClick={() => beginEdit(cell)}
+                        onDragOver={(event) => {
+                          if (draggedColumns.length > 0) {
+                            updateDropTarget(event, 'column', column);
+                          } else if (draggedRows.length > 0) {
+                            updateDropTarget(event, 'row', row);
+                          }
+                        }}
+                        onDrop={(event) => {
+                          if (draggedColumns.length > 0) {
+                            completeDrop(event, 'column', column);
+                          } else if (draggedRows.length > 0) {
+                            completeDrop(event, 'row', row);
+                          }
+                        }}
                       >
                         {isEditing
                           ? <CellInput ref={inputRef} editing={editing} setEditing={setEditing} commit={commitEdit} />
