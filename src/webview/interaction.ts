@@ -15,6 +15,12 @@ export interface GridMovement {
   column: number;
 }
 
+interface SelectionModifiers {
+  shiftKey?: boolean;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+}
+
 type VisibleAlignment = Exclude<Alignment, 'none'>;
 
 export function editCommitMovement(key: 'Enter' | 'Tab', shiftKey: boolean): GridMovement {
@@ -22,6 +28,10 @@ export function editCommitMovement(key: 'Enter' | 'Tab', shiftKey: boolean): Gri
     return { row: shiftKey ? -1 : 1, column: 0 };
   }
   return { row: 0, column: shiftKey ? -1 : 1 };
+}
+
+export function shouldAutoEditCell(modifiers: SelectionModifiers, dragged: boolean): boolean {
+  return !dragged && !modifiers.shiftKey && !modifiers.ctrlKey && !modifiers.metaKey;
 }
 
 export function visibleCellAlignment(alignment: Alignment): VisibleAlignment {

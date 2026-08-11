@@ -1,16 +1,16 @@
 # Marketplace 公開手順
 
-この文書は、Markdown Grid EditorをVisual Studio Marketplaceへ初回公開するときの手順です。現在の `0.2.7` は公開候補版であり、`RELEASE_CHECKLIST.md` の受け入れ完了前に `1.0.0` へ変更しません。
+この文書は、Markdown Grid EditorをVisual Studio Marketplaceへ初回公開するときの手順です。現在の `0.2.8` は公開候補版であり、`RELEASE_CHECKLIST.md` の受け入れ完了前に `1.0.0` へ変更しません。
 
 ## 公開前に人が決めること
 
 - Marketplaceでpublisher `RyutaC2` を作成または所有確認し、拡張機能ID `RyutaC2.md-table-editor` を利用できることを管理画面で確認する
 - GitHubリポジトリのSettings > Code securityでPrivate Vulnerability Reportingを有効にする
 - `RELEASE_CHECKLIST.md` の8シナリオを実施し、公開条件を満たす
-- Marketplace用アイコンを設定するか判断する。設定する場合は正方形のPNGを用意し、`package.json` の `icon` へ相対パスを指定する。256×256を推奨する
+- Marketplace用の256×256 PNGアイコンが管理画面とVS Code内で意図した見た目になることを確認する
 - 実際のLight/Darkテーマの画面を使ったスクリーンショットをREADMEへ追加するか判断する
 
-名前とpublisherの利用可否は、最終的にMarketplaceの管理画面で確認してください。アイコンは必須項目ではありませんが、公開ページで拡張機能を識別しやすくするため、v1公開前の追加を推奨します。
+名前とpublisherの利用可否は、最終的にMarketplaceの管理画面で確認してください。アイコンは `markdown_table_editor.png` をmanifestへ設定済みです。
 
 ## リリース候補を検証する
 
@@ -27,7 +27,7 @@ npm run benchmark
 npm run package:vsix
 ```
 
-生成された `artifacts/md-table-editor-0.2.7.vsix` をVS Code Stableへインストールし、`RELEASE_CHECKLIST.md` を完了します。VSIXの内容にはソース、テスト、秘密情報、内部文書、ソースマップが含まれていないことも確認します。
+生成された `artifacts/md-table-editor-0.2.8.vsix` をVS Code Stableへインストールし、`RELEASE_CHECKLIST.md` を完了します。VSIXの内容にはアイコンPNGが含まれ、SVG原稿、ソース、テスト、秘密情報、内部文書、ソースマップが含まれていないことも確認します。
 
 ## v1を確定する
 
@@ -41,7 +41,14 @@ npm run package:vsix
 
 ## Marketplaceへ公開する
 
-初回は[Visual Studio Marketplaceの管理画面](https://marketplace.visualstudio.com/manage)から、生成した `artifacts/md-table-editor-1.0.0.vsix` を手動アップロードします。公開後に次を確認してください。
+初回はトークンをリポジトリへ持ち込まないよう、次の手順で手動公開します。
+
+1. [Visual Studio Marketplaceの管理画面](https://marketplace.visualstudio.com/manage)へMicrosoftアカウントでサインインする。
+2. 左側でpublisher `RyutaC2` を選択する。存在しない場合だけ `Create publisher` から作成し、変更できないpublisher IDがmanifestの `RyutaC2` と一致することを確認する。
+3. publisher画面の `New extension` から `Visual Studio Code` を選び、生成した `artifacts/md-table-editor-1.0.0.vsix` をアップロードする。
+4. Marketplaceの検証結果を確認し、警告やエラーがあれば公開前に修正して同じバージョンを再生成する。受理済みのバージョン番号は再利用できないため、公開後の修正版はパッチバージョンを上げる。
+
+公開後に次を確認してください。
 
 - Marketplaceの名称、説明、README、ライセンス、リポジトリ、バージョンが正しい
 - VS Code Stableから拡張機能IDを検索・インストールできる

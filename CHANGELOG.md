@@ -2,6 +2,12 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.2.8] - 2026-08-11
+
+- Enter edit mode automatically after a plain single-cell click or keyboard move, while preserving drag, Shift, and Ctrl/Cmd range selection.
+- Keep editing continuously after Enter, Shift+Enter, Tab, or Shift+Tab confirms and moves to the next cell.
+- Add the 256 × 256 PNG Marketplace icon derived from the supplied SVG artwork.
+
 ## [0.2.7] - 2026-08-11
 
 - Move to the next row with Enter, previous row with Shift+Enter, next column with Tab, and previous column with Shift+Tab after confirming a cell edit.

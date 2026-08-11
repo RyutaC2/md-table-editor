@@ -46,13 +46,12 @@ When the cursor is inside an existing table, the new table is inserted after tha
 
 | Action | Keyboard or UI |
 | --- | --- |
-| Move between cells | Arrow keys |
+| Select and edit a cell | Click, Enter, F2, or an unmodified Arrow key |
 | Extend a selection | Shift+Arrow, Shift+Click, or drag |
 | Move selected cells | Drag the border around a single cell or continuous multi-cell selection |
 | Create a disjoint selection | Ctrl/Cmd+Click |
-| Edit the existing value | Enter, F2, or double-click |
 | Replace the value and edit | Type while a cell is selected |
-| Confirm and move | Enter: down; Shift+Enter: up; Tab: right; Shift+Tab: left |
+| Confirm, move, and continue editing | Enter: down; Shift+Enter: up; Tab: right; Shift+Tab: left |
 | Cancel an edit | Esc |
 | Clear cell contents | Delete, Backspace, or the toolbar's delete-cell-content action |
 | Select the complete table | Ctrl/Cmd+A or click the top-left corner |
@@ -69,7 +68,7 @@ When the cursor is inside an existing table, the new table is inserted after tha
 
 Copying a disjoint selection is not supported. When pasting with a disjoint selection active, the primary cell is used as the paste origin.
 
-Clicking another cell while editing confirms the current value and selects the clicked cell in the same action. At a table edge, keyboard confirmation remains on the nearest valid cell.
+A plain click selects the cell and immediately opens its editor. Clicking another cell while editing confirms the current value and starts editing the clicked cell in the same action. Enter and Tab also keep the destination cell in edit mode. Drag, Shift, and Ctrl/Cmd gestures remain selection operations and do not start editing. At a table edge, keyboard confirmation remains on the nearest valid cell.
 
 Import replaces the complete table currently open in the GUI. When an XLSX workbook has multiple worksheets, select one in the VS Code Quick Pick. Export writes the complete current table to one CSV file or one `Table` worksheet. Cell values are imported as strings; spreadsheet formatting, formulas, images, and merged-cell structure are not reproduced.
 

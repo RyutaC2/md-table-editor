@@ -27,7 +27,7 @@ import {
 } from './gridModel';
 import type { SelectionRange } from './gridModel';
 import type { GridAxis } from './gridModel';
-import { editCommitMovement, hasExceededDragThreshold, scrollPositionForPan, visibleCellAlignment } from './interaction';
+import { editCommitMovement, hasExceededDragThreshold, scrollPositionForPan, shouldAutoEditCell, visibleCellAlignment } from './interaction';
 import type { GridMovement } from './interaction';
 import './styles.css';
 
@@ -53,6 +53,8 @@ interface CommitEditOptions {
   destination?: CellPosition;
   movement?: GridMovement;
   selectionModifiers?: SelectionModifiers;
+  continueEditing?: boolean;
+  sourceCell?: CellPosition;
 }
 
 interface DropTarget {
@@ -66,6 +68,9 @@ interface CellSelectionGesture {
   startX: number;
   startY: number;
   anchor: CellPosition;
+  cell: CellPosition;
+  dragged: boolean;
+  modifiers: SelectionModifiers;
 }
 
 interface PanGesture {
@@ -377,7 +382,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   }, [anchor, snapshot]);
 
   const startCellSelection = useCallback((cell: CellPosition, event: React.PointerEvent): void => {
-    if (event.button !== 0) {
+    if (event.button !== 0 || event.target instanceof HTMLInputElement) {
       return;
     }
     const next = clampCell(cell, snapshot);
@@ -386,6 +391,13 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
       startX: event.clientX,
       startY: event.clientY,
       anchor: event.shiftKey ? anchor : next,
+      cell: next,
+      dragged: false,
+      modifiers: {
+        shiftKey: event.shiftKey,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+      },
     };
     const activeEdit = editingRef.current;
     if (activeEdit && !sameCell(activeEdit.cell, next)) {
@@ -407,6 +419,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     )) {
       return;
     }
+    gesture.dragged = true;
     const next = clampCell(cell, snapshot);
     setPrimary(next);
     setRanges((current) => [...current.slice(0, -1), { start: gesture.anchor, end: next }]);
@@ -424,7 +437,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
 
   const commitEdit = useCallback((options?: CommitEditOptions) => {
     const activeEdit = editingRef.current;
-    if (!activeEdit) {
+    if (!activeEdit || (options?.sourceCell && !sameCell(activeEdit.cell, options.sourceCell))) {
       return;
     }
     editingRef.current = undefined;
@@ -438,9 +451,18 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     if (activeEdit.value !== activeEdit.original) {
       sendOperation({ type: 'setCells', changes: [{ ...activeEdit.cell, value: activeEdit.value }] }, next);
     }
-    setEditing(undefined);
     chooseCell(next, options?.selectionModifiers);
-    requestAnimationFrame(() => gridRef.current?.focus());
+    if (options?.continueEditing) {
+      const original = sameCell(next, activeEdit.cell)
+        ? activeEdit.value
+        : snapshot.rows[next.row]?.[next.column] ?? '';
+      const nextEditing = { cell: next, value: original, original };
+      editingRef.current = nextEditing;
+      setEditing(nextEditing);
+    } else {
+      setEditing(undefined);
+      requestAnimationFrame(() => gridRef.current?.focus());
+    }
   }, [chooseCell, sendOperation, snapshot]);
   commitEditRef.current = commitEdit;
 
@@ -496,6 +518,9 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     chooseCell(next, { shiftKey: extend });
     rowVirtualizer.scrollToIndex(Math.max(0, next.row - 1));
     columnVirtualizer.scrollToIndex(next.column);
+    if (!extend) {
+      requestAnimationFrame(() => beginEditRef.current(next));
+    }
   }, [chooseCell, columnVirtualizer, primary, rowVirtualizer, snapshot]);
 
   const keyDown = (event: React.KeyboardEvent<HTMLDivElement>): void => {
@@ -526,6 +551,9 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     if (movement[event.key]) {
       event.preventDefault();
       movePrimary(movement[event.key][0], movement[event.key][1], event.shiftKey);
+    } else if (event.key === 'Tab') {
+      event.preventDefault();
+      movePrimary(0, event.shiftKey ? -1 : 1, false);
     } else if (event.key === 'Enter' || event.key === 'F2') {
       event.preventDefault();
       beginEdit(primary);
@@ -783,10 +811,18 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   }, [snapshot, zoom, rowVirtualizer, columnVirtualizer]);
 
   useEffect(() => {
-    const endCellSelection = (): void => {
+    const endCellSelection = (event: PointerEvent): void => {
+      const gesture = cellSelectionGestureRef.current;
       cellSelectionGestureRef.current = undefined;
       headerSelectionGestureRef.current = undefined;
       setHeaderSelectingAxis(undefined);
+      if (
+        event.type === 'pointerup'
+        && gesture?.pointerId === event.pointerId
+        && shouldAutoEditCell(gesture.modifiers, gesture.dragged)
+      ) {
+        requestAnimationFrame(() => beginEditRef.current(gesture.cell));
+      }
     };
     window.addEventListener('pointerup', endCellSelection);
     window.addEventListener('pointercancel', endCellSelection);
@@ -1593,15 +1629,23 @@ const CellInput = React.forwardRef<HTMLInputElement, {
     value={editing.value}
     aria-label={label}
     onChange={(event) => setEditing({ ...editing, value: event.target.value.replace(/\r\n|\r|\n/gu, ' ') })}
-    onBlur={() => { if (!cancelled.current) commit(); }}
+    onBlur={() => { if (!cancelled.current) commit({ sourceCell: editing.cell }); }}
     onKeyDown={(event) => {
       if (event.nativeEvent.isComposing) {
         return;
       }
       if (event.key === 'Enter') {
-        event.preventDefault(); commit({ movement: editCommitMovement('Enter', event.shiftKey) });
+        event.preventDefault(); commit({
+          movement: editCommitMovement('Enter', event.shiftKey),
+          continueEditing: true,
+          sourceCell: editing.cell,
+        });
       } else if (event.key === 'Tab') {
-        event.preventDefault(); commit({ movement: editCommitMovement('Tab', event.shiftKey) });
+        event.preventDefault(); commit({
+          movement: editCommitMovement('Tab', event.shiftKey),
+          continueEditing: true,
+          sourceCell: editing.cell,
+        });
       } else if (event.key === 'Escape') {
         event.preventDefault(); cancelled.current = true; setEditing(undefined);
       }
