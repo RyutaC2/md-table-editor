@@ -2,6 +2,11 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.2.5] - 2026-08-11
+
+- Add a persistent bottom status bar showing the active cell reference and current table dimensions.
+- Allow a single selected cell to be moved by dragging the same selection border used for rectangular ranges.
+
 ## [0.2.4] - 2026-08-11
 
 - Remove the unused leading space from the zoom control while retaining a stable width for every zoom level.

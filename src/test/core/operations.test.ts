@@ -53,6 +53,16 @@ suite('Markdown table operations edge cases', () => {
     ]);
   });
 
+  test('moves one selected cell with the same operation as a rectangular range', () => {
+    const updated = applyOperation(snapshot(), {
+      type: 'moveCells',
+      source: { top: 1, bottom: 1, left: 0, right: 0 },
+      target: { row: 2, column: 2 },
+    });
+    assert.strictEqual(updated.rows[1][0], '');
+    assert.strictEqual(updated.rows[2][2], 'a');
+  });
+
   test('rejects cell moves that would cross a table edge', () => {
     const source = snapshot();
     const updated = applyOperation(source, {

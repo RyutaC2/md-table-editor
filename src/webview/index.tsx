@@ -11,10 +11,12 @@ import {
   characterWidth,
   axisSelectionRange,
   boundedIndexAtOffset,
+  cellReference,
   clampCell,
   columnName,
   columnPixelWidth,
   contiguous,
+  continuousSelectionBounds,
   estimatedBodyRowHeight,
   isCellSelected,
   nearestBoundedIndex,
@@ -120,6 +122,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     columnOptions: 'Column options', selectAll: 'Select entire table', moveSelection: 'Move selected cells',
     importTable: 'Import CSV or XLSX', exportTable: 'Export CSV or XLSX', zoom: 'Zoom',
     moreActions: 'File and zoom options', alignmentOptions: 'Align all columns', rowOptions: 'Row operations', columnActionOptions: 'Column operations',
+    selectedCell: 'Selected cell', tableSize: 'Table size', columnsUnit: ' columns', rowsUnit: ' rows',
   },
   ja: {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', paste: '貼り付け', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
@@ -135,6 +138,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     columnOptions: '列の操作', selectAll: '表全体を選択', moveSelection: '選択セルを移動',
     importTable: 'CSV・XLSXをインポート', exportTable: 'CSV・XLSXへエクスポート', zoom: 'ズーム',
     moreActions: 'ファイルとズームの操作', alignmentOptions: '全列の配置', rowOptions: '行操作', columnActionOptions: '列操作',
+    selectedCell: '選択セル', tableSize: 'テーブルサイズ', columnsUnit: '列', rowsUnit: '行',
   },
 };
 
@@ -860,11 +864,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   };
 
   const selectedCellBounds = useMemo<CellRangeBounds | undefined>(() => {
-    if (ranges.length !== 1) {
-      return undefined;
-    }
-    const bounds = rangeBounds(ranges[0]);
-    return (bounds.bottom - bounds.top + 1) * (bounds.right - bounds.left + 1) > 1 ? bounds : undefined;
+    return continuousSelectionBounds(ranges);
   }, [ranges]);
   const columnStarts = useMemo(() => {
     const starts = [0];
@@ -1434,6 +1434,10 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
           </div>
         </div>
       </div>
+      <footer className="grid-status" role="status">
+        <span><strong>{text.selectedCell}</strong><span>{cellReference(primary)}</span></span>
+        <span><strong>{text.tableSize}</strong><span>{snapshot.widths.length}{text.columnsUnit} × {snapshot.rows.length}{text.rowsUnit}</span></span>
+      </footer>
     </main>
   );
 }

@@ -3,10 +3,12 @@ import type { TableSnapshot } from '../../core/types';
 import {
   axisSelectionRange,
   boundedIndexAtOffset,
+  cellReference,
   clampCell,
   columnName,
   columnPixelWidth,
   contiguous,
+  continuousSelectionBounds,
   estimatedBodyRowHeight,
   estimatedWrappedLines,
   isCellSelected,
@@ -33,6 +35,10 @@ suite('Grid model', () => {
   test('normalizes reverse selection ranges and detects membership', () => {
     const range = { start: { row: 4, column: 5 }, end: { row: 1, column: 2 } };
     assert.deepStrictEqual(rangeBounds(range), { top: 1, bottom: 4, left: 2, right: 5 });
+    assert.deepStrictEqual(continuousSelectionBounds([{ start: { row: 2, column: 3 }, end: { row: 2, column: 3 } }]), {
+      top: 2, bottom: 2, left: 3, right: 3,
+    });
+    assert.strictEqual(continuousSelectionBounds([range, range]), undefined);
     assert.strictEqual(isCellSelected(range, 2, 3), true);
     assert.strictEqual(isCellSelected(range, 0, 3), false);
   });
@@ -43,6 +49,8 @@ suite('Grid model', () => {
     assert.strictEqual(columnName(26), 'AA');
     assert.strictEqual(columnName(701), 'ZZ');
     assert.strictEqual(columnName(702), 'AAA');
+    assert.strictEqual(cellReference({ row: 0, column: 0 }), 'A0');
+    assert.strictEqual(cellReference({ row: 12, column: 26 }), 'AA12');
   });
 
   test('detects contiguous selections and useful drop positions', () => {

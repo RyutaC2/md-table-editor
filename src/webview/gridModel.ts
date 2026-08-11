@@ -120,6 +120,12 @@ export function rangeBounds(range: SelectionRange): { top: number; bottom: numbe
   };
 }
 
+export function continuousSelectionBounds(
+  ranges: SelectionRange[],
+): { top: number; bottom: number; left: number; right: number } | undefined {
+  return ranges.length === 1 ? rangeBounds(ranges[0]) : undefined;
+}
+
 export function isCellSelected(range: SelectionRange, row: number, column: number): boolean {
   const bounds = rangeBounds(range);
   return row >= bounds.top && row <= bounds.bottom && column >= bounds.left && column <= bounds.right;
@@ -134,6 +140,10 @@ export function columnName(index: number): string {
     value = Math.floor(value / 26);
   }
   return name;
+}
+
+export function cellReference(cell: CellPosition): string {
+  return `${columnName(cell.column)}${cell.row}`;
 }
 
 export function contiguous(indexes: number[]): boolean {

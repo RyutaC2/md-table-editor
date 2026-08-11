@@ -13,7 +13,7 @@ As a Markdown table grows, manually maintaining its pipes, delimiter row, and sp
 - Edit existing tables or insert new tables from the Markdown editor context menu
 - Use a virtualized grid in both VS Code Desktop and VS Code for the Web
 - Select individual cells, rectangular ranges, disjoint ranges, rows, and columns
-- Move a continuous multi-cell rectangle by dragging its selection border without allowing data to cross table edges
+- Move a single cell or continuous multi-cell rectangle by dragging its selection border without allowing data to cross table edges
 - Copy, cut, and paste TSV data, automatically expanding the destination table when necessary
 - Import or export the complete current table as UTF-8 CSV or XLSX, with worksheet selection for multi-sheet workbooks
 - Add, delete, and drag rows or columns, with quick-add controls at the table edges
@@ -48,7 +48,7 @@ When the cursor is inside an existing table, the new table is inserted after tha
 | --- | --- |
 | Move between cells | Arrow keys |
 | Extend a selection | Shift+Arrow, Shift+Click, or drag |
-| Move selected cells | Drag the border around a continuous multi-cell selection |
+| Move selected cells | Drag the border around a single cell or continuous multi-cell selection |
 | Create a disjoint selection | Ctrl/Cmd+Click |
 | Edit the existing value | Enter, F2, or double-click |
 | Replace the value and edit | Type while a cell is selected |
@@ -78,6 +78,8 @@ Grid zoom scales the table, row and column headings, cells, resize increments, s
 The left-aligned toolbar follows the requested action order. At 1400px or wider it uses one labeled row; from 1000px to 1399px it keeps that order in one icon-only row. From 600px to 999px it uses two icon-only rows grouped as clipboard/history/rows/zoom above alignment/files/columns/auto-fit. At 599px or narrower, import, export, zoom, and whole-table auto-fit move into a compound menu, and whole-table alignment uses a separate menu. The compound menu, alignment menu, Undo, and Redo form a four-control group directly below the four clipboard controls. No layout adds a toolbar scrollbar. The direct and compound zoom controls share the same design, and all popup lists use VS Code context-menu colors for light, dark, and high-contrast themes. All operations remain available at every width. Row or column insertion repeats by the number of selected rows or columns. The `more_horiz` menu in each column heading provides per-column alignment, auto-fit, and sorting, closes after an action or an outside click, stays within the visible grid area, and marks the current alignment. Alignment is reflected immediately in the Markdown source and in header, body, and active editor cells.
 
 The vertical `+` control at the right edge appends a column, and the horizontal `+` control at the bottom appends a row. Each control follows the actual table dimensions, and the bottom-right intersection remains empty.
+
+The bottom status bar shows the active cell in `A0` notation and the current table size as columns × rows.
 
 The Markdown header is row `0`; data rows begin at `1`, separated by a persistent heavier rule. Dragging unselected row or column headings selects a continuous range on that axis; the gesture continues if the pointer enters the adjacent cells. Selected headings use selection fill without an extra blue outline, while the selected cell range keeps a strong border. Drag the selected headings again to reorder the block. During reordering, the source becomes translucent and a drag preview and insertion line appear. A drop position can be selected over either a heading or its corresponding cells, with the first and second halves representing insertion before and after.
 
