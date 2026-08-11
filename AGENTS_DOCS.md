@@ -41,7 +41,7 @@ Markdown の表は、パイプ、区切り行、列揃えを人間が維持し�
 
 ### セル範囲移動
 
-- 連続した矩形の複数セル選択には、選択範囲全体を囲む枠線を表示します。
+- 単一セルまたは連続した矩形の複数セル選択には、選択範囲全体を囲む枠線を表示します。
 - 枠線をドラッグすると、矩形の大きさと相対配置を保ってセルのMarkdown生文字列を移動します。移動元は空にし、移動先へ上書きします。
 - 移動先が表の上端、下端、左端、右端を超える場合は、その方向へそれ以上移動させません。自動的な行列追加やデータの切り捨ては行いません。
 - 不連続選択はセル移動の対象外とし、通常のコピー・貼り付け規則を維持します。
@@ -241,7 +241,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 ### ローカル検証環境
 
-現在の開発コンテナはDesktop/Webテストに必要なGTK、NSS、Chromium系共有ライブラリを標準では備えておらず、通常実行ではExtension HostまたはChromiumの起動前に停止します。2026-08-11の0.2.4検証では、必要なDebianパッケージを `/tmp` へ展開し、システムへインストールせず `LD_LIBRARY_PATH` から参照しました。Desktopは既存のWSLgディスプレイを使い、Light Modern、Dark Modern、Default High Contrast、Default High Contrast LightでWebviewを維持する確認を含む合計70件、Webは既定ポート3000の競合を避けてポート3001のヘッドレスChromiumを使い3件が通過しました。通常の開発環境またはGitHub ActionsではOS依存パッケージを正規に導入して実行します。
+現在の開発コンテナはDesktop/Webテストに必要なGTK、NSS、Chromium系共有ライブラリを標準では備えておらず、通常実行ではExtension HostまたはChromiumの起動前に停止します。2026-08-11の0.2.5検証では、必要なDebianパッケージを `/tmp` へ展開し、システムへインストールせず `LD_LIBRARY_PATH` から参照しました。Desktopは既存のWSLgディスプレイを使い、Light Modern、Dark Modern、Default High Contrast、Default High Contrast LightでWebviewを維持する確認を含む合計71件、Webは既定ポート3000の競合を避けてポート3001のヘッドレスChromiumを使い3件が通過しました。通常の開発環境またはGitHub ActionsではOS依存パッケージを正規に導入して実行します。
 
 ### 性能評価
 
@@ -260,7 +260,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - 現在の統合テストはコマンド登録、CodeLens、Webviewパネル生成・再利用が中心です。セル編集、ドラッグ、クリップボード、メニュー、テーマ、ARIAを実ブラウザーDOMで操作するE2Eテストは未整備です。
 - ソースカーソル移動時は文書全体を複数のリスナーで再解析します。約3.5MiBの測定用文書では解析1回が約64msのため、文書バージョン単位の解析結果キャッシュが改善候補です。
 - Unicodeを多用する保証超過表では、直列化と全列幅調整がメインスレッドで1秒を超えます。列幅キャッシュ、差分直列化、Web Workerへの計算分離を検討します。
-- 0.2.4のプロダクションバンドルはDesktop拡張511.27KiB、Web拡張511.23KiB、Webview JavaScript368.16KiB、Webview CSS17.70KiBで、VSIX全体は478.55KiBです。SheetJSをDesktop/Webへ同梱したため拡張バンドルが増えており、初期表示・初回入出力時間を実機測定したうえでファイル変換部分の遅延読み込みを検討します。
+- 0.2.5のプロダクションバンドルはDesktop拡張511.27KiB、Web拡張511.23KiB、Webview JavaScript368.73KiB、Webview CSS18.19KiBで、VSIX全体は479.14KiBです。SheetJSをDesktop/Webへ同梱したため拡張バンドルが増えており、初期表示・初回入出力時間を実機測定したうえでファイル変換部分の遅延読み込みを検討します。
 
 ## 設計意図
 
