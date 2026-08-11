@@ -6,6 +6,7 @@ All notable changes to Markdown Grid Editor are documented in this file.
 
 - Add a persistent bottom status bar showing the active cell reference and current table dimensions.
 - Allow a single selected cell to be moved by dragging the same selection border used for rectangular ranges.
+- Adjust responsive toolbar thresholds to give labeled controls more margin while retaining the icon-only single row at narrower widths.
 
 ## [0.2.4] - 2026-08-11
 
