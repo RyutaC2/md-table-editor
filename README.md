@@ -6,6 +6,10 @@ Create and edit Markdown tables in Visual Studio Code with an Excel-like graphic
 
 As a Markdown table grows, manually maintaining its pipes, delimiter row, and spacing becomes increasingly difficult. Markdown Table GUI keeps the Markdown source on the left and an interactive grid on the right, allowing you to edit tables without manually reformatting the Markdown syntax.
 
+## Installation
+
+Install [Markdown Table GUI from Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=RyutaC2.markdown-table-gui), or open the Extensions view in VS Code and search for `@id:RyutaC2.markdown-table-gui`.
+
 ## Features
 
 - Detect GFM Markdown tables
@@ -120,7 +124,7 @@ Open this repository in VS Code and start `Run Extension` with F5 to launch an E
 
 Distributable packages are written to `artifacts/markdown-table-gui-<version>.vsix`. The `dist`, `out`, `out-unit`, and `artifacts` directories contain generated files only.
 
-Before publishing a release, follow the concise manual scenarios in [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) and the [Marketplace publishing guide](./PUBLISHING.md).
+For release verification and publishing, follow the concise manual scenarios in [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) and the [Marketplace publishing guide](./PUBLISHING.md).
 
 ## Supported environments and limitations
 

@@ -1,8 +1,17 @@
-# Marketplace 公開手順
+# Marketplace 公開・更新手順
 
-この文書は、Markdown Table GUIをVisual Studio Marketplaceへ初回公開するときの手順です。ユーザーによるGUI確認を経て、現在の `1.0.0` を初回安定版として確定しています。Marketplaceへのアップロードは未実施です。
+この文書は、Markdown Table GUIをVisual Studio Marketplaceへ公開・更新する手順とリリース記録です。ユーザーによるGUI確認を経て、`1.0.0` を初回安定版として2026-08-11に公開しました。
 
-## 公開前に人が決めること
+## 現在の公開状態
+
+- Marketplace: [Markdown Table GUI](https://marketplace.visualstudio.com/items?itemName=RyutaC2.markdown-table-gui)
+- 拡張機能ID: `RyutaC2.markdown-table-gui`
+- 公開バージョン: `1.0.0`
+- 配布元VSIX: `artifacts/markdown-table-gui-1.0.0.vsix`
+- SHA-256: `fd3e3e7da412826dbd7e5ac4771f59ce6f36db1e7a2d30609d696568997425bc`
+- Gitタグ: `v1.0.0`
+
+## 初回公開時の確認項目
 
 - Marketplaceでpublisher `RyutaC2` を作成または所有確認し、拡張機能ID `RyutaC2.markdown-table-gui` を利用できることを管理画面で確認する
 - GitHubリポジトリのSettings > Code securityでPrivate Vulnerability Reportingを有効にする
@@ -39,9 +48,9 @@ npm run package:vsix
 4. 全検証と `npm run package:vsix` を再実行する。
 5. コミットとpush後、CIがすべて成功したことを確認する。
 
-## Marketplaceへ公開する
+## Marketplaceへ公開・更新する
 
-初回はトークンをリポジトリへ持ち込まないよう、次の手順で手動公開します。
+初回の `1.0.0` はトークンをリポジトリへ持ち込まないよう、次の手順で手動公開しました。今後も手動更新する場合は、対象バージョンのVSIXへ読み替えます。
 
 1. [Visual Studio Marketplaceの管理画面](https://marketplace.visualstudio.com/manage)へMicrosoftアカウントでサインインする。
 2. 左側でpublisher `RyutaC2` を選択する。存在しない場合だけ `Create publisher` から作成し、変更できないpublisher IDがmanifestの `RyutaC2` と一致することを確認する。
@@ -53,7 +62,7 @@ npm run package:vsix
 - Marketplaceの名称、説明、README、ライセンス、リポジトリ、バージョンが正しい
 - VS Code Stableから拡張機能IDを検索・インストールできる
 - Desktop版とvscode.dev/github.devで有効化できる
-- 問題がなければGitタグ `v1.0.0` とGitHub Releaseを作成し、同じVSIXを添付する
+- Gitタグを作成し、GitHub Releaseを作成する場合はMarketplaceへ公開したものと同じVSIXを添付する
 - 公開Issueフォームと非公開の脆弱性報告フォームが利用できる
 
 公式手順は[Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)と[Extension Manifest](https://code.visualstudio.com/api/references/extension-manifest)を参照してください。

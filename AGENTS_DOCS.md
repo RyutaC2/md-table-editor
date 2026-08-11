@@ -203,8 +203,8 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - `scripts/generate-third-party-notices.mjs`: 本番依存のバージョンと完全なライセンス本文から `THIRD_PARTY_NOTICES.md` を決定的に生成し、`--check` で同期を検証します。
 - `README.md`: GitHubとMarketplaceで既定表示する英語版README。ファイル先頭に日本語で `README.ja.md` への案内リンクを置きます。
 - `README.ja.md`: 英語版READMEと同じ利用者・開発者向け情報を保持する日本語版です。
-- `RELEASE_CHECKLIST.md`: v1公開前に実環境で確認するユーザー受け入れテスト、重要度、合否基準を記録します。VSIXには同梱しません。
-- `PUBLISHING.md`: Marketplaceへ初回公開する際の検証、VSIX確認、手動アップロード、公開後確認を記録します。VSIXには同梱しません。
+- `RELEASE_CHECKLIST.md`: v1公開時に実施し、今後も回帰確認へ使うユーザー受け入れテスト、重要度、合否基準を記録します。VSIXには同梱しません。
+- `PUBLISHING.md`: Marketplaceの公開状態、検証、VSIX確認、手動アップロード、公開後確認を記録します。VSIXには同梱しません。
 - `SECURITY.md`: GitHub上で公開する脆弱性報告窓口とサポート方針を記録します。VSIXには同梱しません。
 - `.github/ISSUE_TEMPLATE`: 公開後の再現可能な不具合報告と、非公開の脆弱性報告への導線を定義します。
 
@@ -216,11 +216,11 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - 右クリック、挿入、分割表示、パネル復元、即時同期、dirty状態、保存、Undo、表削除は、実ブラウザーDOM操作とともに今後追加する統合/E2Eテストの対象です。
 - `npm run check-types`、`npm run lint`、単体テスト、プロダクションビルド、VSIX生成が成功した状態を完成条件とします。
 - ローカル環境で VS Code Extension Host の共有ライブラリが不足する場合は、失敗理由を記録し、GitHub Actions 上で Desktop/Web テストを実行できるようにします。
-- v1公開前は `RELEASE_CHECKLIST.md` のユーザー受け入れテストを実施し、P0・P1が0件、P2が修正済みまたは既知の制限として明示済みであることを確認します。実ブラウザーDOMによる操作E2Eが未整備のため、この手動確認を省略しません。
+- v1公開時は `RELEASE_CHECKLIST.md` のユーザー受け入れテストを実施し、公開を停止する問題がないことを確認済みです。今後の更新でもP0・P1が0件、P2が修正済みまたは既知の制限として明示済みであることを確認します。実ブラウザーDOMによる操作E2Eが未整備のため、この手動確認を省略しません。
 
 ## 現在の実装状態
 
-現在の `1.0.0` では、従来の表解析、CodeLens、Desktop/Web対応、即時ソース同期、仮想化グリッド、TSV、行列操作、配置・ソート・列幅、Undo/Redo、安全なMarkdown表示に加え、2×2クイック挿入、1～20の通常挿入、0始まり行番号、二段階の行列選択・並べ替え、左上角の全選択、枠線による単一・複数セル移動、選択位置とテーブルサイズの下部表示、CSV/XLSX入出力、7段階ズーム、全列配置、全列・単一列の幅調整、ファイル名基準のタブ名、描画内容基準の折り返し行高、選択数に応じた行列一括操作、4段階のレスポンシブツールバー、単一セル選択時の自動編集、Enter/Tab後の連続編集を実装済みです。純粋ロジック68件、Desktop統合5件、Web統合3件のテスト、GitHub Actions、VSIX生成、再現可能な性能ベンチマークを用意しています。ユーザーによるGUI確認を経て初回安定版を確定済みで、Marketplaceへのアップロードは未実施です。
+現在の `1.0.0` では、従来の表解析、CodeLens、Desktop/Web対応、即時ソース同期、仮想化グリッド、TSV、行列操作、配置・ソート・列幅、Undo/Redo、安全なMarkdown表示に加え、2×2クイック挿入、1～20の通常挿入、0始まり行番号、二段階の行列選択・並べ替え、左上角の全選択、枠線による単一・複数セル移動、選択位置とテーブルサイズの下部表示、CSV/XLSX入出力、7段階ズーム、全列配置、全列・単一列の幅調整、ファイル名基準のタブ名、描画内容基準の折り返し行高、選択数に応じた行列一括操作、4段階のレスポンシブツールバー、単一セル選択時の自動編集、Enter/Tab後の連続編集を実装済みです。純粋ロジック68件、Desktop統合5件、Web統合3件のテスト、GitHub Actions、VSIX生成、再現可能な性能ベンチマークを用意しています。ユーザーによるGUI確認を経て初回安定版を確定し、2026-08-11に[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=RyutaC2.markdown-table-gui)へ公開済みです。
 
 ### 実装上の補足
 
@@ -277,12 +277,12 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - Unicodeを多用する保証超過表では、直列化と全列幅調整がメインスレッドで1秒を超えます。列幅キャッシュ、差分直列化、Web Workerへの計算分離を検討します。
 - 1.0.0のプロダクションバンドルはDesktop拡張511.33KiB、Web拡張511.29KiB、Webview JavaScript370.00KiB、Webview CSS18.19KiBで、アイコンと完全な第三者ライセンス本文を含むVSIX全体は498.09KiBです。SheetJSをDesktop/Webへ同梱したため拡張バンドルが増えており、初期表示・初回入出力時間を実機測定したうえでファイル変換部分の遅延読み込みを検討します。
 
-### Marketplace公開前の残作業
+### Marketplace公開状況
 
-- `RELEASE_CHECKLIST.md` を使ったユーザーGUI確認で、公開を停止する問題が報告されていないことを最終確認します。
-- Marketplace管理画面でpublisher `RyutaC2` の所有と拡張機能ID `RyutaC2.markdown-table-gui` の利用可否を確認します。
-- Marketplace用の256×256 PNGアイコンはmanifestへ設定済みです。実画面スクリーンショットをREADMEへ追加するか、ユーザーが最終判断します。
-- GitHubのPrivate Vulnerability Reportingを有効化し、`artifacts/markdown-table-gui-1.0.0.vsix` をMarketplaceへアップロードします。具体的な手順は `PUBLISHING.md` を基準にします。
+- `RELEASE_CHECKLIST.md` に基づくユーザーGUI確認を完了し、公開を停止する問題がない状態で `1.0.0` を公開しました。
+- 公開先は `RyutaC2.markdown-table-gui` で、正式ページは [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=RyutaC2.markdown-table-gui) です。
+- Marketplace用の256×256 PNGアイコンはmanifestへ設定済みです。
+- 公開に使用したVSIXとハッシュ、今後の更新手順は `PUBLISHING.md` を基準にします。
 
 ## 設計意図
 

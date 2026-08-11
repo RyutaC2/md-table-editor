@@ -4,6 +4,10 @@ Markdown の表を、Visual Studio Code 内で Excel のように作成・編集
 
 Markdown テーブルは、セル数が増えるほどパイプや区切り行の手入力・整形が難しくなります。Markdown Table GUI はソースを左側、GUIグリッドを右側へ表示し、Markdown構文を直接整形しなくても表を編集できるようにします。
 
+## インストール
+
+[Visual Studio MarketplaceのMarkdown Table GUI](https://marketplace.visualstudio.com/items?itemName=RyutaC2.markdown-table-gui)からインストールできます。または、VS Codeの拡張機能ビューで `@id:RyutaC2.markdown-table-gui` を検索してください。
+
 ## 主な機能
 
 - GFM Markdownテーブルの検出
@@ -118,7 +122,7 @@ VS Codeでこのリポジトリを開き、F5または `Run Extension` からExt
 
 配布用VSIXは `artifacts/markdown-table-gui-<version>.vsix` として生成されます。`dist`、`out`、`out-unit`、`artifacts` は生成物専用ディレクトリであり、ソースファイルは配置しません。
 
-公開前は [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) の簡潔な手動シナリオと [Marketplace公開手順](./PUBLISHING.md) を確認してください。
+リリースの検証・公開時は [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) の簡潔な手動シナリオと [Marketplace公開手順](./PUBLISHING.md) を確認してください。
 
 ## 対応環境と制限
 
