@@ -6,6 +6,8 @@ All notable changes to Markdown Grid Editor are documented in this file.
 
 - Keep the fuller toolbar layouts visible at narrower widths by moving the responsive breakpoints to 1400px, 1000px, and 600px.
 - Replace the four direct alignment controls in the narrowest layout with one alignment menu, matching the combined width of its file/zoom, Undo, and Redo controls to the four clipboard controls above.
+- Replace the native zoom select with one shared themed menu for direct and compound layouts, preventing unreadable foreground/background combinations and square nested focus rings.
+- Style toolbar, zoom, alignment, and column menu surfaces like VS Code context menus using menu, selection, focus, contrast, light, dark, and forced-color theme tokens.
 
 ## [0.2.1] - 2026-08-11
 

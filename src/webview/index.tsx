@@ -137,7 +137,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
 };
 
 function closeMenusOutside(target?: Node): void {
-  document.querySelectorAll<HTMLDetailsElement>('.column-menu[open], .toolbar-popup[open]').forEach((menu) => {
+  document.querySelectorAll<HTMLDetailsElement>('.column-menu[open], .toolbar-popup[open], .toolbar-zoom-control[open]').forEach((menu) => {
     if (!target || !menu.contains(target)) {
       menu.removeAttribute('open');
     }
@@ -1022,7 +1022,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   return (
     <main className="app">
       <nav className="toolbar" aria-label="Table operations">
-        <div className="toolbar-group toolbar-narrow-tools toolbar-compact" aria-label="Table operations">
+        <div className="toolbar-group toolbar-narrow-tools toolbar-compact" aria-label={text.moreActions}>
           <details className="toolbar-popup toolbar-overflow">
             <summary aria-label={text.moreActions} title={text.moreActions}><Icon name="more_horiz" /></summary>
             <div className="toolbar-popup-items">
@@ -1496,13 +1496,30 @@ function ZoomControl({
   zoom: number;
 }): React.JSX.Element {
   return (
-    <label className="toolbar-zoom-control" title={`${label}: ${zoom}%`}>
-      <span className="visually-hidden">{label}</span>
-      <select aria-label={label} value={zoom} onChange={(event) => onChange(Number(event.target.value))}>
-        {zoomLevels.map((level) => <option key={level} value={level}>{level}%</option>)}
-      </select>
-      <Icon name="expand_more" size={16} />
-    </label>
+    <details className="toolbar-zoom-control">
+      <summary aria-label={`${label}: ${zoom}%`} title={`${label}: ${zoom}%`}>
+        <span>{zoom}%</span>
+        <Icon name="expand_more" size={16} />
+      </summary>
+      <div className="zoom-menu-items" role="listbox" aria-label={label}>
+        {zoomLevels.map((level) => (
+          <button
+            key={level}
+            type="button"
+            className="zoom-menu-item"
+            role="option"
+            aria-selected={zoom === level}
+            onClick={(event) => {
+              event.currentTarget.closest<HTMLDetailsElement>('.toolbar-zoom-control')?.removeAttribute('open');
+              onChange(level);
+            }}
+          >
+            <span>{level}%</span>
+            {zoom === level && <Icon name="check" size={16} />}
+          </button>
+        ))}
+      </div>
+    </details>
   );
 }
 

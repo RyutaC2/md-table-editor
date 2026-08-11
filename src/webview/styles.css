@@ -144,55 +144,50 @@ button:disabled { cursor: default; opacity: 0.45; }
 
 .toolbar-zoom-control {
   position: relative;
-  display: inline-flex;
   width: 82px;
   height: 30px;
+}
+
+.toolbar-zoom-control > summary {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  gap: 3px;
   align-items: center;
-  color: var(--vscode-dropdown-foreground);
-  background: color-mix(in srgb, var(--vscode-dropdown-background) 88%, var(--vscode-button-secondaryBackground, var(--grid-header)));
-  border: 1px solid var(--vscode-dropdown-border, var(--grid-line));
-  border-radius: 999px;
+  justify-content: flex-end;
+  padding: 3px 7px 3px 10px;
+  color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+  font-weight: 600;
+  background: var(--vscode-dropdown-background, var(--vscode-editorWidget-background, var(--grid-header)));
+  border: 1px solid var(--vscode-dropdown-border, var(--vscode-contrastBorder, var(--grid-line)));
+  border-radius: 5px;
+  cursor: pointer;
+  list-style: none;
   transition: border-color 120ms ease, background-color 120ms ease;
 }
 
-.toolbar-zoom-control:hover {
-  background: color-mix(in srgb, var(--vscode-dropdown-background) 76%, var(--vscode-button-secondaryHoverBackground, var(--grid-header)));
-  border-color: color-mix(in srgb, var(--vscode-focusBorder) 62%, var(--grid-line));
+.toolbar-zoom-control > summary::-webkit-details-marker { display: none; }
+
+.toolbar-zoom-control > summary:hover,
+.toolbar-zoom-control[open] > summary {
+  color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+  background: var(--vscode-list-hoverBackground, var(--vscode-toolbar-hoverBackground, var(--vscode-dropdown-background, var(--grid-header))));
 }
 
-.toolbar-zoom-control:focus-within {
+.toolbar-zoom-control > summary:focus-visible {
   border-color: var(--vscode-focusBorder);
-  outline: 1px solid var(--vscode-focusBorder);
-  outline-offset: 1px;
-}
-
-.toolbar-zoom-control select {
-  width: 100%;
-  height: 100%;
-  padding: 3px 25px 3px 9px;
-  color: inherit;
-  font-weight: 600;
-  text-align: center;
-  appearance: none;
-  background: transparent;
-  border: 0;
   outline: 0;
-  cursor: pointer;
+  box-shadow: inset 0 0 0 1px var(--vscode-focusBorder);
 }
 
-.toolbar-zoom-control > .icon {
-  position: absolute;
-  right: 7px;
-  color: var(--vscode-descriptionForeground);
-  pointer-events: none;
-}
+.toolbar-zoom-control > summary .icon { color: currentColor; }
 
 .toolbar-popup {
   position: relative;
   min-width: 0;
 }
 
-.toolbar-popup summary {
+.toolbar-popup > summary {
   display: grid;
   width: 30px;
   height: 30px;
@@ -206,25 +201,40 @@ button:disabled { cursor: default; opacity: 0.45; }
   list-style: none;
 }
 
-.toolbar-popup summary::-webkit-details-marker { display: none; }
-.toolbar-popup summary:hover,
-.toolbar-popup[open] summary { background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground)); }
+.toolbar-popup > summary::-webkit-details-marker { display: none; }
+.toolbar-popup > summary:hover,
+.toolbar-popup[open] > summary { background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground)); }
+.toolbar-popup > summary:focus-visible {
+  border-color: var(--vscode-focusBorder);
+  outline: 0;
+  box-shadow: inset 0 0 0 1px var(--vscode-focusBorder);
+}
 
-.toolbar-popup-items {
+.toolbar-popup-items,
+.zoom-menu-items {
   position: absolute;
   z-index: 200;
   top: 34px;
-  left: 0;
   display: grid;
+  gap: 2px;
+  padding: 4px;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  background: var(--vscode-menu-background, var(--vscode-editorWidget-background, var(--grid-surface)));
+  border: 1px solid var(--vscode-menu-border, var(--vscode-contrastBorder, transparent));
+  border-radius: 6px;
+  box-shadow: 0 6px 20px var(--vscode-widget-shadow, rgb(0 0 0 / 36%));
+  white-space: normal;
+}
+
+.toolbar-popup-items {
+  left: 0;
   min-width: 240px;
   max-width: min(280px, calc(100vw - 12px));
-  gap: 2px;
-  padding: 5px;
-  color: var(--vscode-menu-foreground);
-  background: var(--vscode-menu-background);
-  border: 1px solid var(--vscode-menu-border);
-  box-shadow: 0 8px 24px var(--vscode-widget-shadow);
-  white-space: normal;
+}
+
+.zoom-menu-items {
+  right: 0;
+  min-width: 112px;
 }
 
 .toolbar-popup-right .toolbar-popup-items { right: 0; left: auto; }
@@ -236,10 +246,11 @@ button:disabled { cursor: default; opacity: 0.45; }
   gap: 8px;
   align-items: center;
   padding: 4px 7px;
-  color: var(--vscode-menu-foreground);
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
   text-align: left;
   background: transparent;
   border: 0;
+  border-radius: 4px;
 }
 
 .toolbar-popup-item span {
@@ -248,9 +259,12 @@ button:disabled { cursor: default; opacity: 0.45; }
 }
 
 .toolbar-popup-item:hover,
-.toolbar-popup-item[aria-pressed="true"] {
-  color: var(--vscode-menu-selectionForeground);
-  background: var(--vscode-menu-selectionBackground);
+.toolbar-popup-item:focus-visible,
+.zoom-menu-item:hover,
+.zoom-menu-item:focus-visible {
+  color: var(--vscode-menu-selectionForeground, var(--vscode-list-activeSelectionForeground, var(--vscode-foreground)));
+  background: var(--vscode-menu-selectionBackground, var(--vscode-list-activeSelectionBackground, var(--vscode-list-hoverBackground)));
+  outline: 0;
 }
 
 .toolbar-popup-item.danger .icon { color: var(--vscode-errorForeground); }
@@ -269,11 +283,18 @@ button:disabled { cursor: default; opacity: 0.45; }
   padding: 4px 7px;
 }
 
-.toolbar-popup-zoom select {
-  height: 28px;
-  color: var(--vscode-dropdown-foreground);
-  background: var(--vscode-dropdown-background);
-  border: 1px solid var(--vscode-dropdown-border, var(--grid-line));
+.zoom-menu-item {
+  display: grid;
+  min-height: 28px;
+  grid-template-columns: minmax(0, 1fr) 16px;
+  gap: 8px;
+  align-items: center;
+  padding: 3px 8px;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
 }
 
 .visually-hidden {
@@ -459,10 +480,12 @@ button:disabled { cursor: default; opacity: 0.45; }
   display: grid;
   min-width: 172px;
   gap: 2px;
-  padding: 5px;
-  background: var(--vscode-menu-background);
-  border: 1px solid var(--vscode-menu-border);
-  box-shadow: 0 8px 24px var(--vscode-widget-shadow);
+  padding: 4px;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  background: var(--vscode-menu-background, var(--vscode-editorWidget-background, var(--grid-surface)));
+  border: 1px solid var(--vscode-menu-border, var(--vscode-contrastBorder, transparent));
+  border-radius: 6px;
+  box-shadow: 0 6px 20px var(--vscode-widget-shadow, rgb(0 0 0 / 36%));
   font-size: var(--vscode-font-size);
 }
 
@@ -520,9 +543,10 @@ button:disabled { cursor: default; opacity: 0.45; }
 .column-menu-items button {
   min-height: 28px;
   text-align: left;
-  color: var(--vscode-menu-foreground);
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
   background: transparent;
   border: 0;
+  border-radius: 4px;
 }
 
 .column-menu-item {
@@ -541,9 +565,10 @@ button:disabled { cursor: default; opacity: 0.45; }
 }
 
 .column-menu-items button:hover,
-.column-menu-items button[aria-pressed="true"] {
-  color: var(--vscode-menu-selectionForeground);
-  background: var(--vscode-menu-selectionBackground);
+.column-menu-items button:focus-visible {
+  color: var(--vscode-menu-selectionForeground, var(--vscode-list-activeSelectionForeground, var(--vscode-foreground)));
+  background: var(--vscode-menu-selectionBackground, var(--vscode-list-activeSelectionBackground, var(--vscode-list-hoverBackground)));
+  outline: 0;
 }
 
 .resize-handle {
@@ -793,7 +818,7 @@ button:disabled { cursor: default; opacity: 0.45; }
     padding: 3px;
   }
 
-  .toolbar-popup summary { width: 28px; height: 28px; padding: 3px; }
+  .toolbar-popup > summary { width: 28px; height: 28px; padding: 3px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -801,6 +826,10 @@ button:disabled { cursor: default; opacity: 0.45; }
 }
 
 @media (forced-colors: active) {
+  .toolbar-popup-items,
+  .zoom-menu-items,
+  .column-menu-items { border: 1px solid CanvasText; box-shadow: none; }
+  .toolbar-zoom-control > summary { border-color: ButtonText; }
   .cell.primary { outline: 2px solid Highlight; outline-offset: -2px; }
   .cell.selected { background: Highlight; color: HighlightText; }
   .selection-frame { border-color: Highlight; box-shadow: none; }
