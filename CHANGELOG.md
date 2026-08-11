@@ -2,6 +2,11 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.1.10] - 2026-08-11
+
+- Apply each column's left, center, or right Markdown alignment immediately to header cells, body cells, and active cell inputs in the GUI.
+- Display columns without an explicit Markdown alignment as left-aligned in the grid.
+
 ## [0.1.9] - 2026-08-11
 
 - Keep the labeled two-row toolbar down to 800px and switch to icon-only controls at 799px and below.

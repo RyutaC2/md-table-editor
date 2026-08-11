@@ -1,3 +1,5 @@
+import type { Alignment } from '../core/types';
+
 interface Point {
   x: number;
   y: number;
@@ -6,6 +8,12 @@ interface Point {
 interface ScrollPosition {
   left: number;
   top: number;
+}
+
+type VisibleAlignment = Exclude<Alignment, 'none'>;
+
+export function visibleCellAlignment(alignment: Alignment): VisibleAlignment {
+  return alignment === 'none' ? 'left' : alignment;
 }
 
 export function hasExceededDragThreshold(start: Point, current: Point, threshold: number): boolean {

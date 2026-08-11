@@ -399,6 +399,10 @@ button:disabled { cursor: default; opacity: 0.45; }
   border-bottom: 1px solid var(--grid-line);
 }
 
+.cell.align-left { text-align: left; }
+.cell.align-center { text-align: center; }
+.cell.align-right { text-align: right; }
+
 .header-cell {
   z-index: 11;
   height: 40px;
@@ -431,6 +435,7 @@ button:disabled { cursor: default; opacity: 0.45; }
   background: var(--vscode-input-background);
   border: 1px solid var(--vscode-focusBorder);
   outline: none;
+  text-align: inherit;
 }
 
 @media (min-width: 1500px) {

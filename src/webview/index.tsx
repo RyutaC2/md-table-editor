@@ -8,7 +8,7 @@ import { displayWidth } from '../core/width';
 import type { CellPosition, EditorState, ExtensionMessage, PersistedPanelState, WebviewMessage } from '../shared/protocol';
 import { Icon } from './icons';
 import type { IconName } from './icons';
-import { hasExceededDragThreshold, scrollPositionForPan } from './interaction';
+import { hasExceededDragThreshold, scrollPositionForPan, visibleCellAlignment } from './interaction';
 import './styles.css';
 
 interface VSCodeApi {
@@ -178,6 +178,10 @@ function alignmentIcon(alignment: Alignment): IconName {
     right: 'alignRight',
   };
   return icons[alignment];
+}
+
+function cellAlignmentClass(alignment: Alignment | undefined): string {
+  return ` align-${visibleCellAlignment(alignment ?? 'none')}`;
 }
 
 function plainText(value: string): string {
@@ -893,7 +897,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     />
                   </div>
                   <div
-                    className={`cell header-cell${reorderClass('column', column)} ${ranges.some((range) => selected(range, 0, column)) ? 'selected' : ''} ${sameCell(primary, { row: 0, column }) ? 'primary' : ''}`}
+                    className={`cell header-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('column', column)} ${ranges.some((range) => selected(range, 0, column)) ? 'selected' : ''} ${sameCell(primary, { row: 0, column }) ? 'primary' : ''}`}
                     role="columnheader"
                     aria-label={`${text.header} ${columnName(column)}`}
                     style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top + columnHeaderHeight, width }}
@@ -945,7 +949,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     return (
                       <div
                         key={`${row}:${column}`}
-                        className={`cell body-cell${reorderClass('row', row)}${reorderClass('column', column)} ${ranges.some((range) => selected(range, row, column)) ? 'selected' : ''} ${sameCell(primary, cell) ? 'primary' : ''}`}
+                        className={`cell body-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('row', row)}${reorderClass('column', column)} ${ranges.some((range) => selected(range, row, column)) ? 'selected' : ''} ${sameCell(primary, cell) ? 'primary' : ''}`}
                         role="gridcell"
                         aria-rowindex={row + 1}
                         aria-colindex={column + 1}
