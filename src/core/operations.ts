@@ -11,7 +11,7 @@ export function cloneSnapshot(snapshot: TableSnapshot): TableSnapshot {
 }
 
 function normalize(snapshot: TableSnapshot): TableSnapshot {
-  const columnCount = Math.max(1, snapshot.widths.length, ...snapshot.rows.map((row) => row.length));
+  const columnCount = snapshot.rows.reduce((maximum, row) => Math.max(maximum, row.length), Math.max(1, snapshot.widths.length));
   if (snapshot.rows.length === 0) {
     snapshot.rows.push(Array.from({ length: columnCount }, () => ''));
   }
@@ -41,12 +41,22 @@ function moveItems<T>(items: T[], indexes: number[], target: number): T[] {
   if (selected.length === 0) {
     return items;
   }
+  const selectedSet = new Set(selected);
   const moved = selected.map((index) => items[index]);
-  const remaining = items.filter((_, index) => !selected.includes(index));
-  const removedBeforeTarget = selected.filter((index) => index < target).length;
-  const insertion = Math.max(0, Math.min(remaining.length, target - removedBeforeTarget));
+  const remaining = items.filter((_, index) => !selectedSet.has(index));
+  const safeTarget = Number.isFinite(target) ? Math.floor(target) : items.length;
+  const removedBeforeTarget = selected.filter((index) => index < safeTarget).length;
+  const insertion = Math.max(0, Math.min(remaining.length, safeTarget - removedBeforeTarget));
   remaining.splice(insertion, 0, ...moved);
   return remaining;
+}
+
+function finiteInteger(value: number, fallback: number): number {
+  return Number.isFinite(value) ? Math.floor(value) : fallback;
+}
+
+function maximumColumnWidth(snapshot: TableSnapshot, column: number): number {
+  return snapshot.rows.reduce((maximum, row) => Math.max(maximum, displayWidth(row[column] ?? '')), 3);
 }
 
 function plainText(value: string): string {
@@ -94,8 +104,8 @@ export function applyOperation(current: TableSnapshot, operation: TableOperation
       }
       break;
     case 'insertRow': {
-      const count = Math.max(1, Math.floor(operation.count ?? 1));
-      const index = Math.max(1, Math.min(snapshot.rows.length, operation.index));
+      const count = Math.max(1, finiteInteger(operation.count ?? 1, 1));
+      const index = Math.max(1, Math.min(snapshot.rows.length, finiteInteger(operation.index, snapshot.rows.length)));
       snapshot.rows.splice(index, 0, ...Array.from({ length: count }, () => Array.from({ length: columns }, () => '')));
       break;
     }
@@ -113,8 +123,8 @@ export function applyOperation(current: TableSnapshot, operation: TableOperation
       break;
     }
     case 'insertColumn': {
-      const count = Math.max(1, Math.floor(operation.count ?? 1));
-      const index = Math.max(0, Math.min(columns, operation.index));
+      const count = Math.max(1, finiteInteger(operation.count ?? 1, 1));
+      const index = Math.max(0, Math.min(columns, finiteInteger(operation.index, columns)));
       snapshot.rows.forEach((row) => row.splice(index, 0, ...Array.from({ length: count }, () => '')));
       snapshot.widths.splice(index, 0, ...Array.from({ length: count }, () => 3));
       snapshot.alignments.splice(index, 0, ...Array.from({ length: count }, () => 'none' as Alignment));
@@ -143,17 +153,17 @@ export function applyOperation(current: TableSnapshot, operation: TableOperation
       }
       break;
     case 'setWidth':
-      if (operation.column >= 0 && operation.column < columns) {
+      if (operation.column >= 0 && operation.column < columns && Number.isFinite(operation.width)) {
         snapshot.widths[operation.column] = Math.max(3, Math.floor(operation.width));
       }
       break;
     case 'autoFitColumn':
       if (operation.column >= 0 && operation.column < columns) {
-        snapshot.widths[operation.column] = Math.max(3, ...snapshot.rows.map((row) => displayWidth(row[operation.column] ?? '')));
+        snapshot.widths[operation.column] = maximumColumnWidth(snapshot, operation.column);
       }
       break;
     case 'autoFit':
-      snapshot.widths = snapshot.widths.map((_, column) => Math.max(3, ...snapshot.rows.map((row) => displayWidth(row[column] ?? ''))));
+      snapshot.widths = snapshot.widths.map((_, column) => maximumColumnWidth(snapshot, column));
       break;
     case 'sort':
       sortRows(snapshot, operation.column, operation.direction);

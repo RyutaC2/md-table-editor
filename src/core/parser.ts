@@ -101,6 +101,10 @@ function parseDelimiter(cells: string[]): { alignments: Alignment[]; widths: num
   return { alignments, widths };
 }
 
+function isIndentedCode(line: SourceLine): boolean {
+  return /^(?: {4}|\t)/u.test(line.text);
+}
+
 function fencedLines(lines: SourceLine[]): boolean[] {
   const result = Array.from({ length: lines.length }, () => false);
   let fence: { character: '`' | '~'; length: number } | undefined;
@@ -139,7 +143,7 @@ export function parseMarkdownTables(source: string): MarkdownTable[] {
   const tables: MarkdownTable[] = [];
 
   for (let lineIndex = 0; lineIndex < lines.length - 1; lineIndex += 1) {
-    if (fenced[lineIndex] || fenced[lineIndex + 1] || /^ {4}/u.test(lines[lineIndex].text)) {
+    if (fenced[lineIndex] || fenced[lineIndex + 1] || isIndentedCode(lines[lineIndex]) || isIndentedCode(lines[lineIndex + 1])) {
       continue;
     }
     const header = parseRow(lines[lineIndex]);
@@ -157,7 +161,7 @@ export function parseMarkdownTables(source: string): MarkdownTable[] {
     const originalColumnCounts = [header.cells.length];
     let endLine = lineIndex + 1;
     for (let bodyLine = lineIndex + 2; bodyLine < lines.length; bodyLine += 1) {
-      if (fenced[bodyLine] || lines[bodyLine].text.trim() === '') {
+      if (fenced[bodyLine] || isIndentedCode(lines[bodyLine]) || lines[bodyLine].text.trim() === '') {
         break;
       }
       const body = parseRow(lines[bodyLine]);
@@ -170,7 +174,7 @@ export function parseMarkdownTables(source: string): MarkdownTable[] {
       endLine = bodyLine;
     }
 
-    const columnCount = Math.max(delimiter.widths.length, ...rows.map((row) => row.length));
+    const columnCount = rows.reduce((maximum, row) => Math.max(maximum, row.length), delimiter.widths.length);
     const needsNormalization = originalColumnCounts.some((count) => count !== columnCount)
       || delimiter.widths.length !== columnCount;
     padRows(rows, ranges, columnCount);

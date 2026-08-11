@@ -8,6 +8,8 @@ import { displayWidth } from '../core/width';
 import type { CellPosition, EditorState, ExtensionMessage, PersistedPanelState, WebviewMessage } from '../shared/protocol';
 import { Icon } from './icons';
 import type { IconName } from './icons';
+import { clampCell, columnName, contiguous, isCellSelected, parseTsv, rangeBounds, usefulMove } from './gridModel';
+import type { SelectionRange } from './gridModel';
 import { hasExceededDragThreshold, scrollPositionForPan, visibleCellAlignment } from './interaction';
 import './styles.css';
 
@@ -15,11 +17,6 @@ interface VSCodeApi {
   postMessage(message: WebviewMessage): void;
   getState(): PersistedPanelState | undefined;
   setState(state: PersistedPanelState): void;
-}
-
-interface SelectionRange {
-  start: CellPosition;
-  end: CellPosition;
 }
 
 interface EditingCell {
@@ -103,52 +100,6 @@ function closeColumnMenusOutside(target?: Node): void {
 
 function sameCell(left: CellPosition, right: CellPosition): boolean {
   return left.row === right.row && left.column === right.column;
-}
-
-function clampCell(cell: CellPosition, snapshot: TableSnapshot): CellPosition {
-  return {
-    row: Math.max(0, Math.min(snapshot.rows.length - 1, cell.row)),
-    column: Math.max(0, Math.min(snapshot.widths.length - 1, cell.column)),
-  };
-}
-
-function rangeBounds(range: SelectionRange): { top: number; bottom: number; left: number; right: number } {
-  return {
-    top: Math.min(range.start.row, range.end.row),
-    bottom: Math.max(range.start.row, range.end.row),
-    left: Math.min(range.start.column, range.end.column),
-    right: Math.max(range.start.column, range.end.column),
-  };
-}
-
-function selected(range: SelectionRange, row: number, column: number): boolean {
-  const bounds = rangeBounds(range);
-  return row >= bounds.top && row <= bounds.bottom && column >= bounds.left && column <= bounds.right;
-}
-
-function columnName(index: number): string {
-  let value = index + 1;
-  let name = '';
-  while (value > 0) {
-    value -= 1;
-    name = String.fromCharCode(65 + (value % 26)) + name;
-    value = Math.floor(value / 26);
-  }
-  return name;
-}
-
-function contiguous(indexes: number[]): boolean {
-  const sorted = [...indexes].sort((left, right) => left - right);
-  return sorted.every((value, index) => index === 0 || value === sorted[index - 1] + 1);
-}
-
-function usefulMove(indexes: number[], target: number): boolean {
-  if (indexes.length === 0) {
-    return false;
-  }
-  const first = Math.min(...indexes);
-  const last = Math.max(...indexes);
-  return target < first || target > last + 1;
 }
 
 function dropSide(event: React.DragEvent<HTMLElement>, axis: DropTarget['axis']): DropTarget['side'] {
@@ -235,11 +186,6 @@ function markdownLink(value: string, label: string): string | undefined {
     ?? value.match(/https:\/\/[^\s)]+/u)?.[0];
 }
 
-function parseTsv(value: string): string[][] {
-  const normalized = value.replace(/\r\n|\r/gu, '\n').replace(/\n$/u, '');
-  return normalized.split('\n').map((row) => row.split('\t').map((cell) => cell.replace(/\n/gu, ' ')));
-}
-
 function tsvFromRange(snapshot: TableSnapshot, range: SelectionRange, raw: boolean): string {
   const bounds = rangeBounds(range);
   return snapshot.rows.slice(bounds.top, bounds.bottom + 1)
@@ -265,6 +211,10 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const inputRef = useRef<HTMLInputElement>(null);
   const cellSelectionGestureRef = useRef<CellSelectionGesture | undefined>(undefined);
   const panGestureRef = useRef<PanGesture | undefined>(undefined);
+  const snapshotRef = useRef(snapshot);
+  const primaryRef = useRef(primary);
+  snapshotRef.current = snapshot;
+  primaryRef.current = primary;
   const text = dictionaries[state.language];
   const editingSession = editing ? `${editing.cell.row}:${editing.cell.column}` : undefined;
 
@@ -314,14 +264,20 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     getScrollElement: () => scrollRef.current,
     estimateSize: (index) => {
       const row = snapshot.rows[index + 1] ?? [];
-      const lines = Math.max(1, ...row.map((value, column) => Math.ceil(displayWidth(value) / Math.max(3, snapshot.widths[column] ?? 3))));
+      const lines = row.reduce((maximum, value, column) => (
+        Math.max(maximum, Math.ceil(displayWidth(value) / Math.max(3, snapshot.widths[column] ?? 3)))
+      ), 1);
       return Math.max(38, lines * 20 + 16);
     },
     overscan: 8,
   });
 
-  const sendOperation = useCallback((operation: TableOperation, nextSelection = primary) => {
-    setSnapshot((current) => applyOperation(current, operation));
+  const sendOperation = useCallback((operation: TableOperation, nextSelection = primary, optimisticSnapshot?: TableSnapshot) => {
+    setSnapshot((current) => {
+      const next = optimisticSnapshot ?? applyOperation(current, operation);
+      snapshotRef.current = next;
+      return next;
+    });
     vscode.postMessage({ type: 'operation', documentVersion: state.documentVersion, operation, selection: nextSelection });
   }, [primary, state.documentVersion]);
 
@@ -378,6 +334,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     setPrimary(cell);
     setRanges([{ start: cell, end: cell }]);
   }, [snapshot]);
+  const beginEditRef = useRef(beginEdit);
+  beginEditRef.current = beginEdit;
 
   const commitEdit = useCallback((move?: number) => {
     if (!editing) {
@@ -396,7 +354,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     const changes: Array<{ row: number; column: number; value: string }> = [];
     for (let row = 0; row < snapshot.rows.length; row += 1) {
       for (let column = 0; column < snapshot.widths.length; column += 1) {
-        if (ranges.some((range) => selected(range, row, column))) {
+        if (ranges.some((range) => isCellSelected(range, row, column))) {
           changes.push({ row, column, value });
         }
       }
@@ -532,15 +490,16 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     }));
     const end = { row: requiredRows - 1, column: requiredColumns - 1 };
     setRanges([{ start: primary, end }]);
-    sendOperation({ type: 'replace', snapshot: next }, primary);
+    sendOperation({ type: 'replace', snapshot: next }, primary, next);
   };
 
   const perform = (operation: TableOperation, selection = primary): void => {
-    const nextSelection = clampCell(selection, applyOperation(snapshot, operation));
+    const optimisticSnapshot = applyOperation(snapshot, operation);
+    const nextSelection = clampCell(selection, optimisticSnapshot);
     setPrimary(nextSelection);
     setAnchor(nextSelection);
     setRanges([{ start: nextSelection, end: nextSelection }]);
-    sendOperation(operation, nextSelection);
+    sendOperation(operation, nextSelection, optimisticSnapshot);
   };
 
   const selectedRows = useMemo(() => {
@@ -564,18 +523,22 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     const receive = (event: MessageEvent<ExtensionMessage>): void => {
       const incoming = event.data;
       if (incoming.type === 'load') {
+        const nextSnapshot = cloneSnapshot(incoming.state.snapshot);
         setState(incoming.state);
-        setSnapshot(cloneSnapshot(incoming.state.snapshot));
+        setSnapshot(nextSnapshot);
+        snapshotRef.current = nextSnapshot;
         vscode.setState({ uri: incoming.state.uri, tableStartOffset: incoming.state.tableStartOffset });
-        const cell = clampCell(incoming.state.selection ?? primary, incoming.state.snapshot);
+        const cell = clampCell(incoming.state.selection ?? primaryRef.current, incoming.state.snapshot);
+        primaryRef.current = cell;
         setPrimary(cell);
         setAnchor(cell);
         setRanges([{ start: cell, end: cell }]);
         if (incoming.state.startEditing) {
-          requestAnimationFrame(() => beginEdit({ row: 0, column: 0 }));
+          requestAnimationFrame(() => beginEditRef.current({ row: 0, column: 0 }));
         }
       } else if (incoming.type === 'selection') {
-        const cell = clampCell(incoming.selection, snapshot);
+        const cell = clampCell(incoming.selection, snapshotRef.current);
+        primaryRef.current = cell;
         setPrimary(cell);
         setAnchor(cell);
         setRanges([{ start: cell, end: cell }]);
@@ -897,7 +860,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     />
                   </div>
                   <div
-                    className={`cell header-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('column', column)} ${ranges.some((range) => selected(range, 0, column)) ? 'selected' : ''} ${sameCell(primary, { row: 0, column }) ? 'primary' : ''}`}
+                    className={`cell header-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('column', column)} ${ranges.some((range) => isCellSelected(range, 0, column)) ? 'selected' : ''} ${sameCell(primary, { row: 0, column }) ? 'primary' : ''}`}
                     role="columnheader"
                     aria-label={`${text.header} ${columnName(column)}`}
                     style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top + columnHeaderHeight, width }}
@@ -909,7 +872,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                   >
                     {editing && sameCell(editing.cell, { row: 0, column })
                       ? <CellInput ref={inputRef} editing={editing} setEditing={setEditing} commit={commitEdit} />
-                      : <MarkdownCell value={snapshot.rows[0]?.[column] ?? ''} />}
+                      : <MarkdownCell value={snapshot.rows[0]?.[column] ?? ''} workspaceResourceBase={state.workspaceResourceBase} />}
                   </div>
                 </React.Fragment>
               );
@@ -949,7 +912,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     return (
                       <div
                         key={`${row}:${column}`}
-                        className={`cell body-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('row', row)}${reorderClass('column', column)} ${ranges.some((range) => selected(range, row, column)) ? 'selected' : ''} ${sameCell(primary, cell) ? 'primary' : ''}`}
+                        className={`cell body-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('row', row)}${reorderClass('column', column)} ${ranges.some((range) => isCellSelected(range, row, column)) ? 'selected' : ''} ${sameCell(primary, cell) ? 'primary' : ''}`}
                         role="gridcell"
                         aria-rowindex={row + 1}
                         aria-colindex={column + 1}

@@ -8,7 +8,7 @@ function ensure(condition: unknown, message: string): asserts condition {
 }
 
 export async function run(): Promise<void> {
-  mocha.setup({ ui: 'tdd', reporter: undefined });
+  mocha.setup({ ui: 'tdd', reporter: undefined, timeout: 5000 });
 
   suite('Markdown Grid Editor web extension', () => {
     suiteSetup(async () => {
@@ -31,6 +31,22 @@ export async function run(): Promise<void> {
       await vscode.window.showTextDocument(document);
       const lenses = await vscode.commands.executeCommand<vscode.CodeLens[]>('vscode.executeCodeLensProvider', document.uri);
       ensure(lenses.length === 1, `Expected one CodeLens, received ${lenses.length}.`);
+      const uriArgument = lenses[0].command?.arguments?.[0];
+      ensure(uriArgument instanceof vscode.Uri, 'CodeLens did not include the document URI.');
+      ensure(uriArgument.toString() === document.uri.toString(), 'CodeLens referenced a different document.');
+      ensure(lenses[0].command?.arguments?.[1] === 0, 'CodeLens did not include the table offset.');
+    });
+
+    test('opens the table Webview command repeatedly without error', async () => {
+      const document = await vscode.workspace.openTextDocument({
+        language: 'markdown',
+        content: '| a | b |\n| --- | --- |\n| 1 | 2 |',
+      });
+      await vscode.window.showTextDocument(document);
+      const command = () => vscode.commands.executeCommand('md-table-editor.editTable', document.uri, 0);
+      await command();
+      await vscode.window.showTextDocument(document);
+      await command();
     });
   });
 

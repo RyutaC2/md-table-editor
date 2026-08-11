@@ -42,7 +42,7 @@ function renderRow(cells: string[], widths: number[], leading: boolean, trailing
 }
 
 export function serializeTable(snapshot: TableSnapshot): string {
-  const columnCount = Math.max(1, snapshot.widths.length, ...snapshot.rows.map((row) => row.length));
+  const columnCount = snapshot.rows.reduce((maximum, row) => Math.max(maximum, row.length), Math.max(1, snapshot.widths.length));
   const rows = snapshot.rows.length > 0 ? snapshot.rows : [Array.from({ length: columnCount }, () => '')];
   const widths = Array.from({ length: columnCount }, (_, index) => Math.max(3, snapshot.widths[index] ?? 3));
   const alignments = Array.from({ length: columnCount }, (_, index) => snapshot.alignments[index] ?? 'none');

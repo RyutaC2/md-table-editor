@@ -67,7 +67,7 @@ Markdown テーブルは、セル数が増えるほどパイプや区切り行�
 
 ## 対応するMarkdown
 
-VS Code組み込みプレビューとGitHubの双方で表として解釈されるGFM Tableを対象とします。外側パイプ、空セル、配置、エスケープされたパイプ、一般的なインラインMarkdownを扱います。fenced code block内の表記は対象になりません。
+VS Code組み込みプレビューとGitHubの双方で表として解釈されるGFM Tableを対象とします。外側パイプ、空セル、配置、エスケープされたパイプ、一般的なインラインMarkdownを扱います。fenced code block内と、4スペースまたはタブで始まるインデントコード内の表記は対象になりません。
 
 GUIを開いただけではソースを書き換えません。列数が不均一なデータ行は、最初の編集操作を確定した時点で空セルを補って正規化します。
 
@@ -92,6 +92,7 @@ npm run compile
 | `npm run test:unit` | Markdown表の純粋ロジックを単体テスト |
 | `npm test` | Desktop版の拡張機能統合テスト |
 | `npm run test:web` | Web版の拡張機能統合テスト |
+| `npm run benchmark` | 50列×500行と超過サイズの解析・直列化・表操作性能を測定 |
 | `npm run package` | 配布用ビルド |
 | `npm run package:vsix` | 配布用VSIXを `artifacts/` に生成 |
 | `npm run watch` | TypeScriptとesbuildの監視ビルド |

@@ -2,6 +2,17 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.1.11] - 2026-08-11
+
+- Expand pure unit coverage from 16 to 50 tests across parsing, serialization, operations, Unicode width, selection geometry, TSV, and pointer interactions.
+- Add Desktop integration coverage for CodeLens arguments and Webview panel reuse, plus the equivalent Web edit-command path where tab enumeration is unavailable.
+- Stop parsing four-space or tab-indented code lines as Markdown table delimiters or body rows.
+- Correct display widths for flag and keycap emoji, cache grapheme segmentation, and add an ASCII fast path.
+- Reject non-finite operation widths and safely normalize non-finite insertion indexes and counts.
+- Keep Webview selection messages bound to the latest table snapshot after rows or columns are added.
+- Avoid applying the same optimistic GUI operation twice and improve large row/column calculations.
+- Add a reproducible `npm run benchmark` command for guaranteed and oversized tables.
+
 ## [0.1.10] - 2026-08-11
 
 - Apply each column's left, center, or right Markdown alignment immediately to header cells, body cells, and active cell inputs in the GUI.
