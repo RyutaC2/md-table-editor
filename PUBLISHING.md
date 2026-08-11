@@ -1,6 +1,6 @@
 # Marketplace 公開手順
 
-この文書は、Markdown Table GUIをVisual Studio Marketplaceへ初回公開するときの手順です。現在の `0.2.8` は公開候補版であり、`RELEASE_CHECKLIST.md` の受け入れ完了前に `1.0.0` へ変更しません。
+この文書は、Markdown Table GUIをVisual Studio Marketplaceへ初回公開するときの手順です。ユーザーによるGUI確認を経て、現在の `1.0.0` を初回安定版として確定しています。Marketplaceへのアップロードは未実施です。
 
 ## 公開前に人が決めること
 
@@ -27,11 +27,11 @@ npm run benchmark
 npm run package:vsix
 ```
 
-生成された `artifacts/markdown-table-gui-0.2.8.vsix` をVS Code Stableへインストールし、`RELEASE_CHECKLIST.md` を完了します。VSIXの内容にはアイコンPNGが含まれ、SVG原稿、ソース、テスト、秘密情報、内部文書、ソースマップが含まれていないことも確認します。
+生成された `artifacts/markdown-table-gui-1.0.0.vsix` をVS Code Stableへインストールし、`RELEASE_CHECKLIST.md` の最終確認を行います。VSIXの内容にはアイコンPNGが含まれ、SVG原稿、ソース、テスト、秘密情報、内部文書、ソースマップが含まれていないことも確認します。
 
 ## v1を確定する
 
-受け入れ完了後に、次を1つのリリース準備コミットとして行います。
+このリポジトリでは次のリリース準備を完了した状態で `1.0.0` を確定します。
 
 1. `package.json` と `package-lock.json` を `1.0.0` へ更新する。
 2. `CHANGELOG.md` に `1.0.0` の公開内容と日付を追加する。

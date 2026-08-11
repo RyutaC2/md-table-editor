@@ -9,8 +9,8 @@ Markdown の表は、パイプ、区切り行、列揃えを人間が維持し�
 - Marketplace 表示名: `Markdown Table GUI`
 - 拡張機能 ID: `markdown-table-gui`
 - publisher: `RyutaC2`
-- 初回リリース: `0.1.0`
-- 現在のバージョン: `0.2.8`
+- 初回安定版: `1.0.0`
+- 現在のバージョン: `1.0.0`
 - ライセンス: MIT
 - 対応環境: VS Code Desktop（Windows、macOS、Linux）および Web（vscode.dev、github.dev）
 - 表示言語: 日本語、英語。その他の言語では英語へフォールバックします。
@@ -220,7 +220,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 ## 現在の実装状態
 
-現在の `0.2.8` では、従来の表解析、CodeLens、Desktop/Web対応、即時ソース同期、仮想化グリッド、TSV、行列操作、配置・ソート・列幅、Undo/Redo、安全なMarkdown表示に加え、2×2クイック挿入、1～20の通常挿入、0始まり行番号、二段階の行列選択・並べ替え、左上角の全選択、枠線による単一・複数セル移動、選択位置とテーブルサイズの下部表示、CSV/XLSX入出力、7段階ズーム、全列配置、全列・単一列の幅調整、ファイル名基準のタブ名、描画内容基準の折り返し行高、選択数に応じた行列一括操作、4段階のレスポンシブツールバー、単一セル選択時の自動編集、Enter/Tab後の連続編集を実装済みです。純粋ロジック68件、Desktop統合5件、Web統合3件のテスト、GitHub Actions、VSIX生成、再現可能な性能ベンチマークを用意しています。Marketplaceは未公開であり、v1公開は `RELEASE_CHECKLIST.md` のユーザー受け入れテスト完了待ちです。
+現在の `1.0.0` では、従来の表解析、CodeLens、Desktop/Web対応、即時ソース同期、仮想化グリッド、TSV、行列操作、配置・ソート・列幅、Undo/Redo、安全なMarkdown表示に加え、2×2クイック挿入、1～20の通常挿入、0始まり行番号、二段階の行列選択・並べ替え、左上角の全選択、枠線による単一・複数セル移動、選択位置とテーブルサイズの下部表示、CSV/XLSX入出力、7段階ズーム、全列配置、全列・単一列の幅調整、ファイル名基準のタブ名、描画内容基準の折り返し行高、選択数に応じた行列一括操作、4段階のレスポンシブツールバー、単一セル選択時の自動編集、Enter/Tab後の連続編集を実装済みです。純粋ロジック68件、Desktop統合5件、Web統合3件のテスト、GitHub Actions、VSIX生成、再現可能な性能ベンチマークを用意しています。ユーザーによるGUI確認を経て初回安定版を確定済みで、Marketplaceへのアップロードは未実施です。
 
 ### 実装上の補足
 
@@ -251,38 +251,38 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 ### ローカル検証環境
 
-現在の開発コンテナはDesktop/Webテストに必要なGTK、NSS、Chromium系共有ライブラリを標準では備えておらず、通常実行ではExtension HostまたはChromiumの起動前に停止します。2026-08-11の0.2.6検証では、必要なDebianパッケージを `/tmp` へ展開し、システムへインストールせず `LD_LIBRARY_PATH` から参照しました。Desktopは既存のWSLgディスプレイを使い、Light Modern、Dark Modern、Default High Contrast、Default High Contrast LightでWebviewを維持する確認を含む合計71件、Webは既定ポート3000の競合を避けてポート3001のヘッドレスChromiumを使い3件が通過しました。型チェック、Lint、純粋ロジック66件、第三者通知同期、開発依存を含むnpm監査、プロダクションビルド、VSIX生成も成功し、npm監査は脆弱性0件でした。mainのGitHub Actions run 48もNode.js 22ですべて成功しています。通常の開発環境またはGitHub ActionsではOS依存パッケージを正規に導入して実行します。
+現在の開発コンテナはDesktop/Webテストに必要なGTK、NSS、Chromium系共有ライブラリを標準では備えておらず、通常実行ではExtension HostまたはChromiumの起動前に停止します。2026-08-11の1.0.0検証では、必要なDebianパッケージを `/tmp` へ展開し、システムへインストールせず `LD_LIBRARY_PATH` から参照しました。Desktopは既存のWSLgディスプレイを使い、Light Modern、Dark Modern、Default High Contrast、Default High Contrast LightでWebviewを維持する確認を含む合計73件、Webは既定ポート3000の競合を避けてポート3001のヘッドレスChromiumを使い3件が通過しました。型チェック、Lint、純粋ロジック68件、第三者通知同期、開発依存を含むnpm監査、プロダクションビルド、VSIX生成も成功し、npm監査は脆弱性0件でした。直前のmainのGitHub Actions run 48もNode.js 22ですべて成功しており、1.0.0のpush後に新しいCI結果を確認します。通常の開発環境またはGitHub ActionsではOS依存パッケージを正規に導入して実行します。
 
 ### 性能評価
 
-2026-08-11に0.2.6をWSL2、Intel Core i7-12700KF、Node.js 22.23.2で `npm run benchmark` 相当として測定しました。値はウォームアップ後の中央値で、50×500のコア処理は7標本、100×2000は3標本、CSV・XLSX変換は3標本です。DOM描画、Webviewメッセージ、VS Code文書更新、ファイル選択UI、ディスクI/Oは含まず、メモリ上の解析・直列化・純粋操作・ファイル形式変換を測定しています。
+2026-08-11に1.0.0をWSL2、Intel Core i7-12700KF、Node.js 22.23.2で `npm run benchmark` により測定しました。値はウォームアップ後の中央値で、50×500のコア処理は7標本、100×2000は3標本、CSV・XLSX変換は3標本です。DOM描画、Webviewメッセージ、VS Code文書更新、ファイル選択UI、ディスクI/Oは含まず、メモリ上の解析・直列化・純粋操作・ファイル形式変換を測定しています。
 
 | データ | Markdown | 解析 | 直列化 | 1セル更新 | 全列幅調整 | 1列ソート |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ASCII 50列×500行 | 368.0 KiB | 8.74 ms | 5.21 ms | 0.13 ms | 8.07 ms | 0.38 ms |
-| Unicode 50列×500行 | 441.1 KiB | 8.94 ms | 136.89 ms | 0.12 ms | 135.56 ms | 0.35 ms |
-| Unicode 100列×2000行 | 3520.8 KiB | 68.09 ms | 1126.49 ms | 0.51 ms | 1182.46 ms | 1.33 ms |
+| ASCII 50列×500行 | 368.0 KiB | 7.51 ms | 4.78 ms | 0.10 ms | 8.33 ms | 0.41 ms |
+| Unicode 50列×500行 | 441.1 KiB | 10.10 ms | 162.64 ms | 0.07 ms | 173.29 ms | 0.39 ms |
+| Unicode 100列×2000行 | 3520.8 KiB | 76.90 ms | 1419.99 ms | 0.56 ms | 1455.43 ms | 1.46 ms |
 
 | データ | CSV | XLSX | CSV出力 | CSV入力 | XLSX出力 | XLSX入力 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ASCII 50列×500行 | 307.1 KiB | 168.4 KiB | 10.56 ms | 27.27 ms | 43.93 ms | 56.17 ms |
-| Unicode 50列×500行 | 355.8 KiB | 168.7 KiB | 9.74 ms | 36.80 ms | 44.95 ms | 58.20 ms |
+| ASCII 50列×500行 | 307.1 KiB | 168.4 KiB | 9.50 ms | 27.95 ms | 46.49 ms | 59.99 ms |
+| Unicode 50列×500行 | 355.8 KiB | 168.7 KiB | 14.89 ms | 33.52 ms | 47.94 ms | 61.53 ms |
 
-保証サイズではASCII表のコア処理はすべて9ms未満、CSV・XLSX変換は59ms未満です。Unicodeを全セルに含む場合は書記素単位の幅計算が支配的で、保証サイズでも全列幅調整と直列化が約136～137ms、超過サイズでは約1.13～1.18秒かかります。100列×2000行は保証対象外ですが編集可能とする仕様のため、将来は列単位の幅キャッシュまたは変更列だけを再計算する方式を優先候補とします。
+保証サイズではASCII表のコア処理はすべて9ms未満、CSV・XLSX変換は62ms未満です。Unicodeを全セルに含む場合は書記素単位の幅計算が支配的で、保証サイズでも全列幅調整と直列化が約163～173ms、超過サイズでは約1.42～1.46秒かかります。100列×2000行は保証対象外ですが編集可能とする仕様のため、将来は列単位の幅キャッシュまたは変更列だけを再計算する方式を優先候補とします。
 
 ### 既知の改善候補
 
 - 現在の統合テストはコマンド登録、CodeLens、Webviewパネル生成・再利用が中心です。セル編集、ドラッグ、クリップボード、メニュー、テーマ、ARIAを実ブラウザーDOMで操作するE2Eテストは未整備です。
 - ソースカーソル移動時は文書全体を複数のリスナーで再解析します。約3.5MiBの測定用文書では解析1回が約68msのため、文書バージョン単位の解析結果キャッシュが改善候補です。
 - Unicodeを多用する保証超過表では、直列化と全列幅調整がメインスレッドで1秒を超えます。列幅キャッシュ、差分直列化、Web Workerへの計算分離を検討します。
-- 0.2.6のプロダクションバンドルはDesktop拡張511.32KiB、Web拡張511.28KiB、Webview JavaScript368.92KiB、Webview CSS18.19KiBで、完全な第三者ライセンス本文を含むVSIX全体は488.48KiBです。SheetJSをDesktop/Webへ同梱したため拡張バンドルが増えており、初期表示・初回入出力時間を実機測定したうえでファイル変換部分の遅延読み込みを検討します。
+- 1.0.0のプロダクションバンドルはDesktop拡張511.33KiB、Web拡張511.29KiB、Webview JavaScript370.00KiB、Webview CSS18.19KiBで、アイコンと完全な第三者ライセンス本文を含むVSIX全体は498.09KiBです。SheetJSをDesktop/Webへ同梱したため拡張バンドルが増えており、初期表示・初回入出力時間を実機測定したうえでファイル変換部分の遅延読み込みを検討します。
 
-### v1公開前の残作業
+### Marketplace公開前の残作業
 
-- `RELEASE_CHECKLIST.md` の8シナリオを実機で完了し、P0・P1が0件であることを確認します。
+- `RELEASE_CHECKLIST.md` を使ったユーザーGUI確認で、公開を停止する問題が報告されていないことを最終確認します。
 - Marketplace管理画面でpublisher `RyutaC2` の所有と拡張機能ID `RyutaC2.markdown-table-gui` の利用可否を確認します。
 - Marketplace用の256×256 PNGアイコンはmanifestへ設定済みです。実画面スクリーンショットをREADMEへ追加するか、ユーザーが最終判断します。
-- GitHubのPrivate Vulnerability Reportingを有効化し、受け入れ後にだけバージョンを `1.0.0` へ更新します。具体的な手順は `PUBLISHING.md` を基準にします。
+- GitHubのPrivate Vulnerability Reportingを有効化し、`artifacts/markdown-table-gui-1.0.0.vsix` をMarketplaceへアップロードします。具体的な手順は `PUBLISHING.md` を基準にします。
 
 ## 設計意図
 

@@ -2,6 +2,14 @@
 
 All notable changes to Markdown Table GUI are documented in this file.
 
+## [1.0.0] - 2026-08-11
+
+- Publish the first stable release as `Markdown Table GUI` with the Marketplace identifier `RyutaC2.markdown-table-gui`.
+- Detect, insert, and edit GFM Markdown tables through an Excel-like virtualized grid in VS Code Desktop and Web.
+- Synchronize cell, row, column, alignment, sorting, and width operations to the Markdown source with standard Save and Undo/Redo behavior.
+- Support continuous keyboard editing, rectangular and disjoint selection, safe cell and row/column movement, responsive themed controls, and CSV/XLSX import and export.
+- Include English and Japanese interfaces, local Material Symbols, a Marketplace icon, accessibility metadata, release documentation, and Desktop/Web verification.
+
 ## [0.2.8] - 2026-08-11
 
 - Enter edit mode automatically after a plain single-cell click or keyboard move, while preserving drag, Shift, and Ctrl/Cmd range selection.
