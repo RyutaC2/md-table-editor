@@ -211,7 +211,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 ## 現在の実装状態
 
-現在の `0.2.2` では、従来の表解析、CodeLens、Desktop/Web対応、即時ソース同期、仮想化グリッド、TSV、行列操作、配置・ソート・列幅、Undo/Redo、安全なMarkdown表示に加え、2×2クイック挿入、1～20の通常挿入、0始まり行番号、二段階の行列選択・並べ替え、左上角の全選択、枠線によるセル範囲移動、CSV/XLSX入出力、7段階ズーム、全列配置、選択数に応じた行列一括操作、4段階のレスポンシブツールバーを実装済みです。純粋ロジック64件、Desktop統合4件、Web統合3件のテスト、GitHub Actions、VSIX生成、再現可能な性能ベンチマークを用意しています。Marketplaceは未公開であり、v1公開は `RELEASE_CHECKLIST.md` のユーザー受け入れテスト完了待ちです。
+現在の `0.2.2` では、従来の表解析、CodeLens、Desktop/Web対応、即時ソース同期、仮想化グリッド、TSV、行列操作、配置・ソート・列幅、Undo/Redo、安全なMarkdown表示に加え、2×2クイック挿入、1～20の通常挿入、0始まり行番号、二段階の行列選択・並べ替え、左上角の全選択、枠線によるセル範囲移動、CSV/XLSX入出力、7段階ズーム、全列配置、選択数に応じた行列一括操作、4段階のレスポンシブツールバーを実装済みです。純粋ロジック64件、Desktop統合5件、Web統合3件のテスト、GitHub Actions、VSIX生成、再現可能な性能ベンチマークを用意しています。Marketplaceは未公開であり、v1公開は `RELEASE_CHECKLIST.md` のユーザー受け入れテスト完了待ちです。
 
 ### 実装上の補足
 
@@ -238,7 +238,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 ### ローカル検証環境
 
-現在の開発コンテナはDesktop/Webテストに必要なGTK、NSS、Chromium系共有ライブラリを標準では備えておらず、通常実行ではExtension HostまたはChromiumの起動前に停止します。2026-08-11の0.2.1検証では、必要なDebianパッケージを `/tmp` へ展開し、システムへインストールせず `LD_LIBRARY_PATH` から参照しました。Desktopは既存のWSLgディスプレイを使って単体を含む68件、Webは既定ポート3000の競合を避けてポート3001のヘッドレスChromiumを使い3件が通過しました。通常の開発環境またはGitHub ActionsではOS依存パッケージを正規に導入して実行します。
+現在の開発コンテナはDesktop/Webテストに必要なGTK、NSS、Chromium系共有ライブラリを標準では備えておらず、通常実行ではExtension HostまたはChromiumの起動前に停止します。2026-08-11の0.2.2検証では、必要なDebianパッケージを `/tmp` へ展開し、システムへインストールせず `LD_LIBRARY_PATH` から参照しました。Desktopは既存のWSLgディスプレイを使い、Light Modern、Dark Modern、Default High Contrast、Default High Contrast LightでWebviewを維持する確認を含む合計69件、Webは既定ポート3000の競合を避けてポート3001のヘッドレスChromiumを使い3件が通過しました。通常の開発環境またはGitHub ActionsではOS依存パッケージを正規に導入して実行します。
 
 ### 性能評価
 

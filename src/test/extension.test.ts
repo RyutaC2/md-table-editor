@@ -91,6 +91,38 @@ suite('Markdown Grid Editor extension', () => {
     assert.strictEqual(await vscode.window.tabGroups.close(opened), true);
   });
 
+  test('keeps the Webview open across built-in light, dark, and high-contrast themes', async function () {
+    this.timeout(10000);
+    const document = await vscode.workspace.openTextDocument({
+      language: 'markdown',
+      content: '| theme | value |\n| --- | --- |\n| current | test |',
+    });
+    await vscode.window.showTextDocument(document);
+    await vscode.commands.executeCommand('md-table-editor.editTable', document.uri, 0);
+    const opened = await waitFor(() => {
+      const tabs = tableWebviewTabs();
+      return tabs.length === 1 ? tabs : undefined;
+    });
+    const configuration = vscode.workspace.getConfiguration('workbench');
+    const originalTheme = configuration.inspect<string>('colorTheme')?.globalValue;
+    const themes: Array<[string, vscode.ColorThemeKind]> = [
+      ['Light Modern', vscode.ColorThemeKind.Light],
+      ['Dark Modern', vscode.ColorThemeKind.Dark],
+      ['Default High Contrast', vscode.ColorThemeKind.HighContrast],
+      ['Default High Contrast Light', vscode.ColorThemeKind.HighContrastLight],
+    ];
+    try {
+      for (const [theme, kind] of themes) {
+        await configuration.update('colorTheme', theme, vscode.ConfigurationTarget.Global);
+        await waitFor(() => vscode.window.activeColorTheme.kind === kind ? true : undefined);
+        assert.strictEqual(tableWebviewTabs().length, 1, `${theme} closed the table Webview.`);
+      }
+    } finally {
+      await configuration.update('colorTheme', originalTheme, vscode.ConfigurationTarget.Global);
+      assert.strictEqual(await vscode.window.tabGroups.close(opened), true);
+    }
+  });
+
   test('quick inserts a two-column table with a header and one data row', async function () {
     this.timeout(5000);
     const document = await vscode.workspace.openTextDocument({ language: 'markdown', content: '# Test' });
