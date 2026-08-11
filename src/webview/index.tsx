@@ -27,7 +27,8 @@ import {
 } from './gridModel';
 import type { SelectionRange } from './gridModel';
 import type { GridAxis } from './gridModel';
-import { hasExceededDragThreshold, scrollPositionForPan, visibleCellAlignment } from './interaction';
+import { editCommitMovement, hasExceededDragThreshold, scrollPositionForPan, visibleCellAlignment } from './interaction';
+import type { GridMovement } from './interaction';
 import './styles.css';
 
 interface VSCodeApi {
@@ -40,6 +41,18 @@ interface EditingCell {
   cell: CellPosition;
   value: string;
   original: string;
+}
+
+interface SelectionModifiers {
+  shiftKey?: boolean;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+}
+
+interface CommitEditOptions {
+  destination?: CellPosition;
+  movement?: GridMovement;
+  selectionModifiers?: SelectionModifiers;
 }
 
 interface DropTarget {
@@ -268,8 +281,11 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const headerSelectionGestureRef = useRef<HeaderSelectionGesture | undefined>(undefined);
   const cellMoveGestureRef = useRef<CellMoveGesture | undefined>(undefined);
   const panGestureRef = useRef<PanGesture | undefined>(undefined);
+  const editingRef = useRef(editing);
+  const commitEditRef = useRef<(options?: CommitEditOptions) => void>(() => undefined);
   const snapshotRef = useRef(snapshot);
   const primaryRef = useRef(primary);
+  editingRef.current = editing;
   snapshotRef.current = snapshot;
   primaryRef.current = primary;
   const text = dictionaries[state.language];
@@ -345,7 +361,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     vscode.postMessage({ type: 'operation', documentVersion: state.documentVersion, operation, selection: nextSelection });
   }, [primary, state.documentVersion]);
 
-  const chooseCell = useCallback((cell: CellPosition, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+  const chooseCell = useCallback((cell: CellPosition, event?: SelectionModifiers) => {
     const next = clampCell(cell, snapshot);
     setPrimary(next);
     if (event?.shiftKey) {
@@ -371,7 +387,12 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
       startY: event.clientY,
       anchor: event.shiftKey ? anchor : next,
     };
-    chooseCell(next, event);
+    const activeEdit = editingRef.current;
+    if (activeEdit && !sameCell(activeEdit.cell, next)) {
+      commitEditRef.current({ destination: next, selectionModifiers: event });
+    } else {
+      chooseCell(next, event);
+    }
   }, [anchor, chooseCell, snapshot]);
 
   const extendCellSelection = useCallback((cell: CellPosition, event: React.PointerEvent): void => {
@@ -401,18 +422,27 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const beginEditRef = useRef(beginEdit);
   beginEditRef.current = beginEdit;
 
-  const commitEdit = useCallback((move?: number) => {
-    if (!editing) {
+  const commitEdit = useCallback((options?: CommitEditOptions) => {
+    const activeEdit = editingRef.current;
+    if (!activeEdit) {
       return;
     }
-    if (editing.value !== editing.original) {
-      sendOperation({ type: 'setCells', changes: [{ ...editing.cell, value: editing.value }] }, editing.cell);
+    editingRef.current = undefined;
+    const movement = options?.movement ?? { row: 0, column: 0 };
+    const next = options?.destination
+      ? clampCell(options.destination, snapshot)
+      : clampCell({
+        row: activeEdit.cell.row + movement.row,
+        column: activeEdit.cell.column + movement.column,
+      }, snapshot);
+    if (activeEdit.value !== activeEdit.original) {
+      sendOperation({ type: 'setCells', changes: [{ ...activeEdit.cell, value: activeEdit.value }] }, next);
     }
-    const next = move === undefined ? editing.cell : clampCell({ row: editing.cell.row, column: editing.cell.column + move }, snapshot);
     setEditing(undefined);
-    chooseCell(next);
+    chooseCell(next, options?.selectionModifiers);
     requestAnimationFrame(() => gridRef.current?.focus());
-  }, [chooseCell, editing, sendOperation, snapshot]);
+  }, [chooseCell, sendOperation, snapshot]);
+  commitEditRef.current = commitEdit;
 
   const replaceSelection = useCallback((value: string) => {
     const changes: Array<{ row: number; column: number; value: string }> = [];
@@ -1553,7 +1583,7 @@ function ZoomControl({
 const CellInput = React.forwardRef<HTMLInputElement, {
   editing: EditingCell;
   setEditing: React.Dispatch<React.SetStateAction<EditingCell | undefined>>;
-  commit: (move?: number) => void;
+  commit: (options?: CommitEditOptions) => void;
   label: string;
 }>(({ editing, setEditing, commit, label }, ref) => {
   const cancelled = useRef(false);
@@ -1569,9 +1599,9 @@ const CellInput = React.forwardRef<HTMLInputElement, {
         return;
       }
       if (event.key === 'Enter') {
-        event.preventDefault(); commit();
+        event.preventDefault(); commit({ movement: editCommitMovement('Enter', event.shiftKey) });
       } else if (event.key === 'Tab') {
-        event.preventDefault(); commit(event.shiftKey ? -1 : 1);
+        event.preventDefault(); commit({ movement: editCommitMovement('Tab', event.shiftKey) });
       } else if (event.key === 'Escape') {
         event.preventDefault(); cancelled.current = true; setEditing(undefined);
       }

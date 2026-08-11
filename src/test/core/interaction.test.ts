@@ -1,5 +1,10 @@
 import * as assert from 'assert';
-import { hasExceededDragThreshold, scrollPositionForPan, visibleCellAlignment } from '../../webview/interaction';
+import {
+  editCommitMovement,
+  hasExceededDragThreshold,
+  scrollPositionForPan,
+  visibleCellAlignment,
+} from '../../webview/interaction';
 
 suite('Grid pointer interaction', () => {
   test('uses left alignment for unspecified columns and preserves explicit alignment', () => {
@@ -7,6 +12,13 @@ suite('Grid pointer interaction', () => {
     assert.strictEqual(visibleCellAlignment('left'), 'left');
     assert.strictEqual(visibleCellAlignment('center'), 'center');
     assert.strictEqual(visibleCellAlignment('right'), 'right');
+  });
+
+  test('moves from an edited cell using spreadsheet-style Enter and Tab directions', () => {
+    assert.deepStrictEqual(editCommitMovement('Enter', false), { row: 1, column: 0 });
+    assert.deepStrictEqual(editCommitMovement('Enter', true), { row: -1, column: 0 });
+    assert.deepStrictEqual(editCommitMovement('Tab', false), { row: 0, column: 1 });
+    assert.deepStrictEqual(editCommitMovement('Tab', true), { row: 0, column: -1 });
   });
 
   test('starts a selection drag only after reaching the movement threshold', () => {

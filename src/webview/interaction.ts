@@ -10,7 +10,19 @@ interface ScrollPosition {
   top: number;
 }
 
+export interface GridMovement {
+  row: number;
+  column: number;
+}
+
 type VisibleAlignment = Exclude<Alignment, 'none'>;
+
+export function editCommitMovement(key: 'Enter' | 'Tab', shiftKey: boolean): GridMovement {
+  if (key === 'Enter') {
+    return { row: shiftKey ? -1 : 1, column: 0 };
+  }
+  return { row: 0, column: shiftKey ? -1 : 1 };
+}
 
 export function visibleCellAlignment(alignment: Alignment): VisibleAlignment {
   return alignment === 'none' ? 'left' : alignment;
