@@ -300,7 +300,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     snapshot.widths,
     markdownHeaderMinimumHeight,
     gridScale,
-    3,
+    2,
   );
   const bodyOffset = scaledColumnHeaderHeight + headerRowHeight;
 
