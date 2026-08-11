@@ -76,7 +76,7 @@ The left-aligned toolbar follows the requested action order. At 1500px or wider 
 
 The vertical `+` control at the right edge appends a column, and the horizontal `+` control at the bottom appends a row. Each control follows the actual table dimensions, and the bottom-right intersection remains empty.
 
-The Markdown header is row `0`; data rows begin at `1`. Dragging unselected row or column headings selects a continuous range on that axis. Drag the selected headings again to reorder the block. During reordering, the source becomes translucent and a drag preview and insertion line appear. A drop position can be selected over either a heading or its corresponding cells, with the first and second halves representing insertion before and after.
+The Markdown header is row `0`; data rows begin at `1`, separated by a persistent heavier rule. Dragging unselected row or column headings selects a continuous range on that axis; the gesture continues if the pointer enters the adjacent cells. Selected headings and cells use a strong outline that remains distinct from the selection fill. Drag the selected headings again to reorder the block. During reordering, the source becomes translucent and a drag preview and insertion line appear. A drop position can be selected over either a heading or its corresponding cells, with the first and second halves representing insertion before and after.
 
 ## Supported Markdown
 

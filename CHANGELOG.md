@@ -7,6 +7,8 @@ All notable changes to Markdown Grid Editor are documented in this file.
 - Refine the toolbar into four responsive layouts: labeled one-row, icon-only one-row, icon-only two-row, and partially collapsed two-row.
 - Keep the requested action groups together at intermediate widths and remove the stray divider at the start of the second row.
 - Widen the compound menu for translated labels and replace the plain zoom select with a compact, rounded control using the official `expand_more` Material Symbol.
+- Continue row and column range selection when the pointer leaves the narrow heading and enters the grid, without retaining the reorder cursor during selection.
+- Strengthen selection borders, separate selected-cell fill from its frame, distinguish axis and title surfaces, and keep a visible divider below row 0.
 
 ## [0.2.0] - 2026-08-11
 

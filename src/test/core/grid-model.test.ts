@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import type { TableSnapshot } from '../../core/types';
 import {
   axisSelectionRange,
+  boundedIndexAtOffset,
   clampCell,
   columnName,
   columnPixelWidth,
@@ -102,5 +103,13 @@ suite('Grid model', () => {
     assert.strictEqual(nearestBoundedIndex(starts, 190, 2), 2);
     assert.strictEqual(nearestBoundedIndex(starts, 500, 2), 2);
     assert.strictEqual(nearestBoundedIndex(starts, -100, 2), 0);
+  });
+
+  test('keeps a header selection on the cell under an out-of-header pointer', () => {
+    const starts = [34, 78, 116, 174];
+    assert.strictEqual(boundedIndexAtOffset(starts, 20, 1, 2), 1);
+    assert.strictEqual(boundedIndexAtOffset(starts, 115, 1, 2), 1);
+    assert.strictEqual(boundedIndexAtOffset(starts, 116, 1, 2), 2);
+    assert.strictEqual(boundedIndexAtOffset(starts, 500, 1, 2), 2);
   });
 });

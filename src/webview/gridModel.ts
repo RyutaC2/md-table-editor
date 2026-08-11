@@ -94,6 +94,20 @@ export function nearestBoundedIndex(starts: number[], desiredStart: number, maxi
   return nearest;
 }
 
+export function boundedIndexAtOffset(starts: number[], offset: number, minimumIndex: number, maximumIndex: number): number {
+  const minimum = Math.max(0, Math.min(minimumIndex, starts.length - 2));
+  const maximum = Math.max(minimum, Math.min(maximumIndex, starts.length - 2));
+  if (offset <= (starts[minimum] ?? 0)) {
+    return minimum;
+  }
+  for (let index = minimum; index < maximum; index += 1) {
+    if (offset < starts[index + 1]) {
+      return index;
+    }
+  }
+  return maximum;
+}
+
 export function rangeBounds(range: SelectionRange): { top: number; bottom: number; left: number; right: number } {
   return {
     top: Math.min(range.start.row, range.end.row),
