@@ -14,6 +14,8 @@ export interface SelectionRange {
   end: CellPosition;
 }
 
+export type GridAxis = 'column' | 'row';
+
 export function columnPixelWidth(markdownWidth: number): number {
   const safeWidth = Number.isFinite(markdownWidth) ? Math.max(3, Math.floor(markdownWidth)) : 3;
   return Math.max(minimumColumnWidth, safeWidth * characterWidth + columnWidthChrome);
@@ -37,6 +39,38 @@ export function clampCell(cell: CellPosition, snapshot: TableSnapshot): CellPosi
     row: Math.max(0, Math.min(snapshot.rows.length - 1, cell.row)),
     column: Math.max(0, Math.min(snapshot.widths.length - 1, cell.column)),
   };
+}
+
+export function axisSelectionRange(
+  axis: GridAxis,
+  anchor: number,
+  current: number,
+  rowCount: number,
+  columnCount: number,
+): SelectionRange {
+  if (axis === 'row') {
+    return {
+      start: { row: anchor, column: 0 },
+      end: { row: current, column: Math.max(0, columnCount - 1) },
+    };
+  }
+  return {
+    start: { row: 0, column: anchor },
+    end: { row: Math.max(0, rowCount - 1), column: current },
+  };
+}
+
+export function rangeSelectsWholeAxis(
+  range: SelectionRange,
+  axis: GridAxis,
+  index: number,
+  rowCount: number,
+  columnCount: number,
+): boolean {
+  const bounds = rangeBounds(range);
+  return axis === 'row'
+    ? index >= bounds.top && index <= bounds.bottom && bounds.left === 0 && bounds.right === columnCount - 1
+    : index >= bounds.left && index <= bounds.right && bounds.top === 0 && bounds.bottom === rowCount - 1;
 }
 
 export function rangeBounds(range: SelectionRange): { top: number; bottom: number; left: number; right: number } {

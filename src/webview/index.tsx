@@ -9,6 +9,7 @@ import { Icon } from './icons';
 import type { IconName } from './icons';
 import {
   characterWidth,
+  axisSelectionRange,
   clampCell,
   columnName,
   columnPixelWidth,
@@ -16,10 +17,12 @@ import {
   estimatedBodyRowHeight,
   isCellSelected,
   parseTsv,
+  rangeSelectsWholeAxis,
   rangeBounds,
   usefulMove,
 } from './gridModel';
 import type { SelectionRange } from './gridModel';
+import type { GridAxis } from './gridModel';
 import { hasExceededDragThreshold, scrollPositionForPan, visibleCellAlignment } from './interaction';
 import './styles.css';
 
@@ -56,6 +59,13 @@ interface PanGesture {
   scrollTop: number;
 }
 
+interface HeaderSelectionGesture {
+  pointerId: number;
+  axis: GridAxis;
+  anchor: number;
+  additive: boolean;
+}
+
 type Dictionary = Record<string, string>;
 
 declare function acquireVsCodeApi(): VSCodeApi;
@@ -81,7 +91,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     disjointReorder: 'Disjoint rows or columns cannot be reordered.', moveRows: 'Move rows', moveColumns: 'Move columns',
     clipboardFailed: 'Could not access the clipboard.',
     appendRow: 'Add row at end', appendColumn: 'Add column at end',
-    columnOptions: 'Column options',
+    columnOptions: 'Column options', selectAll: 'Select entire table',
   },
   ja: {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
@@ -93,7 +103,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     disjointReorder: '不連続な行または列は並べ替えできません。', moveRows: '行を移動', moveColumns: '列を移動',
     clipboardFailed: 'クリップボードへアクセスできませんでした。',
     appendRow: '末尾に行を追加', appendColumn: '末尾に列を追加',
-    columnOptions: '列の操作',
+    columnOptions: '列の操作', selectAll: '表全体を選択',
   },
 };
 
@@ -217,6 +227,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const gridRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const cellSelectionGestureRef = useRef<CellSelectionGesture | undefined>(undefined);
+  const headerSelectionGestureRef = useRef<HeaderSelectionGesture | undefined>(undefined);
   const panGestureRef = useRef<PanGesture | undefined>(undefined);
   const snapshotRef = useRef(snapshot);
   const primaryRef = useRef(primary);
@@ -522,6 +533,37 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     return [...indexes];
   }, [ranges]);
 
+  const wholeAxisSelected = useCallback((axis: GridAxis, index: number): boolean => ranges.some((range) => (
+    rangeSelectsWholeAxis(range, axis, index, snapshot.rows.length, snapshot.widths.length)
+  )), [ranges, snapshot.rows.length, snapshot.widths.length]);
+
+  const startHeaderSelection = useCallback((axis: GridAxis, index: number, event: React.PointerEvent): void => {
+    if (event.button !== 0 || wholeAxisSelected(axis, index)) {
+      return;
+    }
+    const additive = event.ctrlKey || event.metaKey;
+    const axisAnchor = event.shiftKey ? (axis === 'row' ? anchor.row : anchor.column) : index;
+    const range = axisSelectionRange(axis, axisAnchor, index, snapshot.rows.length, snapshot.widths.length);
+    const next = axis === 'row' ? range.start : { row: 0, column: index };
+    headerSelectionGestureRef.current = { pointerId: event.pointerId, axis, anchor: axisAnchor, additive };
+    setPrimary(next);
+    setAnchor(next);
+    setRanges((current) => additive ? [...current, range] : [range]);
+    vscode.postMessage({ type: 'revealCell', cell: next });
+  }, [anchor, snapshot.rows.length, snapshot.widths.length, wholeAxisSelected]);
+
+  const extendHeaderSelection = useCallback((axis: GridAxis, index: number, event: React.PointerEvent): void => {
+    const gesture = headerSelectionGestureRef.current;
+    if (!gesture || gesture.axis !== axis || gesture.pointerId !== event.pointerId || (event.buttons & 1) === 0) {
+      return;
+    }
+    const range = axisSelectionRange(axis, gesture.anchor, index, snapshot.rows.length, snapshot.widths.length);
+    const next = axis === 'row' ? { row: index, column: 0 } : { row: 0, column: index };
+    setPrimary(next);
+    setRanges((current) => gesture.additive ? [...current.slice(0, -1), range] : [range]);
+    vscode.postMessage({ type: 'revealCell', cell: next });
+  }, [snapshot.rows.length, snapshot.widths.length]);
+
   useEffect(() => {
     const receive = (event: MessageEvent<ExtensionMessage>): void => {
       const incoming = event.data;
@@ -569,6 +611,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   useEffect(() => {
     const endCellSelection = (): void => {
       cellSelectionGestureRef.current = undefined;
+      headerSelectionGestureRef.current = undefined;
     };
     window.addEventListener('pointerup', endCellSelection);
     window.addEventListener('pointercancel', endCellSelection);
@@ -776,7 +819,19 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
           }}
         >
           <div className="grid-canvas" style={{ width: canvasWidth, height: canvasHeight }}>
-            <div className="corner" aria-hidden="true" style={{ left: scrollPosition.left, top: scrollPosition.top }} />
+            <button
+              type="button"
+              className="corner"
+              aria-label={text.selectAll}
+              title={text.selectAll}
+              style={{ left: scrollPosition.left, top: scrollPosition.top }}
+              onClick={() => {
+                const start = { row: 0, column: 0 };
+                const end = { row: snapshot.rows.length - 1, column: snapshot.widths.length - 1 };
+                setPrimary(start); setAnchor(start); setRanges([{ start, end }]);
+                vscode.postMessage({ type: 'revealCell', cell: start });
+              }}
+            />
             <div
               className="header-row-heading"
               role="rowheader"
@@ -787,17 +842,21 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                 const end = { row: 0, column: snapshot.widths.length - 1 };
                 setPrimary(start); setAnchor(start); setRanges([{ start, end }]);
               }}
-            >1</div>
+            >0</div>
             {virtualColumns.map((virtualColumn) => {
               const column = virtualColumn.index;
               const width = virtualColumn.size;
+              const canReorder = wholeAxisSelected('column', column) && contiguous(selectedColumns);
               return (
                 <React.Fragment key={virtualColumn.key}>
                   <div
                     className={`column-heading${reorderClass('column', column)}`}
                     role="columnheader"
-                    draggable
+                    draggable={canReorder}
                     onDragStart={(event) => {
+                      if (!canReorder || headerSelectionGestureRef.current) {
+                        event.preventDefault(); return;
+                      }
                       const indexes = selectedColumns.includes(column) ? selectedColumns : [column];
                       if (!contiguous(indexes)) {
                         event.preventDefault(); setNotice(text.disjointReorder); return;
@@ -808,12 +867,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     onDragOver={(event) => updateDropTarget(event, 'column', column)}
                     onDrop={(event) => completeDrop(event, 'column', column)}
                     onDragEnd={clearReorder}
-                    onPointerDown={(event) => {
-                      if (event.button !== 0) return;
-                      const start = { row: 0, column };
-                      const end = { row: snapshot.rows.length - 1, column };
-                      setPrimary(start); setAnchor(start); setRanges(event.ctrlKey || event.metaKey ? [...ranges, { start, end }] : [{ start, end }]);
-                    }}
+                    onPointerDown={(event) => startHeaderSelection('column', column, event)}
+                    onPointerEnter={(event) => extendHeaderSelection('column', column, event)}
                     style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top, width }}
                   >
                     <span>{columnName(column)}</span>
@@ -897,31 +952,31 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
             {virtualRows.map((virtualRow) => {
               const row = virtualRow.index + 1;
               const top = bodyOffset + virtualRow.start;
+              const canReorder = wholeAxisSelected('row', row) && contiguous(selectedRows.filter((index) => index > 0));
               return (
                 <React.Fragment key={virtualRow.key}>
                   <div
                     className={`row-heading${reorderClass('row', row)}`}
                     role="rowheader"
-                    draggable
+                    draggable={canReorder}
                     style={{ left: scrollPosition.left, top, height: virtualRow.size }}
                     onDragStart={(event) => {
+                      if (!canReorder || headerSelectionGestureRef.current) {
+                        event.preventDefault(); return;
+                      }
                       const indexes = selectedRows.includes(row) ? selectedRows.filter((index) => index > 0) : [row];
                       if (!contiguous(indexes)) {
                         event.preventDefault(); setNotice(text.disjointReorder); return;
                       }
-                      dragPreview(event, `${text.moveRows}: ${indexes.map((index) => index + 1).join(', ')}`, indexes.length);
+                      dragPreview(event, `${text.moveRows}: ${indexes.join(', ')}`, indexes.length);
                       setDraggedRows(indexes);
                     }}
                     onDragOver={(event) => updateDropTarget(event, 'row', row)}
                     onDrop={(event) => completeDrop(event, 'row', row)}
                     onDragEnd={clearReorder}
-                    onPointerDown={(event) => {
-                      if (event.button !== 0) return;
-                      const start = { row, column: 0 };
-                      const end = { row, column: snapshot.widths.length - 1 };
-                      setPrimary(start); setAnchor(start); setRanges(event.ctrlKey || event.metaKey ? [...ranges, { start, end }] : [{ start, end }]);
-                    }}
-                  >{row + 1}</div>
+                    onPointerDown={(event) => startHeaderSelection('row', row, event)}
+                    onPointerEnter={(event) => extendHeaderSelection('row', row, event)}
+                  >{row}</div>
                   {virtualColumns.map((virtualColumn) => {
                     const column = virtualColumn.index;
                     const cell = { row, column };

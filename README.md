@@ -50,7 +50,7 @@ When the cursor is inside an existing table, the new table is inserted after tha
 | Confirm an edit | Enter, Tab, or move focus |
 | Cancel an edit | Esc |
 | Clear cell contents | Delete, Backspace, or the toolbar's delete-cell-content action |
-| Select the complete table | Ctrl/Cmd+A |
+| Select the complete table | Ctrl/Cmd+A or click the top-left corner |
 | Copy or cut | Ctrl/Cmd+C or X, or the toolbar |
 | Paste | Ctrl/Cmd+V |
 | Undo or redo | Ctrl/Cmd+Z or Y, or the toolbar |
@@ -67,7 +67,7 @@ The toolbar changes with the available width: one labeled row at 1500px or wider
 
 The vertical `+` control at the right edge appends a column, and the horizontal `+` control at the bottom appends a row. Each control follows the actual table dimensions, and the bottom-right intersection remains empty.
 
-Dragging a row or column heading makes the source translucent and shows a drag preview and insertion line. A drop position can be selected over either a heading or its corresponding cells, with the first and second halves representing insertion before and after.
+The Markdown header is row `0`; data rows begin at `1`. Dragging unselected row or column headings selects a continuous range on that axis. Drag the selected headings again to reorder the block. During reordering, the source becomes translucent and a drag preview and insertion line appear. A drop position can be selected over either a heading or its corresponding cells, with the first and second halves representing insertion before and after.
 
 ## Supported Markdown
 

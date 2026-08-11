@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import type { TableSnapshot } from '../../core/types';
 import {
+  axisSelectionRange,
   clampCell,
   columnName,
   columnPixelWidth,
@@ -10,6 +11,7 @@ import {
   isCellSelected,
   parseTsv,
   rangeBounds,
+  rangeSelectsWholeAxis,
   usefulMove,
 } from '../../webview/gridModel';
 
@@ -68,5 +70,22 @@ suite('Grid model', () => {
     assert.strictEqual(estimatedBodyRowHeight(['1234567890123456789012345', 'short'], [3, 20]), 76);
     assert.strictEqual(estimatedBodyRowHeight(['', ''], [3, 3]), 38);
     assert.strictEqual(estimatedBodyRowHeight([''], [3], 40), 40);
+  });
+
+  test('builds row and column header ranges on one fixed axis', () => {
+    assert.deepStrictEqual(axisSelectionRange('row', 3, 1, 5, 4), {
+      start: { row: 3, column: 0 }, end: { row: 1, column: 3 },
+    });
+    assert.deepStrictEqual(axisSelectionRange('column', 2, 0, 5, 4), {
+      start: { row: 0, column: 2 }, end: { row: 4, column: 0 },
+    });
+  });
+
+  test('requires a complete row or column before enabling a second-drag reorder', () => {
+    const wholeRow = axisSelectionRange('row', 1, 3, 5, 4);
+    const wholeColumn = axisSelectionRange('column', 1, 2, 5, 4);
+    assert.strictEqual(rangeSelectsWholeAxis(wholeRow, 'row', 2, 5, 4), true);
+    assert.strictEqual(rangeSelectsWholeAxis(wholeRow, 'column', 1, 5, 4), false);
+    assert.strictEqual(rangeSelectsWholeAxis(wholeColumn, 'column', 2, 5, 4), true);
   });
 });
