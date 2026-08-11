@@ -2,6 +2,10 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.2.6] - 2026-08-11
+
+- Fix regular table insertion so every advertised size from 1×1 through 20×20 is created without being truncated to 8×8.
+
 ## [0.2.5] - 2026-08-11
 
 - Add a persistent bottom status bar showing the active cell reference and current table dimensions.

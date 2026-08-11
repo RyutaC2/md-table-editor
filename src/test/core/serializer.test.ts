@@ -54,8 +54,12 @@ suite('Markdown table serializer edge cases', () => {
     assert.strictEqual(smallest.format.eol, '\r\n');
 
     const largest = parseMarkdownTables(createTableMarkdown(99, 99))[0];
-    assert.strictEqual(largest.rows.length, 8);
-    assert.strictEqual(largest.widths.length, 8);
+    assert.strictEqual(largest.rows.length, 20);
+    assert.strictEqual(largest.widths.length, 20);
+
+    const invalid = parseMarkdownTables(createTableMarkdown(Number.NaN, Number.POSITIVE_INFINITY))[0];
+    assert.strictEqual(invalid.rows.length, 1);
+    assert.strictEqual(invalid.widths.length, 1);
   });
 
   test('round-trips supported formatting and cell content', () => {

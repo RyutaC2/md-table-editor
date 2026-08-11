@@ -56,8 +56,8 @@ export function serializeTable(snapshot: TableSnapshot): string {
 }
 
 export function createTableMarkdown(columns: number, visibleRows: number, eol: '\n' | '\r\n' | '\r' = '\n'): string {
-  const columnCount = Math.min(8, Math.max(1, Math.floor(columns)));
-  const rowCount = Math.min(8, Math.max(1, Math.floor(visibleRows)));
+  const columnCount = Number.isFinite(columns) ? Math.min(20, Math.max(1, Math.floor(columns))) : 1;
+  const rowCount = Number.isFinite(visibleRows) ? Math.min(20, Math.max(1, Math.floor(visibleRows))) : 1;
   return serializeTable({
     rows: Array.from({ length: rowCount }, () => Array.from({ length: columnCount }, () => '')),
     alignments: Array.from({ length: columnCount }, () => 'none' as const),
