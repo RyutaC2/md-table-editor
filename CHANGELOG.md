@@ -2,6 +2,11 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.2.2] - 2026-08-11
+
+- Keep the fuller toolbar layouts visible at narrower widths by moving the responsive breakpoints to 1400px, 1000px, and 600px.
+- Replace the four direct alignment controls in the narrowest layout with one alignment menu, matching the combined width of its file/zoom, Undo, and Redo controls to the four clipboard controls above.
+
 ## [0.2.1] - 2026-08-11
 
 - Refine the toolbar into four responsive layouts: labeled one-row, icon-only one-row, icon-only two-row, and partially collapsed two-row.

@@ -1022,8 +1022,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   return (
     <main className="app">
       <nav className="toolbar" aria-label="Table operations">
-        <div className="toolbar-group toolbar-overflow toolbar-compact" aria-label={text.moreActions}>
-          <details className="toolbar-popup">
+        <div className="toolbar-group toolbar-narrow-tools toolbar-compact" aria-label="Table operations">
+          <details className="toolbar-popup toolbar-overflow">
             <summary aria-label={text.moreActions} title={text.moreActions}><Icon name="more_horiz" /></summary>
             <div className="toolbar-popup-items">
               <ToolbarMenuItem action={{ icon: 'download', label: text.importTable, onClick: () => vscode.postMessage({ type: 'importTable' }) }} />
@@ -1036,12 +1036,19 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                   zoom={zoom}
                   onChange={(level) => {
                     setZoom(level);
-                    document.querySelector<HTMLDetailsElement>('.toolbar-overflow .toolbar-popup[open]')?.removeAttribute('open');
+                    document.querySelector<HTMLDetailsElement>('details.toolbar-overflow[open]')?.removeAttribute('open');
                   }}
                 />
               </div>
             </div>
           </details>
+          <ToolbarPopup
+            actions={alignmentActions}
+            icon={alignmentActions.find((action) => action.pressed)?.icon ?? 'format_align_justify'}
+            label={text.alignmentOptions}
+          />
+          <ToolbarButton icon="undo" label={text.undo} labelVisibility="hidden" onClick={() => vscode.postMessage({ type: 'undo' })} />
+          <ToolbarButton icon="redo" label={text.redo} labelVisibility="hidden" onClick={() => vscode.postMessage({ type: 'redo' })} />
         </div>
         <div className="toolbar-group toolbar-clipboard" aria-label="Clipboard">
           <ToolbarButton icon="content_paste" label={text.paste} labelVisibility="hidden" onClick={() => void pasteFromToolbar()} />
@@ -1457,6 +1464,25 @@ function ToolbarMenuItem({ action }: { action: ToolbarAction }): React.JSX.Eleme
       <span>{action.label}</span>
       {action.pressed && <Icon name="check" size={16} />}
     </button>
+  );
+}
+
+function ToolbarPopup({
+  actions,
+  icon,
+  label,
+}: {
+  actions: ToolbarAction[];
+  icon: IconName;
+  label: string;
+}): React.JSX.Element {
+  return (
+    <details className="toolbar-popup">
+      <summary aria-label={label} title={label}><Icon name={icon} /></summary>
+      <div className="toolbar-popup-items">
+        {actions.map((action) => <ToolbarMenuItem key={action.label} action={action} />)}
+      </div>
+    </details>
   );
 }
 
