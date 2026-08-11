@@ -49,20 +49,24 @@ const customClipboardType = 'application/x-markdown-grid-editor';
 
 const dictionaries: Record<'en' | 'ja', Dictionary> = {
   en: {
-    loading: 'Loading table…', undo: 'Undo', redo: 'Redo', rowBefore: 'Row before', rowAfter: 'Row after',
+    loading: 'Loading table…', undo: 'Undo', redo: 'Redo', copy: 'Copy', cut: 'Cut', clearCells: 'Delete cell contents',
+    rowBefore: 'Row before', rowAfter: 'Row after',
     deleteRow: 'Delete row', columnBefore: 'Column before', columnAfter: 'Column after', deleteColumn: 'Delete column',
     autoFit: 'Auto fit widths', alignment: 'Alignment', none: 'None', left: 'Left', center: 'Center', right: 'Right',
     ascending: 'Sort ascending', descending: 'Sort descending', large: 'Large table: virtualization is enabled and no data is truncated.',
     disjointCopy: 'Copying disjoint ranges is not supported.', header: 'Header', empty: 'Empty table',
     disjointReorder: 'Disjoint rows or columns cannot be reordered.', moveRows: 'Move rows', moveColumns: 'Move columns',
+    clipboardFailed: 'Could not access the clipboard.',
   },
   ja: {
-    loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', rowBefore: '前に行を追加', rowAfter: '後に行を追加',
+    loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
+    rowBefore: '前に行を追加', rowAfter: '後に行を追加',
     deleteRow: '行を削除', columnBefore: '前に列を追加', columnAfter: '後に列を追加', deleteColumn: '列を削除',
     autoFit: '横幅を整える', alignment: '配置', none: '指定なし', left: '左', center: '中央', right: '右',
     ascending: '昇順で並べ替え', descending: '降順で並べ替え', large: '大きなテーブルです。データを省略せず仮想化して表示しています。',
     disjointCopy: '不連続範囲はコピーできません。', header: 'ヘッダー', empty: '空のテーブル',
     disjointReorder: '不連続な行または列は並べ替えできません。', moveRows: '行を移動', moveColumns: '列を移動',
+    clipboardFailed: 'クリップボードへアクセスできませんでした。',
   },
 };
 
@@ -297,6 +301,39 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
       sendOperation({ type: 'setCells', changes });
     }
   }, [ranges, sendOperation, snapshot]);
+
+  const copySelection = useCallback(async (cut: boolean): Promise<void> => {
+    if (ranges.length !== 1) {
+      setNotice(text.disjointCopy);
+      return;
+    }
+
+    const plain = tsvFromRange(snapshot, ranges[0], false);
+    const raw = tsvFromRange(snapshot, ranges[0], true);
+    try {
+      if (!navigator.clipboard) {
+        throw new Error('Clipboard API is unavailable');
+      }
+      if (typeof ClipboardItem === 'function' && typeof navigator.clipboard.write === 'function') {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({
+            'text/plain': new Blob([plain], { type: 'text/plain' }),
+            [customClipboardType]: new Blob([raw], { type: customClipboardType }),
+          })]);
+        } catch {
+          await navigator.clipboard.writeText(plain);
+        }
+      } else {
+        await navigator.clipboard.writeText(plain);
+      }
+      if (cut) {
+        replaceSelection('');
+      }
+      requestAnimationFrame(() => gridRef.current?.focus());
+    } catch {
+      setNotice(text.clipboardFailed);
+    }
+  }, [ranges, replaceSelection, snapshot, text.clipboardFailed, text.disjointCopy]);
 
   const movePrimary = useCallback((rowDelta: number, columnDelta: number, extend: boolean) => {
     const next = clampCell({ row: primary.row + rowDelta, column: primary.column + columnDelta }, snapshot);
@@ -536,6 +573,19 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
         <div className="toolbar-group toolbar-history" aria-label="History">
           <ToolbarButton icon="undo" label={text.undo} onClick={() => vscode.postMessage({ type: 'undo' })} />
           <ToolbarButton icon="redo" label={text.redo} onClick={() => vscode.postMessage({ type: 'redo' })} />
+        </div>
+        <div className="toolbar-group toolbar-clipboard" aria-label="Clipboard">
+          <ToolbarButton icon="content_copy" label={text.copy} onClick={() => void copySelection(false)} />
+          <ToolbarButton icon="content_cut" label={text.cut} onClick={() => void copySelection(true)} />
+          <ToolbarButton
+            danger
+            icon="delete"
+            label={text.clearCells}
+            onClick={() => {
+              replaceSelection('');
+              requestAnimationFrame(() => gridRef.current?.focus());
+            }}
+          />
         </div>
         <div className="toolbar-group toolbar-rows" aria-label="Rows">
           <ToolbarButton icon="add_row_above" label={text.rowBefore} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row) }, { row: Math.max(1, primary.row), column: primary.column })} />

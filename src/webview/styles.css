@@ -60,9 +60,9 @@ button:disabled { cursor: default; opacity: 0.45; }
   flex: 0 0 auto;
   min-height: 80px;
   grid-template-areas:
-    'history rows'
-    'columns display';
-  grid-template-columns: max-content minmax(0, 1fr);
+    'history rows display'
+    'clipboard columns display';
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) max-content;
   grid-template-rows: repeat(2, 30px);
   gap: 4px 8px;
   padding: 8px 10px;
@@ -81,9 +81,15 @@ button:disabled { cursor: default; opacity: 0.45; }
 }
 
 .toolbar-history { grid-area: history; }
+.toolbar-clipboard { grid-area: clipboard; }
 .toolbar-rows { grid-area: rows; padding-left: 8px; border-left: 1px solid var(--grid-line); }
-.toolbar-columns { grid-area: columns; }
-.toolbar-display { grid-area: display; padding-left: 8px; border-left: 1px solid var(--grid-line); }
+.toolbar-columns { grid-area: columns; padding-left: 8px; border-left: 1px solid var(--grid-line); }
+.toolbar-display {
+  grid-area: display;
+  align-self: center;
+  padding-left: 8px;
+  border-left: 1px solid var(--grid-line);
+}
 
 .toolbar-button {
   display: inline-flex;
@@ -388,18 +394,18 @@ button:disabled { cursor: default; opacity: 0.45; }
   outline: none;
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 1500px) {
   .toolbar {
     min-height: 46px;
-    grid-template-areas: 'history rows columns display';
-    grid-template-columns: max-content max-content max-content minmax(0, 1fr);
+    grid-template-areas: 'history clipboard rows columns display';
+    grid-template-columns: max-content max-content max-content max-content minmax(0, 1fr);
     grid-template-rows: 30px;
   }
 
-  .toolbar-columns { padding-left: 8px; border-left: 1px solid var(--grid-line); }
+  .toolbar-clipboard { padding-left: 8px; border-left: 1px solid var(--grid-line); }
 }
 
-@media (max-width: 559px) {
+@media (max-width: 679px) {
   .toolbar {
     display: flex;
     min-height: 44px;
@@ -409,6 +415,7 @@ button:disabled { cursor: default; opacity: 0.45; }
   }
 
   .toolbar-group { gap: 2px; flex: 0 0 auto; }
+  .toolbar-clipboard,
   .toolbar-rows,
   .toolbar-columns,
   .toolbar-display { padding-left: 3px; border-left: 1px solid var(--grid-line); }

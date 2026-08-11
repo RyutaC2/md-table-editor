@@ -2,6 +2,13 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.1.5] - 2026-08-11
+
+- Add toolbar buttons to copy, cut, and delete the contents of selected cells.
+- Keep Markdown source values in the custom clipboard format when the Webview supports it, with TSV as the interoperable fallback.
+- Place row operations directly above column operations in the labeled two-row toolbar layout.
+- Adjust responsive toolbar breakpoints for the additional clipboard controls without introducing a scrollbar.
+
 ## [0.1.4] - 2026-08-11
 
 - Output packaged VSIX files to the dedicated `artifacts/` directory.
