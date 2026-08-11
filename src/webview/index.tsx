@@ -595,6 +595,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     const start = event.clientX;
     const initial = snapshot.widths[column];
     let preview = initial;
+    const root = document.documentElement;
+    root.classList.add('column-resizing');
     const move = (moveEvent: PointerEvent): void => {
       const width = Math.max(3, Math.round(initial + (moveEvent.clientX - start) / characterWidth));
       if (width !== preview) {
@@ -602,16 +604,27 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
         setSnapshot((current) => applyOperation(current, { type: 'setWidth', column, width }));
       }
     };
-    const up = (upEvent: PointerEvent): void => {
+    const cleanup = (): void => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
-      const width = Math.max(3, Math.round(initial + (upEvent.clientX - start) / characterWidth));
-      if (width !== initial) {
-        sendOperation({ type: 'setWidth', column, width }, primary);
+      window.removeEventListener('pointercancel', cancel);
+      window.removeEventListener('blur', up);
+      root.classList.remove('column-resizing');
+    };
+    const up = (): void => {
+      cleanup();
+      if (preview !== initial) {
+        sendOperation({ type: 'setWidth', column, width: preview }, primary);
       }
+    };
+    const cancel = (): void => {
+      cleanup();
+      setSnapshot((current) => applyOperation(current, { type: 'setWidth', column, width: initial }));
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', cancel);
+    window.addEventListener('blur', up);
   };
 
   const reorderClass = (axis: DropTarget['axis'], index: number): string => {
@@ -853,6 +866,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     </details>
                     <span
                       className="resize-handle"
+                      draggable={false}
                       title={text.autoFit}
                       onPointerDown={(event) => resizeColumn(column, event)}
                       onDoubleClick={(event) => {
@@ -1052,7 +1066,9 @@ function MarkdownCell({ value, workspaceResourceBase }: { value: string; workspa
   return (
     <span
       className="markdown-cell"
+      draggable={false}
       dangerouslySetInnerHTML={{ __html: html }}
+      onDragStart={(event) => event.preventDefault()}
       onClick={(event) => {
         const target = event.target;
         if ((event.ctrlKey || event.metaKey) && target instanceof HTMLAnchorElement && /^https:\/\//iu.test(target.href)) {
