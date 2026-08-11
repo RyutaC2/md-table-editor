@@ -150,7 +150,7 @@ button:disabled { cursor: default; opacity: 0.45; }
 
 .toolbar-zoom-control {
   position: relative;
-  width: 82px;
+  width: 64px;
   height: 30px;
 }
 
@@ -160,8 +160,8 @@ button:disabled { cursor: default; opacity: 0.45; }
   height: 100%;
   gap: 3px;
   align-items: center;
-  justify-content: flex-end;
-  padding: 3px 7px 3px 10px;
+  justify-content: center;
+  padding: 3px 4px;
   color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
   font-weight: 600;
   background: var(--vscode-dropdown-background, var(--vscode-editorWidget-background, var(--grid-header)));
@@ -173,6 +173,7 @@ button:disabled { cursor: default; opacity: 0.45; }
 }
 
 .toolbar-zoom-control > summary::-webkit-details-marker { display: none; }
+.toolbar-zoom-control > summary::marker { content: ''; }
 
 .toolbar-zoom-control > summary:hover,
 .toolbar-zoom-control[open] > summary {
