@@ -9,6 +9,7 @@ All notable changes to Markdown Grid Editor are documented in this file.
 - Declare full support for Restricted Mode and virtual workspaces, and validate complete bundled dependency license notices during production packaging.
 - Extend the repeatable performance benchmark with CSV and XLSX import/export measurements at the guaranteed table size.
 - Add concise v1 user-acceptance, Marketplace publishing, and vulnerability-reporting documentation.
+- Slightly reduce the blue active-selection frame and normalize the row 0 title separator to a clear 2px rule.
 
 ## [0.2.5] - 2026-08-11
 

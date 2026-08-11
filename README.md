@@ -81,7 +81,7 @@ The vertical `+` control at the right edge appends a column, and the horizontal 
 
 The bottom status bar shows the active cell in `A0` notation and the current table size as columns × rows.
 
-The Markdown header is row `0`; data rows begin at `1`, separated by a persistent heavier rule. Dragging unselected row or column headings selects a continuous range on that axis; the gesture continues if the pointer enters the adjacent cells. Selected headings use selection fill without an extra blue outline, while the selected cell range keeps a strong border. Drag the selected headings again to reorder the block. During reordering, the source becomes translucent and a drag preview and insertion line appear. A drop position can be selected over either a heading or its corresponding cells, with the first and second halves representing insertion before and after.
+The Markdown header is row `0`; data rows begin at `1`, separated by a persistent 2px rule. Dragging unselected row or column headings selects a continuous range on that axis; the gesture continues if the pointer enters the adjacent cells. Selected headings use selection fill without an extra blue outline, while the selected cell range keeps a clear 2px border. Drag the selected headings again to reorder the block. During reordering, the source becomes translucent and a drag preview and insertion line appear. A drop position can be selected over either a heading or its corresponding cells, with the first and second halves representing insertion before and after.
 
 ## Supported Markdown
 
