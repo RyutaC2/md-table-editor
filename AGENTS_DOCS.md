@@ -251,7 +251,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 ### ローカル検証環境
 
-現在の開発コンテナはDesktop/Webテストに必要なGTK、NSS、Chromium系共有ライブラリを標準では備えておらず、通常実行ではExtension HostまたはChromiumの起動前に停止します。2026-08-11の1.0.0検証では、必要なDebianパッケージを `/tmp` へ展開し、システムへインストールせず `LD_LIBRARY_PATH` から参照しました。Desktopは既存のWSLgディスプレイを使い、Light Modern、Dark Modern、Default High Contrast、Default High Contrast LightでWebviewを維持する確認を含む合計73件、Webは既定ポート3000の競合を避けてポート3001のヘッドレスChromiumを使い3件が通過しました。型チェック、Lint、純粋ロジック68件、第三者通知同期、開発依存を含むnpm監査、プロダクションビルド、VSIX生成も成功し、npm監査は脆弱性0件でした。直前のmainのGitHub Actions run 48もNode.js 22ですべて成功しており、1.0.0のpush後に新しいCI結果を確認します。通常の開発環境またはGitHub ActionsではOS依存パッケージを正規に導入して実行します。
+現在の開発コンテナはDesktop/Webテストに必要なGTK、NSS、Chromium系共有ライブラリを標準では備えておらず、通常実行ではExtension HostまたはChromiumの起動前に停止します。2026-08-11の1.0.0検証では、必要なDebianパッケージを `/tmp` へ展開し、システムへインストールせず `LD_LIBRARY_PATH` から参照しました。Desktopは既存のWSLgディスプレイを使い、Light Modern、Dark Modern、Default High Contrast、Default High Contrast LightでWebviewを維持する確認を含む合計73件、Webは既定ポート3000の競合を避けてポート3001のヘッドレスChromiumを使い3件が通過しました。型チェック、Lint、純粋ロジック68件、第三者通知同期、開発依存を含むnpm監査、プロダクションビルド、VSIX生成も成功し、npm監査は脆弱性0件でした。1.0.0リリースコミットを対象とするmainのGitHub Actions run 50もNode.js 22でDesktop/WebテストとVSIX成果物アップロードまで成功しています。通常の開発環境またはGitHub ActionsではOS依存パッケージを正規に導入して実行します。
 
 ### 性能評価
 
