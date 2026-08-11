@@ -32,6 +32,8 @@ As a Markdown table grows, manually maintaining its pipes, delimiter row, and sp
 4. Confirming a cell edit immediately updates the source on the left.
 5. Save the file normally with Ctrl/Cmd+S.
 
+The editor tab is named `table: <filename>` so it remains tied to the source document even when header cells change.
+
 ### Insert a new table
 
 1. Right-click in the Markdown editor.
@@ -69,7 +71,7 @@ Copying a disjoint selection is not supported. When pasting with a disjoint sele
 
 Import replaces the complete table currently open in the GUI. When an XLSX workbook has multiple worksheets, select one in the VS Code Quick Pick. Export writes the complete current table to one CSV file or one `Table` worksheet. Cell values are imported as strings; spreadsheet formatting, formulas, images, and merged-cell structure are not reproduced.
 
-Cell contents wrap automatically when they exceed the column width. A row expands only as much as required by its tallest cell.
+Cell contents wrap automatically when they exceed the column width. A row expands only as much as required by its tallest rendered cell; hidden Markdown link destinations do not add blank vertical space.
 
 Grid zoom scales the table, row and column headings, cells, resize increments, selection border, and edge-add controls. The toolbar remains at the VS Code UI size so its controls stay usable.
 

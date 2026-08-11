@@ -1,13 +1,13 @@
 import type { TableSnapshot } from '../core/types';
-import { displayWidth } from '../core/width';
+import { displayWidth, visibleMarkdownText } from '../core/width';
 import type { CellPosition } from '../shared/protocol';
 
 export const minimumColumnWidth = 96;
 export const characterWidth = 8;
 const columnWidthChrome = 20;
 const bodyRowMinimumHeight = 38;
-const bodyRowLineHeight = 20;
-const bodyRowVerticalPadding = 16;
+const bodyRowLineHeight = 18;
+const bodyRowVerticalPadding = 18;
 
 export interface SelectionRange {
   start: CellPosition;
@@ -25,7 +25,7 @@ export function columnPixelWidth(markdownWidth: number, scale = 1): number {
 export function estimatedWrappedLines(value: string, markdownWidth: number): number {
   const availableWidth = columnPixelWidth(markdownWidth) - columnWidthChrome;
   const charactersPerLine = Math.max(1, Math.floor(availableWidth / characterWidth));
-  return Math.max(1, Math.ceil(displayWidth(value) / charactersPerLine));
+  return Math.max(1, Math.ceil(displayWidth(visibleMarkdownText(value)) / charactersPerLine));
 }
 
 export function estimatedBodyRowHeight(
@@ -33,12 +33,15 @@ export function estimatedBodyRowHeight(
   widths: number[],
   minimumHeight = bodyRowMinimumHeight,
   scale = 1,
+  separatorWidth = 1,
 ): number {
   const lines = row.reduce((maximum, value, column) => (
     Math.max(maximum, estimatedWrappedLines(value, widths[column] ?? 3))
   ), 1);
   const safeScale = Number.isFinite(scale) ? Math.max(0.5, Math.min(2, scale)) : 1;
-  return Math.round(Math.max(minimumHeight, lines * bodyRowLineHeight + bodyRowVerticalPadding) * safeScale);
+  const minimum = Math.round(minimumHeight * safeScale);
+  const content = Math.ceil((lines * bodyRowLineHeight + bodyRowVerticalPadding) * safeScale) + separatorWidth;
+  return Math.max(minimum, content);
 }
 
 export function clampCell(cell: CellPosition, snapshot: TableSnapshot): CellPosition {

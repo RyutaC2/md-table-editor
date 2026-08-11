@@ -68,17 +68,22 @@ suite('Grid model', () => {
   });
 
   test('sizes a body row from the tallest cell without excessive minimum-width wrapping', () => {
-    assert.strictEqual(estimatedBodyRowHeight(['short', '1234567890'], [3, 3]), 56);
-    assert.strictEqual(estimatedBodyRowHeight(['1234567890123456789012345', 'short'], [3, 20]), 76);
+    assert.strictEqual(estimatedBodyRowHeight(['short', '1234567890'], [3, 3]), 55);
+    assert.strictEqual(estimatedBodyRowHeight(['1234567890123456789012345', 'short'], [3, 20]), 73);
     assert.strictEqual(estimatedBodyRowHeight(['', ''], [3, 3]), 38);
     assert.strictEqual(estimatedBodyRowHeight([''], [3], 40), 40);
+  });
+
+  test('estimates wrapping from rendered Markdown text instead of hidden link destinations', () => {
+    assert.strictEqual(estimatedWrappedLines('[short](https://example.com/a/very/long/path/that/is/not/rendered)', 3), 1);
+    assert.strictEqual(estimatedBodyRowHeight(['[short](https://example.com/a/very/long/path/that/is/not/rendered)'], [3]), 38);
   });
 
   test('scales grid geometry without changing wrapping capacity', () => {
     assert.strictEqual(columnPixelWidth(3, 0.5), 48);
     assert.strictEqual(columnPixelWidth(20, 2), 360);
     assert.strictEqual(estimatedBodyRowHeight(['1234567890'], [3], 38, 0.5), 28);
-    assert.strictEqual(estimatedBodyRowHeight(['1234567890'], [3], 38, 2), 112);
+    assert.strictEqual(estimatedBodyRowHeight(['1234567890'], [3], 38, 2), 109);
   });
 
   test('builds row and column header ranges on one fixed axis', () => {

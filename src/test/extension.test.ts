@@ -84,6 +84,8 @@ suite('Markdown Grid Editor extension', () => {
       return tabs.length === 1 ? tabs : undefined;
     });
     assert.strictEqual(opened.length, 1);
+    const fileName = document.fileName.split(/[\\/]/u).at(-1);
+    assert.strictEqual(opened[0].label, `table: ${fileName}`);
 
     await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
     await command();

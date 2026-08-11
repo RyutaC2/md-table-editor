@@ -87,7 +87,7 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
     const sourceColumn = vscode.window.activeTextEditor?.viewColumn ?? vscode.ViewColumn.One;
     const panel = vscode.window.createWebviewPanel(
       viewType,
-      this.titleFor(table),
+      this.titleFor(document),
       { viewColumn: vscode.ViewColumn.Beside, preserveFocus: false },
       {
         enableScripts: true,
@@ -347,7 +347,7 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
     session.tableEndOffset = table.endOffset;
     session.documentVersion = document.version;
     session.snapshot = snapshot(table);
-    session.panel.title = this.titleFor(table);
+    session.panel.title = this.titleFor(document);
     const state: EditorState = {
       uri: document.uri.toString(),
       tableStartOffset: table.startOffset,
@@ -442,9 +442,9 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
     session.tableStartOffset = startOffset;
   }
 
-  private titleFor(table: MarkdownTable): string {
-    const heading = table.rows[0].filter(Boolean).slice(0, 2).join(' · ');
-    return heading ? `Table: ${heading}` : `Table ${table.startLine + 1}`;
+  private titleFor(document: vscode.TextDocument): string {
+    const fileName = document.fileName.split(/[\\/]/u).at(-1) || document.uri.path.split('/').at(-1) || document.uri.toString();
+    return `table: ${fileName}`;
   }
 
   private post(session: TableSession, outgoing: ExtensionMessage): void {

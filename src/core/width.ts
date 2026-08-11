@@ -36,6 +36,15 @@ export function displayWidth(value: string): number {
   return width;
 }
 
+export function visibleMarkdownText(value: string): string {
+  return value
+    .replace(/!\[([^\]]*)\]\([^)]*\)/gu, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/gu, '$1')
+    .replace(/[*_~`]/gu, '')
+    .replace(/\\\|/gu, '|')
+    .trim();
+}
+
 export function padToDisplayWidth(value: string, width: number): string {
   return value + ' '.repeat(Math.max(0, width - displayWidth(value)));
 }

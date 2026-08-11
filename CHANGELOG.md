@@ -6,6 +6,8 @@ All notable changes to Markdown Grid Editor are documented in this file.
 
 - Restore whole-table auto-fit with the official `fit_width` Material Symbol at the far right of one-row toolbars, below zoom in two-row toolbars, and inside the compound menu at the narrowest width.
 - Add a `fit_width` auto-fit action for the current column to every column menu.
+- Name editor tabs `table: <filename>` so the source document remains identifiable regardless of table headers.
+- Calculate wrapped row heights from rendered Markdown text and explicit grid line-height metrics, preventing hidden link destinations and accumulated line-height drift from adding empty vertical space.
 
 ## [0.2.2] - 2026-08-11
 

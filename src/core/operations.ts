@@ -1,5 +1,5 @@
 import type { Alignment, TableOperation, TableSnapshot } from './types';
-import { displayWidth } from './width';
+import { displayWidth, visibleMarkdownText } from './width';
 
 export function cloneSnapshot(snapshot: TableSnapshot): TableSnapshot {
   return {
@@ -56,23 +56,14 @@ function finiteInteger(value: number, fallback: number): number {
 }
 
 function maximumColumnWidth(snapshot: TableSnapshot, column: number): number {
-  return snapshot.rows.reduce((maximum, row) => Math.max(maximum, displayWidth(displayText(row[column] ?? ''))), 3);
-}
-
-function displayText(value: string): string {
-  return value
-    .replace(/!\[([^\]]*)\]\([^)]*\)/gu, '$1')
-    .replace(/\[([^\]]+)\]\([^)]*\)/gu, '$1')
-    .replace(/[*_~`]/gu, '')
-    .replace(/\\\|/gu, '|')
-    .trim();
+  return snapshot.rows.reduce((maximum, row) => Math.max(maximum, displayWidth(visibleMarkdownText(row[column] ?? ''))), 3);
 }
 
 function sortRows(snapshot: TableSnapshot, column: number, direction: 'ascending' | 'descending'): void {
   if (column < 0 || column >= snapshot.widths.length || snapshot.rows.length <= 2) {
     return;
   }
-  const body = snapshot.rows.slice(1).map((row, index) => ({ row, index, value: displayText(row[column] ?? '') }));
+  const body = snapshot.rows.slice(1).map((row, index) => ({ row, index, value: visibleMarkdownText(row[column] ?? '') }));
   const nonEmpty = body.filter(({ value }) => value !== '');
   const numeric = nonEmpty.length > 0 && nonEmpty.every(({ value }) => Number.isFinite(Number(value)));
   const collator = new Intl.Collator(undefined, { numeric: false, sensitivity: 'base' });
