@@ -6,6 +6,7 @@ All notable changes to Markdown Grid Editor are documented in this file.
 
 - Grow the Markdown header row as well as body rows when rendered cell content wraps.
 - Tighten the character-to-pixel width model and auto-fit columns from visible text rather than Markdown decoration or link targets.
+- Keep every toolbar layout left-aligned and use two rows for the narrow icon-only layout.
 
 ## [0.1.12] - 2026-08-11
 

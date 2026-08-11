@@ -62,9 +62,10 @@ button:disabled { cursor: default; opacity: 0.45; }
   grid-template-areas:
     'history rows'
     'clipboard columns';
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: max-content max-content;
   grid-template-rows: repeat(2, 30px);
   gap: 6px 12px;
+  justify-content: start;
   padding: 8px 10px;
   overflow: hidden;
   background: var(--vscode-titleBar-activeBackground, var(--grid-header));
@@ -440,7 +441,7 @@ button:disabled { cursor: default; opacity: 0.45; }
   .toolbar {
     min-height: 46px;
     grid-template-areas: 'history clipboard rows columns';
-    grid-template-columns: max-content max-content max-content minmax(0, 1fr);
+    grid-template-columns: repeat(4, max-content);
     grid-template-rows: 30px;
     column-gap: 10px;
   }
@@ -450,15 +451,17 @@ button:disabled { cursor: default; opacity: 0.45; }
 
 @media (max-width: 799px) {
   .toolbar {
-    display: flex;
-    min-height: 44px;
-    gap: 6px;
-    align-items: center;
+    min-height: 76px;
+    grid-template-areas:
+      'history rows'
+      'clipboard columns';
+    grid-template-columns: max-content max-content;
+    grid-template-rows: repeat(2, 28px);
+    gap: 4px 8px;
     padding: 7px 6px;
   }
 
   .toolbar-group { gap: 2px; flex: 0 0 auto; }
-  .toolbar-clipboard,
   .toolbar-rows,
   .toolbar-columns { padding-left: 6px; border-left: 1px solid var(--grid-line); }
 
