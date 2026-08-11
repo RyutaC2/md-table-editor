@@ -250,7 +250,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 ### ローカル検証環境
 
-現在の開発コンテナはDesktop/Webテストに必要なGTK、NSS、Chromium系共有ライブラリを標準では備えておらず、通常実行ではExtension HostまたはChromiumの起動前に停止します。2026-08-11の0.2.5検証では、必要なDebianパッケージを `/tmp` へ展開し、システムへインストールせず `LD_LIBRARY_PATH` から参照しました。Desktopは既存のWSLgディスプレイを使い、Light Modern、Dark Modern、Default High Contrast、Default High Contrast LightでWebviewを維持する確認を含む合計71件、Webは既定ポート3000の競合を避けてポート3001のヘッドレスChromiumを使い3件が通過しました。通常の開発環境またはGitHub ActionsではOS依存パッケージを正規に導入して実行します。
+現在の開発コンテナはDesktop/Webテストに必要なGTK、NSS、Chromium系共有ライブラリを標準では備えておらず、通常実行ではExtension HostまたはChromiumの起動前に停止します。2026-08-11の0.2.6検証では、必要なDebianパッケージを `/tmp` へ展開し、システムへインストールせず `LD_LIBRARY_PATH` から参照しました。Desktopは既存のWSLgディスプレイを使い、Light Modern、Dark Modern、Default High Contrast、Default High Contrast LightでWebviewを維持する確認を含む合計71件、Webは既定ポート3000の競合を避けてポート3001のヘッドレスChromiumを使い3件が通過しました。型チェック、Lint、純粋ロジック66件、第三者通知同期、開発依存を含むnpm監査、プロダクションビルド、VSIX生成も成功し、npm監査は脆弱性0件でした。mainのGitHub Actions run 48もNode.js 22ですべて成功しています。通常の開発環境またはGitHub ActionsではOS依存パッケージを正規に導入して実行します。
 
 ### 性能評価
 
@@ -274,7 +274,14 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - 現在の統合テストはコマンド登録、CodeLens、Webviewパネル生成・再利用が中心です。セル編集、ドラッグ、クリップボード、メニュー、テーマ、ARIAを実ブラウザーDOMで操作するE2Eテストは未整備です。
 - ソースカーソル移動時は文書全体を複数のリスナーで再解析します。約3.5MiBの測定用文書では解析1回が約68msのため、文書バージョン単位の解析結果キャッシュが改善候補です。
 - Unicodeを多用する保証超過表では、直列化と全列幅調整がメインスレッドで1秒を超えます。列幅キャッシュ、差分直列化、Web Workerへの計算分離を検討します。
-- 0.2.5のプロダクションバンドルはDesktop拡張511.27KiB、Web拡張511.23KiB、Webview JavaScript368.73KiB、Webview CSS18.19KiBで、VSIX全体は479.14KiBです。SheetJSをDesktop/Webへ同梱したため拡張バンドルが増えており、初期表示・初回入出力時間を実機測定したうえでファイル変換部分の遅延読み込みを検討します。
+- 0.2.6のプロダクションバンドルはDesktop拡張511.32KiB、Web拡張511.28KiB、Webview JavaScript368.92KiB、Webview CSS18.19KiBで、完全な第三者ライセンス本文を含むVSIX全体は488.48KiBです。SheetJSをDesktop/Webへ同梱したため拡張バンドルが増えており、初期表示・初回入出力時間を実機測定したうえでファイル変換部分の遅延読み込みを検討します。
+
+### v1公開前の残作業
+
+- `RELEASE_CHECKLIST.md` の8シナリオを実機で完了し、P0・P1が0件であることを確認します。
+- Marketplace管理画面でpublisher `RyutaC2` の所有と拡張機能ID `RyutaC2.md-table-editor` の利用可否を確認します。
+- Marketplace用の正方形PNGアイコンと実画面スクリーンショットを追加するか、ユーザーが最終判断します。現在のmanifestにアイコンはなく、READMEにも製品画像はありません。
+- GitHubのPrivate Vulnerability Reportingを有効化し、受け入れ後にだけバージョンを `1.0.0` へ更新します。具体的な手順は `PUBLISHING.md` を基準にします。
 
 ## 設計意図
 
