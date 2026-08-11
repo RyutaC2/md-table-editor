@@ -1,6 +1,6 @@
 # Marketplace 公開手順
 
-この文書は、Markdown Grid EditorをVisual Studio Marketplaceへ初回公開するときの手順です。現在の `0.2.6` は公開候補版であり、`RELEASE_CHECKLIST.md` の受け入れ完了前に `1.0.0` へ変更しません。
+この文書は、Markdown Grid EditorをVisual Studio Marketplaceへ初回公開するときの手順です。現在の `0.2.7` は公開候補版であり、`RELEASE_CHECKLIST.md` の受け入れ完了前に `1.0.0` へ変更しません。
 
 ## 公開前に人が決めること
 
@@ -27,7 +27,7 @@ npm run benchmark
 npm run package:vsix
 ```
 
-生成された `artifacts/md-table-editor-0.2.6.vsix` をVS Code Stableへインストールし、`RELEASE_CHECKLIST.md` を完了します。VSIXの内容にはソース、テスト、秘密情報、内部文書、ソースマップが含まれていないことも確認します。
+生成された `artifacts/md-table-editor-0.2.7.vsix` をVS Code Stableへインストールし、`RELEASE_CHECKLIST.md` を完了します。VSIXの内容にはソース、テスト、秘密情報、内部文書、ソースマップが含まれていないことも確認します。
 
 ## v1を確定する
 

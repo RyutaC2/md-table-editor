@@ -13,7 +13,7 @@ body:
     attributes:
       label: Environment
       description: Include the extension, VS Code, and OS versions, plus Desktop or Web.
-      placeholder: Markdown Grid Editor 0.2.6; VS Code 1.125.0; Windows 11; Desktop
+      placeholder: Markdown Grid Editor x.y.z; VS Code 1.125.0; Windows 11; Desktop
     validations:
       required: true
   - type: input
