@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { applyOperation } from '../core/operations';
 import { findTableAtOffset, parseMarkdownTables } from '../core/parser';
 import { serializeTable } from '../core/serializer';
+import { readTabularWorkbook, snapshotFromTabularRows, workbookRows, writeTabularFile } from '../core/tabularFiles';
+import type { TabularFileType } from '../core/tabularFiles';
 import type { MarkdownTable, TableSnapshot } from '../core/types';
 import type { CellPosition, EditorState, ExtensionMessage, PersistedPanelState, WebviewMessage } from '../shared/protocol';
 import { language, message } from './locale';
@@ -41,6 +43,11 @@ function nonce(): string {
   const values = new Uint32Array(4);
   globalThis.crypto.getRandomValues(values);
   return Array.from(values, (value) => value.toString(36)).join('');
+}
+
+function tabularFileType(uri: vscode.Uri): TabularFileType | undefined {
+  const path = uri.path.toLowerCase();
+  return path.endsWith('.csv') ? 'csv' : path.endsWith('.xlsx') ? 'xlsx' : undefined;
 }
 
 function transformOffset(offset: number, changes: readonly vscode.TextDocumentContentChangeEvent[]): number | undefined {
@@ -170,6 +177,12 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
       case 'redo':
         await this.runHistory(session, incoming.type);
         break;
+      case 'importTable':
+        await this.importTable(session);
+        break;
+      case 'exportTable':
+        await this.exportTable(session);
+        break;
       case 'openLink':
         if (/^https:\/\//iu.test(incoming.href)) {
           await vscode.env.openExternal(vscode.Uri.parse(incoming.href));
@@ -181,17 +194,17 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
   private async applyWebviewOperation(
     session: TableSession,
     incoming: Extract<WebviewMessage, { type: 'operation' }>,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const document = await vscode.workspace.openTextDocument(session.uri);
     const table = findTableAtOffset(document.getText(), session.tableStartOffset);
     if (!table) {
       this.closeRemoved(session);
-      return;
+      return false;
     }
     if (incoming.documentVersion !== document.version) {
       await this.sendState(session, document, table, false);
       this.post(session, { type: 'notice', level: 'warning', message: message('staleEdit') });
-      return;
+      return false;
     }
 
     const updated = applyOperation(snapshot(table), incoming.operation);
@@ -202,13 +215,99 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
     session.applyingEdit = false;
     if (!applied) {
       this.post(session, { type: 'notice', level: 'error', message: message('staleEdit') });
-      return;
+      return false;
     }
     const currentDocument = await vscode.workspace.openTextDocument(session.uri);
     const currentTable = findTableAtOffset(currentDocument.getText(), table.startOffset);
     if (currentTable) {
       session.selection = incoming.selection;
       await this.sendState(session, currentDocument, currentTable, false);
+    }
+    return currentTable !== undefined;
+  }
+
+  private async importTable(session: TableSession): Promise<void> {
+    const selected = await vscode.window.showOpenDialog({
+      title: message('importTitle'),
+      canSelectFiles: true,
+      canSelectFolders: false,
+      canSelectMany: false,
+      filters: { 'CSV / Excel Workbook': ['csv', 'xlsx'] },
+    });
+    const uri = selected?.[0];
+    if (!uri) {
+      return;
+    }
+    const type = tabularFileType(uri);
+    if (!type) {
+      void vscode.window.showWarningMessage(message('unsupportedTableFile'));
+      return;
+    }
+    try {
+      const data = await vscode.workspace.fs.readFile(uri);
+      const workbook = readTabularWorkbook(data, type);
+      let sheetName = workbook.SheetNames[0];
+      if (!sheetName) {
+        throw new Error('The workbook has no worksheets');
+      }
+      if (type === 'xlsx' && workbook.SheetNames.length > 1) {
+        const chosen = await vscode.window.showQuickPick(workbook.SheetNames, { placeHolder: message('selectSheet') });
+        if (!chosen) {
+          return;
+        }
+        sheetName = chosen;
+      }
+      const document = await vscode.workspace.openTextDocument(session.uri);
+      const table = findTableAtOffset(document.getText(), session.tableStartOffset);
+      if (!table) {
+        this.closeRemoved(session);
+        return;
+      }
+      const imported = snapshotFromTabularRows(workbookRows(workbook, sheetName), table.format);
+      const fitted = applyOperation(imported, { type: 'autoFit' });
+      const applied = await this.applyWebviewOperation(session, {
+        type: 'operation',
+        documentVersion: document.version,
+        operation: { type: 'replace', snapshot: fitted },
+        selection: { row: 0, column: 0 },
+      });
+      if (applied) {
+        void vscode.window.showInformationMessage(message('imported'));
+      }
+    } catch {
+      void vscode.window.showErrorMessage(message('importFailed'));
+    }
+  }
+
+  private async exportTable(session: TableSession): Promise<void> {
+    const document = await vscode.workspace.openTextDocument(session.uri);
+    const table = findTableAtOffset(document.getText(), session.tableStartOffset);
+    if (!table) {
+      this.closeRemoved(session);
+      return;
+    }
+    const path = session.uri.path;
+    const slash = path.lastIndexOf('/');
+    const baseName = path.slice(slash + 1).replace(/\.[^.]*$/u, '') || 'table';
+    const defaultUri = session.uri.with({ path: `${path.slice(0, slash + 1)}${baseName}-table.xlsx`, query: '', fragment: '' });
+    const uri = await vscode.window.showSaveDialog({
+      title: message('exportTitle'),
+      defaultUri,
+      filters: { 'Excel Workbook': ['xlsx'], CSV: ['csv'] },
+    });
+    if (!uri) {
+      return;
+    }
+    const type = tabularFileType(uri);
+    if (!type) {
+      void vscode.window.showWarningMessage(message('unsupportedTableFile'));
+      return;
+    }
+    try {
+      await vscode.workspace.fs.writeFile(uri, writeTabularFile(snapshot(table), type));
+      void vscode.window.showInformationMessage(message('exported'));
+    } catch {
+      void vscode.window.showErrorMessage(message('exportFailed'));
     }
   }
 

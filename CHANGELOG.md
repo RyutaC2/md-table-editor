@@ -8,6 +8,7 @@ All notable changes to Markdown Grid Editor are documented in this file.
 - Number the Markdown header as row 0, select continuous row or column ranges on the first heading drag, and reorder the selected block on a second drag.
 - Select the complete table by clicking the top-left grid corner.
 - Show a draggable border around continuous multi-cell selections and move their raw Markdown values without crossing table edges or losing overlapping data.
+- Import and replace the complete current table from UTF-8 CSV or XLSX, choose from multiple XLSX worksheets, and export the complete table to CSV or XLSX.
 
 ## [0.1.13] - 2026-08-11
 

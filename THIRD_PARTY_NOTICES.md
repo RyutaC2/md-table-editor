@@ -6,3 +6,11 @@
 
 - Project: <https://github.com/google/material-design-icons>
 - License: <https://www.apache.org/licenses/LICENSE-2.0>
+
+## SheetJS Community Edition
+
+CSV and XLSX import/export uses SheetJS Community Edition 0.20.3, obtained from the project's official distribution CDN. SheetJS Community Edition is distributed under the Apache License, Version 2.0.
+
+- Project: <https://sheetjs.com/>
+- Distribution: <https://cdn.sheetjs.com/>
+- License: <https://www.apache.org/licenses/LICENSE-2.0>

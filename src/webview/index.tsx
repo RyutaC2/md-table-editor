@@ -101,6 +101,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     clipboardFailed: 'Could not access the clipboard.',
     appendRow: 'Add row at end', appendColumn: 'Add column at end',
     columnOptions: 'Column options', selectAll: 'Select entire table', moveSelection: 'Move selected cells',
+    importTable: 'Import CSV or XLSX', exportTable: 'Export CSV or XLSX',
   },
   ja: {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
@@ -113,6 +114,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     clipboardFailed: 'クリップボードへアクセスできませんでした。',
     appendRow: '末尾に行を追加', appendColumn: '末尾に列を追加',
     columnOptions: '列の操作', selectAll: '表全体を選択', moveSelection: '選択セルを移動',
+    importTable: 'CSV・XLSXをインポート', exportTable: 'CSV・XLSXへエクスポート',
   },
 };
 
@@ -878,6 +880,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
           <ToolbarButton icon="undo" label={text.undo} onClick={() => vscode.postMessage({ type: 'undo' })} />
           <ToolbarButton icon="redo" label={text.redo} onClick={() => vscode.postMessage({ type: 'redo' })} />
           <ToolbarButton icon="autoFit" label={text.autoFit} onClick={() => perform({ type: 'autoFit' })} />
+          <ToolbarButton icon="download" label={text.importTable} onClick={() => vscode.postMessage({ type: 'importTable' })} />
+          <ToolbarButton icon="upload" label={text.exportTable} onClick={() => vscode.postMessage({ type: 'exportTable' })} />
         </div>
         <div className="toolbar-group toolbar-clipboard" aria-label="Clipboard">
           <ToolbarButton icon="content_copy" label={text.copy} onClick={() => void copySelection(false)} />

@@ -13,7 +13,15 @@ export type MessageKey =
   | 'staleEdit'
   | 'restoreFailed'
   | 'invalidDocument'
-  | 'largeTable';
+  | 'largeTable'
+  | 'importTitle'
+  | 'selectSheet'
+  | 'importFailed'
+  | 'imported'
+  | 'exportTitle'
+  | 'exportFailed'
+  | 'exported'
+  | 'unsupportedTableFile';
 
 const messages: Record<'en' | 'ja', Record<MessageKey, string>> = {
   en: {
@@ -30,6 +38,14 @@ const messages: Record<'en' | 'ja', Record<MessageKey, string>> = {
     restoreFailed: 'The table editor could not be restored because its table was not found.',
     invalidDocument: 'Open a Markdown file before using this command.',
     largeTable: 'This table is larger than the guaranteed 50 × 500 size. It remains fully editable.',
+    importTitle: 'Import and replace the current table',
+    selectSheet: 'Select the worksheet to import',
+    importFailed: 'The CSV or XLSX file could not be imported.',
+    imported: 'The current table was replaced with the imported data.',
+    exportTitle: 'Export the complete current table',
+    exportFailed: 'The table could not be exported as CSV or XLSX.',
+    exported: 'The complete table was exported.',
+    unsupportedTableFile: 'Choose a file with a .csv or .xlsx extension.',
   },
   ja: {
     editTable: 'GUIで編集',
@@ -45,6 +61,14 @@ const messages: Record<'en' | 'ja', Record<MessageKey, string>> = {
     restoreFailed: '対象テーブルを検出できないため、GUIを復元できませんでした。',
     invalidDocument: 'Markdownファイルを開いてから実行してください。',
     largeTable: '保証サイズの50列×500行を超えています。データを省略せず編集を継続します。',
+    importTitle: 'インポートして現在の表全体を置換',
+    selectSheet: 'インポートするワークシートを選択',
+    importFailed: 'CSVまたはXLSXファイルをインポートできませんでした。',
+    imported: 'インポートしたデータで現在の表全体を置換しました。',
+    exportTitle: '現在の表全体をエクスポート',
+    exportFailed: '表をCSVまたはXLSXとしてエクスポートできませんでした。',
+    exported: '現在の表全体をエクスポートしました。',
+    unsupportedTableFile: '拡張子が.csvまたは.xlsxのファイルを選択してください。',
   },
 };
 

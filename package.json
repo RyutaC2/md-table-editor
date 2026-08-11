@@ -92,7 +92,8 @@
     "@tanstack/react-virtual": "^3.14.9",
     "markdown-it": "^15.0.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",

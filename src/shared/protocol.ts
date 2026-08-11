@@ -28,6 +28,8 @@ export type WebviewMessage =
   | { type: 'revealCell'; cell: CellPosition }
   | { type: 'undo' }
   | { type: 'redo' }
+  | { type: 'importTable' }
+  | { type: 'exportTable' }
   | { type: 'openLink'; href: string };
 
 export interface PersistedPanelState {

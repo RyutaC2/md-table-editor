@@ -15,6 +15,7 @@ As a Markdown table grows, manually maintaining its pipes, delimiter row, and sp
 - Select individual cells, rectangular ranges, disjoint ranges, rows, and columns
 - Move a continuous multi-cell rectangle by dragging its selection border without allowing data to cross table edges
 - Copy, cut, and paste TSV data, automatically expanding the destination table when necessary
+- Import or export the complete current table as UTF-8 CSV or XLSX, with worksheet selection for multi-sheet workbooks
 - Add, delete, and drag rows or columns, with quick-add controls at the table edges
 - Set column alignment, perform stable sorting, resize columns by dragging, and auto-fit widths
 - Render sanitized inline Markdown inside cells
@@ -55,6 +56,7 @@ When the cursor is inside an existing table, the new table is inserted after tha
 | Select the complete table | Ctrl/Cmd+A or click the top-left corner |
 | Copy or cut | Ctrl/Cmd+C or X, or the toolbar |
 | Paste | Ctrl/Cmd+V |
+| Import or export | Toolbar; CSV and XLSX only |
 | Undo or redo | Ctrl/Cmd+Z or Y, or the toolbar |
 | Add or delete rows and columns | Top toolbar; use the `+` controls at the right and bottom edges to append |
 | Align or sort a column | Menu in each column heading |
@@ -62,6 +64,8 @@ When the cursor is inside an existing table, the new table is inserted after tha
 | Pan a large table | Hold the middle mouse button and drag over the grid |
 
 Copying a disjoint selection is not supported. When pasting with a disjoint selection active, the primary cell is used as the paste origin.
+
+Import replaces the complete table currently open in the GUI. When an XLSX workbook has multiple worksheets, select one in the VS Code Quick Pick. Export writes the complete current table to one CSV file or one `Table` worksheet. Cell values are imported as strings; spreadsheet formatting, formulas, images, and merged-cell structure are not reproduced.
 
 Cell contents wrap automatically when they exceed the column width. A row expands only as much as required by its tallest cell.
 
