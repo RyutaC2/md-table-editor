@@ -6,6 +6,7 @@ All notable changes to Markdown Grid Editor are documented in this file.
 
 - Remove the unused leading space from the zoom control while retaining a stable width for every zoom level.
 - Give whole-table alignment icons explicit hover and accessibility labels that describe both the scope and resulting alignment.
+- Remove blue outlines from selected row, column, and corner headings while retaining selection fill and cell-range borders.
 
 ## [0.2.3] - 2026-08-11
 
