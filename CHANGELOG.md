@@ -2,6 +2,11 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.2.3] - 2026-08-11
+
+- Restore whole-table auto-fit with the official `fit_width` Material Symbol at the far right of one-row toolbars, below zoom in two-row toolbars, and inside the compound menu at the narrowest width.
+- Add a `fit_width` auto-fit action for the current column to every column menu.
+
 ## [0.2.2] - 2026-08-11
 
 - Keep the fuller toolbar layouts visible at narrower widths by moving the responsive breakpoints to 1400px, 1000px, and 600px.

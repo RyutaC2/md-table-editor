@@ -110,7 +110,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     loading: 'Loading table…', undo: 'Undo', redo: 'Redo', paste: 'Paste', copy: 'Copy', cut: 'Cut', clearCells: 'Delete cell contents',
     rowBefore: 'Row before', rowAfter: 'Row after',
     deleteRow: 'Delete row', columnBefore: 'Column before', columnAfter: 'Column after', deleteColumn: 'Delete column',
-    autoFit: 'Auto fit widths', alignment: 'Alignment', none: 'None', left: 'Left', center: 'Center', right: 'Right',
+    autoFit: 'Auto fit all widths', autoFitColumn: 'Auto fit this column', alignment: 'Alignment', none: 'None', left: 'Left', center: 'Center', right: 'Right',
     ascending: 'Sort ascending', descending: 'Sort descending', large: 'Large table: virtualization is enabled and no data is truncated.',
     disjointCopy: 'Copying disjoint ranges is not supported.', header: 'Header', empty: 'Empty table',
     disjointReorder: 'Disjoint rows or columns cannot be reordered.', moveRows: 'Move rows', moveColumns: 'Move columns',
@@ -124,7 +124,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', paste: '貼り付け', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
     rowBefore: '前に行を追加', rowAfter: '後に行を追加',
     deleteRow: '行を削除', columnBefore: '前に列を追加', columnAfter: '後に列を追加', deleteColumn: '列を削除',
-    autoFit: '横幅を整える', alignment: '配置', none: '指定なし', left: '左', center: '中央', right: '右',
+    autoFit: 'すべての列幅を自動調整', autoFitColumn: 'この列幅を自動調整', alignment: '配置', none: '指定なし', left: '左', center: '中央', right: '右',
     ascending: '昇順で並べ替え', descending: '降順で並べ替え', large: '大きなテーブルです。データを省略せず仮想化して表示しています。',
     disjointCopy: '不連続範囲はコピーできません。', header: 'ヘッダー', empty: '空のテーブル',
     disjointReorder: '不連続な行または列は並べ替えできません。', moveRows: '行を移動', moveColumns: '列を移動',
@@ -1040,6 +1040,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                   }}
                 />
               </div>
+              <div className="toolbar-popup-separator" />
+              <ToolbarMenuItem action={{ icon: 'fit_width', label: text.autoFit, onClick: () => perform({ type: 'autoFit' }) }} />
             </div>
           </details>
           <ToolbarPopup
@@ -1084,6 +1086,9 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
         </div>
         <div className="toolbar-group toolbar-columns" aria-label="Columns">
           {columnActions.map((action) => <ToolbarButton key={action.label} {...action} labelVisibility="wide" />)}
+        </div>
+        <div className="toolbar-group toolbar-autofit" aria-label={text.autoFit}>
+          <ToolbarButton icon="fit_width" label={text.autoFit} labelVisibility="hidden" onClick={() => perform({ type: 'autoFit' })} />
         </div>
       </nav>
       {state.oversized && <div className="banner" role="status">{text.large}</div>}
@@ -1222,6 +1227,15 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                             {snapshot.alignments[column] === alignment && <Icon name="check" size={16} />}
                           </button>
                         ))}
+                        <div className="column-menu-separator" />
+                        <button
+                          type="button"
+                          className="column-menu-item"
+                          onClick={(event) => {
+                            event.currentTarget.closest('details')?.removeAttribute('open');
+                            perform({ type: 'autoFitColumn', column }, primary);
+                          }}
+                        ><Icon name="fit_width" /><span>{text.autoFitColumn}</span></button>
                         <div className="column-menu-separator" />
                         <button
                           type="button"

@@ -67,8 +67,8 @@ button:disabled { cursor: default; opacity: 0.45; }
   display: grid;
   flex: 0 0 auto;
   min-height: 46px;
-  grid-template-areas: 'clipboard history files zoom alignments rows columns';
-  grid-template-columns: repeat(7, max-content);
+  grid-template-areas: 'clipboard history files zoom alignments rows columns autofit';
+  grid-template-columns: repeat(8, max-content);
   grid-template-rows: 30px;
   gap: 8px;
   justify-content: start;
@@ -94,6 +94,7 @@ button:disabled { cursor: default; opacity: 0.45; }
 .toolbar-alignments { grid-area: alignments; }
 .toolbar-rows { grid-area: rows; }
 .toolbar-columns { grid-area: columns; }
+.toolbar-autofit { grid-area: autofit; }
 .toolbar-narrow-tools { grid-area: narrow-tools; }
 .toolbar-compact { display: none; }
 
@@ -103,6 +104,11 @@ button:disabled { cursor: default; opacity: 0.45; }
 .toolbar-alignments,
 .toolbar-rows,
 .toolbar-columns {
+  padding-left: 8px;
+  border-left: 1px solid var(--grid-line);
+}
+
+.toolbar-autofit {
   padding-left: 8px;
   border-left: 1px solid var(--grid-line);
 }
@@ -762,7 +768,7 @@ button:disabled { cursor: default; opacity: 0.45; }
     min-height: 80px;
     grid-template-areas:
       'clipboard history rows zoom'
-      'alignments files columns .';
+      'alignments files columns autofit';
     grid-template-columns: repeat(4, max-content);
     grid-template-rows: repeat(2, 30px);
     gap: 6px 8px;
@@ -785,7 +791,8 @@ button:disabled { cursor: default; opacity: 0.45; }
   .toolbar-files,
   .toolbar-zoom,
   .toolbar-alignments,
-  .toolbar-history { display: none; }
+  .toolbar-history,
+  .toolbar-autofit { display: none; }
 
   .toolbar-compact { display: flex; }
 
