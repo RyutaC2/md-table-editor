@@ -2,6 +2,18 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.1.7] - 2026-08-11
+
+- Replace simplified icon drawings with the official Material Symbols Outlined 24px SVG paths from Google.
+- Move the global width-fit action next to Undo and Redo.
+- Switch to the icon-only toolbar at 899px and below, and add clearer spacing between action groups.
+
+## [0.1.6] - 2026-08-11
+
+- Close an open column menu when clicking elsewhere or scrolling the grid.
+- Keep column menus inside the visible grid viewport, including the first column.
+- Add slim plus buttons at the right and bottom table edges for appending columns and rows.
+
 ## [0.1.5] - 2026-08-11
 
 - Add toolbar buttons to copy, cut, and delete the contents of selected cells.

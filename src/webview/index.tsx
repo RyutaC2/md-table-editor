@@ -45,6 +45,8 @@ const markdownHeaderHeight = 40;
 const bodyOffset = columnHeaderHeight + markdownHeaderHeight;
 const minimumColumnWidth = 96;
 const characterWidth = 9;
+const appendColumnWidth = 30;
+const appendRowHeight = 28;
 const customClipboardType = 'application/x-markdown-grid-editor';
 
 const dictionaries: Record<'en' | 'ja', Dictionary> = {
@@ -57,6 +59,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     disjointCopy: 'Copying disjoint ranges is not supported.', header: 'Header', empty: 'Empty table',
     disjointReorder: 'Disjoint rows or columns cannot be reordered.', moveRows: 'Move rows', moveColumns: 'Move columns',
     clipboardFailed: 'Could not access the clipboard.',
+    appendRow: 'Add row at end', appendColumn: 'Add column at end',
   },
   ja: {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
@@ -67,8 +70,17 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     disjointCopy: '不連続範囲はコピーできません。', header: 'ヘッダー', empty: '空のテーブル',
     disjointReorder: '不連続な行または列は並べ替えできません。', moveRows: '行を移動', moveColumns: '列を移動',
     clipboardFailed: 'クリップボードへアクセスできませんでした。',
+    appendRow: '末尾に行を追加', appendColumn: '末尾に列を追加',
   },
 };
+
+function closeColumnMenusOutside(target?: Node): void {
+  document.querySelectorAll<HTMLDetailsElement>('.column-menu[open]').forEach((menu) => {
+    if (!target || !menu.contains(target)) {
+      menu.removeAttribute('open');
+    }
+  });
+}
 
 function sameCell(left: CellPosition, right: CellPosition): boolean {
   return left.row === right.row && left.column === right.column;
@@ -229,6 +241,40 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const gridRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const text = dictionaries[state.language];
+
+  const positionColumnMenu = useCallback((details: HTMLDetailsElement): void => {
+    if (!details.open) {
+      return;
+    }
+    document.querySelectorAll<HTMLDetailsElement>('.column-menu[open]').forEach((menu) => {
+      if (menu !== details) {
+        menu.removeAttribute('open');
+      }
+    });
+    const items = details.querySelector<HTMLElement>('.column-menu-items');
+    if (!items) {
+      return;
+    }
+    items.style.removeProperty('transform');
+    requestAnimationFrame(() => {
+      const viewport = scrollRef.current?.getBoundingClientRect();
+      const menuBounds = items?.getBoundingClientRect();
+      if (!viewport || !menuBounds || !details.open) {
+        return;
+      }
+      const inset = 8;
+      const leftEdge = viewport.left + inset;
+      const rightEdge = viewport.right - inset;
+      const shift = menuBounds.left < leftEdge
+        ? leftEdge - menuBounds.left
+        : menuBounds.right > rightEdge
+          ? rightEdge - menuBounds.right
+          : 0;
+      if (shift !== 0) {
+        items.style.transform = `translateX(${shift}px)`;
+      }
+    });
+  }, []);
 
   const columnVirtualizer = useVirtualizer({
     count: snapshot.widths.length,
@@ -502,6 +548,14 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     return () => window.removeEventListener('pointerup', pointerUp);
   }, []);
 
+  useEffect(() => {
+    const pointerDown = (event: PointerEvent): void => {
+      closeColumnMenusOutside(event.target instanceof Node ? event.target : undefined);
+    };
+    document.addEventListener('pointerdown', pointerDown, true);
+    return () => document.removeEventListener('pointerdown', pointerDown, true);
+  }, []);
+
   const resizeColumn = (column: number, event: React.PointerEvent): void => {
     event.preventDefault();
     event.stopPropagation();
@@ -564,8 +618,10 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
 
   const virtualColumns = columnVirtualizer.getVirtualItems();
   const virtualRows = rowVirtualizer.getVirtualItems();
-  const canvasWidth = rowHeaderWidth + columnVirtualizer.getTotalSize();
-  const canvasHeight = bodyOffset + rowVirtualizer.getTotalSize();
+  const tableWidth = columnVirtualizer.getTotalSize();
+  const tableBodyHeight = rowVirtualizer.getTotalSize();
+  const canvasWidth = rowHeaderWidth + tableWidth + appendColumnWidth;
+  const canvasHeight = bodyOffset + tableBodyHeight + appendRowHeight;
 
   return (
     <main className="app">
@@ -573,6 +629,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
         <div className="toolbar-group toolbar-history" aria-label="History">
           <ToolbarButton icon="undo" label={text.undo} onClick={() => vscode.postMessage({ type: 'undo' })} />
           <ToolbarButton icon="redo" label={text.redo} onClick={() => vscode.postMessage({ type: 'redo' })} />
+          <span className="toolbar-group-separator" aria-hidden="true" />
+          <ToolbarButton icon="autoFit" label={text.autoFit} onClick={() => perform({ type: 'autoFit' })} />
         </div>
         <div className="toolbar-group toolbar-clipboard" aria-label="Clipboard">
           <ToolbarButton icon="content_copy" label={text.copy} onClick={() => void copySelection(false)} />
@@ -597,9 +655,6 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
           <ToolbarButton icon="add_column_right" label={text.columnAfter} onClick={() => perform({ type: 'insertColumn', index: primary.column + 1 }, { row: primary.row, column: primary.column + 1 })} />
           <ToolbarButton danger icon="view_column" label={text.deleteColumn} disabled={snapshot.widths.length <= 1} onClick={() => perform({ type: 'deleteColumns', indexes: selectedColumns }, { row: primary.row, column: Math.max(0, primary.column - 1) })} />
         </div>
-        <div className="toolbar-group toolbar-display" aria-label="Display">
-          <ToolbarButton icon="autoFit" label={text.autoFit} onClick={() => perform({ type: 'autoFit' })} />
-        </div>
       </nav>
       {state.oversized && <div className="banner" role="status">{text.large}</div>}
       {notice && <button type="button" className="notice" onClick={() => setNotice(undefined)}>{notice}</button>}
@@ -618,7 +673,10 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
         <div
           ref={scrollRef}
           className="grid-scroll"
-          onScroll={(event) => setScrollPosition({ left: event.currentTarget.scrollLeft, top: event.currentTarget.scrollTop })}
+          onScroll={(event) => {
+            closeColumnMenusOutside();
+            setScrollPosition({ left: event.currentTarget.scrollLeft, top: event.currentTarget.scrollTop });
+          }}
         >
           <div className="grid-canvas" style={{ width: canvasWidth, height: canvasHeight }}>
             <div className="corner" aria-hidden="true" style={{ left: scrollPosition.left, top: scrollPosition.top }} />
@@ -663,6 +721,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     <details
                       className="column-menu"
                       draggable={false}
+                      onToggle={(event) => positionColumnMenu(event.currentTarget)}
                       onDragStart={(event) => event.stopPropagation()}
                       onPointerDown={(event) => event.stopPropagation()}
                     >
@@ -798,6 +857,40 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                 </React.Fragment>
               );
             })}
+            <button
+              type="button"
+              className="append-button append-column-button"
+              style={{ left: rowHeaderWidth + tableWidth, top: scrollPosition.top, width: appendColumnWidth, height: bodyOffset }}
+              title={text.appendColumn}
+              aria-label={text.appendColumn}
+              onClick={() => {
+                const column = snapshot.widths.length;
+                perform({ type: 'insertColumn', index: column }, { row: primary.row, column });
+                requestAnimationFrame(() => {
+                  columnVirtualizer.measure();
+                  columnVirtualizer.scrollToIndex(column, { align: 'end' });
+                  gridRef.current?.focus();
+                });
+              }}
+            ><Icon name="add" /></button>
+            <button
+              type="button"
+              className="append-button append-row-button"
+              style={{ left: 0, top: bodyOffset + tableBodyHeight, width: canvasWidth, height: appendRowHeight }}
+              title={text.appendRow}
+              aria-label={text.appendRow}
+              onClick={() => {
+                const row = snapshot.rows.length;
+                perform({ type: 'insertRow', index: row }, { row, column: primary.column });
+                requestAnimationFrame(() => {
+                  rowVirtualizer.measure();
+                  rowVirtualizer.scrollToIndex(row - 1, { align: 'end' });
+                  gridRef.current?.focus();
+                });
+              }}
+            >
+              <span className="append-row-button-icon" style={{ left: scrollPosition.left + 15 }}><Icon name="add" /></span>
+            </button>
           </div>
         </div>
       </div>

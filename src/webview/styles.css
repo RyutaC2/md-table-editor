@@ -60,11 +60,11 @@ button:disabled { cursor: default; opacity: 0.45; }
   flex: 0 0 auto;
   min-height: 80px;
   grid-template-areas:
-    'history rows display'
-    'clipboard columns display';
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) max-content;
+    'history rows'
+    'clipboard columns';
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, 30px);
-  gap: 4px 8px;
+  gap: 6px 12px;
   padding: 8px 10px;
   overflow: hidden;
   background: var(--vscode-titleBar-activeBackground, var(--grid-header));
@@ -82,13 +82,15 @@ button:disabled { cursor: default; opacity: 0.45; }
 
 .toolbar-history { grid-area: history; }
 .toolbar-clipboard { grid-area: clipboard; }
-.toolbar-rows { grid-area: rows; padding-left: 8px; border-left: 1px solid var(--grid-line); }
-.toolbar-columns { grid-area: columns; padding-left: 8px; border-left: 1px solid var(--grid-line); }
-.toolbar-display {
-  grid-area: display;
-  align-self: center;
-  padding-left: 8px;
-  border-left: 1px solid var(--grid-line);
+.toolbar-rows { grid-area: rows; padding-left: 10px; border-left: 1px solid var(--grid-line); }
+.toolbar-columns { grid-area: columns; padding-left: 10px; border-left: 1px solid var(--grid-line); }
+
+.toolbar-group-separator {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  flex: 0 0 1px;
+  background: var(--grid-line);
 }
 
 .toolbar-button {
@@ -264,6 +266,47 @@ button:disabled { cursor: default; opacity: 0.45; }
   box-shadow: 0 8px 24px var(--vscode-widget-shadow);
 }
 
+.append-button {
+  position: absolute;
+  display: grid;
+  padding: 0;
+  place-items: center;
+  color: var(--vscode-descriptionForeground);
+  background: color-mix(in srgb, var(--grid-header) 82%, var(--grid-surface));
+  border: 0;
+  border-right: 1px solid var(--grid-line);
+  border-bottom: 1px solid var(--grid-line);
+}
+
+.append-button:hover {
+  color: var(--vscode-foreground);
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.append-button:focus-visible {
+  z-index: 30;
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: -2px;
+}
+
+.append-column-button {
+  z-index: 17;
+  border-left: 1px solid var(--grid-line);
+}
+
+.append-row-button {
+  z-index: 10;
+  display: block;
+  border-top: 1px solid var(--grid-line);
+}
+
+.append-row-button-icon {
+  position: absolute;
+  top: 50%;
+  display: block;
+  transform: translate(-50%, -50%);
+}
+
 .column-menu-items button {
   min-height: 28px;
   text-align: left;
@@ -397,19 +440,20 @@ button:disabled { cursor: default; opacity: 0.45; }
 @media (min-width: 1500px) {
   .toolbar {
     min-height: 46px;
-    grid-template-areas: 'history clipboard rows columns display';
-    grid-template-columns: max-content max-content max-content max-content minmax(0, 1fr);
+    grid-template-areas: 'history clipboard rows columns';
+    grid-template-columns: max-content max-content max-content minmax(0, 1fr);
     grid-template-rows: 30px;
+    column-gap: 10px;
   }
 
-  .toolbar-clipboard { padding-left: 8px; border-left: 1px solid var(--grid-line); }
+  .toolbar-clipboard { padding-left: 10px; border-left: 1px solid var(--grid-line); }
 }
 
-@media (max-width: 679px) {
+@media (max-width: 899px) {
   .toolbar {
     display: flex;
     min-height: 44px;
-    gap: 3px;
+    gap: 6px;
     align-items: center;
     padding: 7px 6px;
   }
@@ -417,8 +461,7 @@ button:disabled { cursor: default; opacity: 0.45; }
   .toolbar-group { gap: 2px; flex: 0 0 auto; }
   .toolbar-clipboard,
   .toolbar-rows,
-  .toolbar-columns,
-  .toolbar-display { padding-left: 3px; border-left: 1px solid var(--grid-line); }
+  .toolbar-columns { padding-left: 6px; border-left: 1px solid var(--grid-line); }
 
   .toolbar-button {
     width: 28px;

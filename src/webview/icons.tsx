@@ -1,8 +1,10 @@
 import React from 'react';
 
-// These icons use Material Symbols' visual language and are distributed with
-// the extension as local SVG so the Webview remains offline-compatible.
+// These paths are the official Material Symbols Outlined 24px defaults
+// distributed by Google under Apache 2.0. They remain local so the Webview is
+// offline-compatible. Source: google/material-design-icons, symbols/web.
 type IconName =
+  | 'add'
   | 'add_column_left'
   | 'add_column_right'
   | 'add_row_above'
@@ -24,35 +26,36 @@ type IconName =
   | 'view_column';
 
 const paths: Record<IconName, string[]> = {
-  add_column_left: ['M9 3h12v18H9V3zm6 2h-4v14h4V5zm4 0h-2v14h2V5zM4 11V8h2v3h3v2H6v3H4v-3H1v-2h3z'],
-  add_column_right: ['M3 3h12v18H3V3zm6 2H5v14h4V5zm4 0h-2v14h2V5zm6 6V8h2v3h3v2h-3v3h-2v-3h-3v-2h3z'],
-  add_row_above: ['M3 9h18v12H3V9zm2 6v4h14v-4H5zm0-4v2h14v-2H5zm6-7V1h2v3h3v2h-3v3h-2V6H8V4h3z'],
-  add_row_below: ['M3 3h18v12H3V3zm2 6v4h14V9H5zm0-4v2h14V5H5zm6 14v-3h2v3h3v2h-3v3h-2v-3H8v-2h3z'],
-  alignCenter: ['M5 5h14v2H5V5zm3 4h8v2H8V9zm-3 4h14v2H5v-2zm3 4h8v2H8v-2z'],
-  alignLeft: ['M4 5h16v2H4V5zm0 4h10v2H4V9zm0 4h16v2H4v-2zm0 4h10v2H4v-2z'],
-  alignNone: ['M4 5h16v2H4V5zm3 4h10v2H7V9zm-3 4h16v2H4v-2zm3 4h10v2H7v-2z'],
-  alignRight: ['M4 5h16v2H4V5zm6 4h10v2H10V9zm-6 4h16v2H4v-2zm6 4h10v2H10v-2z'],
-  autoFit: ['M3 5h2v14H3V5zm16 0h2v14h-2V5zM7 11h10v2H7v-2zm0 1 3-3v6l-3-3zm10 0-3 3V9l3 3z'],
-  check: ['M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'],
-  content_copy: ['M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z'],
-  content_cut: ['M9.64 7.64A4 4 0 1 0 6 10a3.96 3.96 0 0 0 2.4-.8L12 12.8l-3.6 3.6A4 4 0 1 0 10 19.6l3.4-3.4L19 21h3L10.6 9.6l-.96-1.96zM6 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 14a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm8.8-8.8-1.4-1.4L19 3h3l-7.2 10.2z'],
-  delete: ['M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5-1-1h-5l-1 1H5v2h14V4h-3.5z'],
-  redo: ['M18.4 10.6C16.55 8.15 13.8 7 11 7c-3.87 0-7.16 2.48-8.39 5.94L4.5 13.6C5.41 10.94 7.93 9 11 9c2.16 0 4.27.87 5.69 2.4L13 15h7V8l-1.6 2.6z'],
-  sortAscending: ['M6 19V7.8L3.4 10.4 2 9l5-5 5 5-1.4 1.4L8 7.8V19H6zm7-2h8v2h-8v-2zm0-6h6v2h-6v-2zm0-6h4v2h-4V5z'],
-  sortDescending: ['M6 5v11.2l-2.6-2.6L2 15l5 5 5-5-1.4-1.4L8 16.2V5H6zm7 0h8v2h-8V5zm0 6h6v2h-6v-2zm0 6h4v2h-4v-2z'],
-  table_rows: ['M3 5h18v4H3V5zm0 5h18v4H3v-4zm0 5h18v4H3v-4z'],
-  undo: ['M7.5 8H17c2.76 0 5 2.24 5 5s-2.24 5-5 5h-1v-2h1c1.66 0 3-1.34 3-3s-1.34-3-3-3H7.5v3L3 8l4.5-5v3z'],
-  view_column: ['M3 5h18v14H3V5zm2 2v10h4V7H5zm6 0v10h4V7h-4zm6 0v10h2V7h-2z'],
+  add: ['M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z'],
+  add_column_left: ['M800-200v-560H560v560h240Zm-640 80v-160h80v80h240v-560H240v80h-80v-160h720v720H160Zm320-360Zm80 0h-80 80Zm0 0ZM160-360v-80H80v-80h80v-80h80v80h80v80h-80v80h-80Z'],
+  add_column_right: ['M160-760v560h240v-560H160ZM80-120v-720h720v160h-80v-80H480v560h240v-80h80v160H80Zm400-360Zm-80 0h80-80Zm0 0Zm320 120v-80h-80v-80h80v-80h80v80h80v80h-80v80h-80Z'],
+  add_row_above: ['M200-160h560v-240H200v240Zm640 80H120v-720h160v80h-80v240h560v-240h-80v-80h160v720ZM480-480Zm0 80v-80 80Zm0 0Zm-40-240v-80h-80v-80h80v-80h80v80h80v80h-80v80h-80Z'],
+  add_row_below: ['M200-560h560v-240H200v240Zm-80 400v-720h720v720H680v-80h80v-240H200v240h80v80H120Zm360-320Zm0-80v80-80Zm0 0ZM440-80v-80h-80v-80h80v-80h80v80h80v80h-80v80h-80Z'],
+  alignCenter: ['M120-120v-80h720v80H120Zm160-160v-80h400v80H280ZM120-440v-80h720v80H120Zm160-160v-80h400v80H280ZM120-760v-80h720v80H120Z'],
+  alignLeft: ['M120-120v-80h720v80H120Zm0-160v-80h480v80H120Zm0-160v-80h720v80H120Zm0-160v-80h480v80H120Zm0-160v-80h720v80H120Z'],
+  alignNone: ['M120-120v-80h720v80H120Zm0-160v-80h720v80H120Zm0-160v-80h720v80H120Zm0-160v-80h720v80H120Zm0-160v-80h720v80H120Z'],
+  alignRight: ['M120-760v-80h720v80H120Zm240 160v-80h480v80H360ZM120-440v-80h720v80H120Zm240 160v-80h480v80H360ZM120-120v-80h720v80H120Z'],
+  autoFit: ['M120-120v-720h80v720h-80Zm640 0v-720h80v720h-80ZM280-440v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Z'],
+  check: ['M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z'],
+  content_copy: ['M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z'],
+  content_cut: ['M760-120 480-400l-94 94q8 15 11 32t3 34q0 66-47 113T240-80q-66 0-113-47T80-240q0-66 47-113t113-47q17 0 34 3t32 11l94-94-94-94q-15 8-32 11t-34 3q-66 0-113-47T80-720q0-66 47-113t113-47q66 0 113 47t47 113q0 17-3 34t-11 32l494 494v40H760ZM600-520l-80-80 240-240h120v40L600-520ZM240-640q33 0 56.5-23.5T320-720q0-33-23.5-56.5T240-800q-33 0-56.5 23.5T160-720q0 33 23.5 56.5T240-640Zm240 180q8 0 14-6t6-14q0-8-6-14t-14-6q-8 0-14 6t-6 14q0 8 6 14t14 6ZM240-160q33 0 56.5-23.5T320-240q0-33-23.5-56.5T240-320q-33 0-56.5 23.5T160-240q0 33 23.5 56.5T240-160Z'],
+  delete: ['M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z'],
+  redo: ['M396-200q-97 0-166.5-63T160-420q0-94 69.5-157T396-640h252L544-744l56-56 200 200-200 200-56-56 104-104H396q-63 0-109.5 40T240-420q0 60 46.5 100T396-280h284v80H396Z'],
+  sortAscending: ['M440-160v-487L216-423l-56-57 320-320 320 320-56 57-224-224v487h-80Z'],
+  sortDescending: ['M440-800v487L216-537l-56 57 320 320 320-320-56-57-224 224v-487h-80Z'],
+  table_rows: ['M760-200v-120H200v120h560Zm0-200v-160H200v160h560Zm0-240v-120H200v120h560ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Z'],
+  undo: ['M280-200v-80h284q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l104 104-56 56-200-200 200-200 56 56-104 104h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H280Z'],
+  view_column: ['M121-280v-400q0-33 23.5-56.5T201-760h559q33 0 56.5 23.5T840-680v400q0 33-23.5 56.5T760-200H201q-33 0-56.5-23.5T121-280Zm79 0h133v-400H200v400Zm213 0h133v-400H413v400Zm213 0h133v-400H626v400Z'],
 };
 
-export function Icon({ name, size = 18 }: { name: IconName; size?: number }): React.JSX.Element {
+export function Icon({ name, size = 20 }: { name: IconName; size?: number }): React.JSX.Element {
   return (
     <svg
       aria-hidden="true"
       className="icon"
       focusable="false"
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="0 -960 960 960"
       width={size}
     >
       {paths[name].map((path) => <path key={path} d={path} fill="currentColor" />)}

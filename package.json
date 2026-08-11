@@ -2,7 +2,7 @@
   "name": "md-table-editor",
   "displayName": "Markdown Grid Editor",
   "description": "Edit Markdown tables in an Excel-like GUI inside Visual Studio Code.",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "publisher": "RyutaC2",
   "license": "MIT",
   "homepage": "https://github.com/RyutaC2/md-table-editor#readme",
