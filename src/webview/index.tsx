@@ -122,7 +122,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     columnOptions: 'Column options', selectAll: 'Select entire table', moveSelection: 'Move selected cells',
     importTable: 'Import CSV or XLSX', exportTable: 'Export CSV or XLSX', zoom: 'Zoom',
     moreActions: 'File and zoom options', alignmentOptions: 'Align all columns', rowOptions: 'Row operations', columnActionOptions: 'Column operations',
-    selectedCell: 'Selected cell', tableSize: 'Table size', columnsUnit: ' columns', rowsUnit: ' rows',
+    selectedCell: 'Selected cell', tableSize: 'Table size', columnsUnit: ' columns', rowsUnit: ' rows', editCell: 'Edit cell',
   },
   ja: {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', paste: '貼り付け', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
@@ -138,7 +138,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     columnOptions: '列の操作', selectAll: '表全体を選択', moveSelection: '選択セルを移動',
     importTable: 'CSV・XLSXをインポート', exportTable: 'CSV・XLSXへエクスポート', zoom: 'ズーム',
     moreActions: 'ファイルとズームの操作', alignmentOptions: '全列の配置', rowOptions: '行操作', columnActionOptions: '列操作',
-    selectedCell: '選択セル', tableSize: 'テーブルサイズ', columnsUnit: '列', rowsUnit: '行',
+    selectedCell: '選択セル', tableSize: 'テーブルサイズ', columnsUnit: '列', rowsUnit: '行', editCell: 'セルを編集',
   },
 };
 
@@ -1293,7 +1293,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     onDrop={(event) => draggedColumns.length > 0 && completeDrop(event, 'column', column)}
                   >
                     {editing && sameCell(editing.cell, { row: 0, column })
-                      ? <CellInput ref={inputRef} editing={editing} setEditing={setEditing} commit={commitEdit} />
+                      ? <CellInput ref={inputRef} editing={editing} setEditing={setEditing} commit={commitEdit} label={`${text.editCell}: ${cellReference(editing.cell)}`} />
                       : <MarkdownCell value={snapshot.rows[0]?.[column] ?? ''} workspaceResourceBase={state.workspaceResourceBase} />}
                   </div>
                 </React.Fragment>
@@ -1358,7 +1358,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                         }}
                       >
                         {isEditing
-                          ? <CellInput ref={inputRef} editing={editing} setEditing={setEditing} commit={commitEdit} />
+                          ? <CellInput ref={inputRef} editing={editing} setEditing={setEditing} commit={commitEdit} label={`${text.editCell}: ${cellReference(editing.cell)}`} />
                           : <MarkdownCell value={snapshot.rows[row]?.[column] ?? ''} workspaceResourceBase={state.workspaceResourceBase} />}
                       </div>
                     );
@@ -1554,13 +1554,14 @@ const CellInput = React.forwardRef<HTMLInputElement, {
   editing: EditingCell;
   setEditing: React.Dispatch<React.SetStateAction<EditingCell | undefined>>;
   commit: (move?: number) => void;
-}>(({ editing, setEditing, commit }, ref) => {
+  label: string;
+}>(({ editing, setEditing, commit, label }, ref) => {
   const cancelled = useRef(false);
   return <input
     ref={ref}
     className="cell-input"
     value={editing.value}
-    aria-label="Edit cell"
+    aria-label={label}
     onChange={(event) => setEditing({ ...editing, value: event.target.value.replace(/\r\n|\r|\n/gu, ' ') })}
     onBlur={() => { if (!cancelled.current) commit(); }}
     onKeyDown={(event) => {
@@ -1614,7 +1615,8 @@ function Root(): React.JSX.Element {
     return () => window.removeEventListener('message', receive);
   }, []);
   if (!state) {
-    return <main className="loading" aria-live="polite">Loading table…</main>;
+    const initialLanguage = document.documentElement.lang === 'ja' ? 'ja' : 'en';
+    return <main className="loading" aria-live="polite">{dictionaries[initialLanguage].loading}</main>;
   }
   return <TableEditor key={`${state.uri}:${state.tableStartOffset}`} initial={state} />;
 }
