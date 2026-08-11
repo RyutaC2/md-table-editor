@@ -1,6 +1,17 @@
 import * as assert from 'assert';
 import type { TableSnapshot } from '../../core/types';
-import { clampCell, columnName, contiguous, isCellSelected, parseTsv, rangeBounds, usefulMove } from '../../webview/gridModel';
+import {
+  clampCell,
+  columnName,
+  columnPixelWidth,
+  contiguous,
+  estimatedBodyRowHeight,
+  estimatedWrappedLines,
+  isCellSelected,
+  parseTsv,
+  rangeBounds,
+  usefulMove,
+} from '../../webview/gridModel';
 
 const snapshot: TableSnapshot = {
   rows: [['a', 'b', 'c'], ['1', '2', '3']],
@@ -42,5 +53,20 @@ suite('Grid model', () => {
   test('parses TSV with Windows and classic Mac line endings', () => {
     assert.deepStrictEqual(parseTsv('a\tb\r\nc\td\r'), [['a', 'b'], ['c', 'd']]);
     assert.deepStrictEqual(parseTsv('a\t\n\t'), [['a', ''], ['', '']]);
+  });
+
+  test('uses the effective minimum column width when estimating wrapped lines', () => {
+    assert.strictEqual(columnPixelWidth(3), 96);
+    assert.strictEqual(columnPixelWidth(20), 180);
+    assert.strictEqual(estimatedWrappedLines('123456789', 3), 1);
+    assert.strictEqual(estimatedWrappedLines('1234567890', 3), 2);
+    assert.strictEqual(estimatedWrappedLines('1234567890123456789012345', 3), 3);
+  });
+
+  test('sizes a body row from the tallest cell without excessive minimum-width wrapping', () => {
+    assert.strictEqual(estimatedBodyRowHeight(['short', '1234567890'], [3, 3]), 56);
+    assert.strictEqual(estimatedBodyRowHeight(['1234567890123456789012345', 'short'], [3, 20]), 76);
+    assert.strictEqual(estimatedBodyRowHeight(['', ''], [3, 3]), 38);
+    assert.strictEqual(estimatedBodyRowHeight([''], [3], 40), 40);
   });
 });

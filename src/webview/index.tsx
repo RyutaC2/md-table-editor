@@ -4,11 +4,21 @@ import { createRoot } from 'react-dom/client';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { applyOperation, cloneSnapshot } from '../core/operations';
 import type { Alignment, TableOperation, TableSnapshot } from '../core/types';
-import { displayWidth } from '../core/width';
 import type { CellPosition, EditorState, ExtensionMessage, PersistedPanelState, WebviewMessage } from '../shared/protocol';
 import { Icon } from './icons';
 import type { IconName } from './icons';
-import { clampCell, columnName, contiguous, isCellSelected, parseTsv, rangeBounds, usefulMove } from './gridModel';
+import {
+  characterWidth,
+  clampCell,
+  columnName,
+  columnPixelWidth,
+  contiguous,
+  estimatedBodyRowHeight,
+  isCellSelected,
+  parseTsv,
+  rangeBounds,
+  usefulMove,
+} from './gridModel';
 import type { SelectionRange } from './gridModel';
 import { hasExceededDragThreshold, scrollPositionForPan, visibleCellAlignment } from './interaction';
 import './styles.css';
@@ -54,10 +64,7 @@ const vscode = acquireVsCodeApi();
 const markdown = new MarkdownIt({ html: false, linkify: true, breaks: false });
 const rowHeaderWidth = 48;
 const columnHeaderHeight = 34;
-const markdownHeaderHeight = 40;
-const bodyOffset = columnHeaderHeight + markdownHeaderHeight;
-const minimumColumnWidth = 96;
-const characterWidth = 9;
+const markdownHeaderMinimumHeight = 40;
 const appendColumnWidth = 30;
 const appendRowHeight = 28;
 const selectionDragThreshold = 5;
@@ -217,6 +224,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   primaryRef.current = primary;
   const text = dictionaries[state.language];
   const editingSession = editing ? `${editing.cell.row}:${editing.cell.column}` : undefined;
+  const headerRowHeight = estimatedBodyRowHeight(snapshot.rows[0] ?? [], snapshot.widths, markdownHeaderMinimumHeight);
+  const bodyOffset = columnHeaderHeight + headerRowHeight;
 
   const positionColumnMenu = useCallback((details: HTMLDetailsElement): void => {
     if (!details.open) {
@@ -255,20 +264,14 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const columnVirtualizer = useVirtualizer({
     count: snapshot.widths.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => Math.max(minimumColumnWidth, snapshot.widths[index] * characterWidth + 28),
+    estimateSize: (index) => columnPixelWidth(snapshot.widths[index]),
     horizontal: true,
     overscan: 4,
   });
   const rowVirtualizer = useVirtualizer({
     count: Math.max(0, snapshot.rows.length - 1),
     getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => {
-      const row = snapshot.rows[index + 1] ?? [];
-      const lines = row.reduce((maximum, value, column) => (
-        Math.max(maximum, Math.ceil(displayWidth(value) / Math.max(3, snapshot.widths[column] ?? 3)))
-      ), 1);
-      return Math.max(38, lines * 20 + 16);
-    },
+    estimateSize: (index) => estimatedBodyRowHeight(snapshot.rows[index + 1] ?? [], snapshot.widths),
     overscan: 8,
   });
 
@@ -764,7 +767,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
             <div
               className="header-row-heading"
               role="rowheader"
-              style={{ left: scrollPosition.left, top: scrollPosition.top + columnHeaderHeight }}
+              style={{ left: scrollPosition.left, top: scrollPosition.top + columnHeaderHeight, height: headerRowHeight }}
               onPointerDown={(event) => {
                 if (event.button !== 0) return;
                 const start = { row: 0, column: 0 };
@@ -863,7 +866,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     className={`cell header-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('column', column)} ${ranges.some((range) => isCellSelected(range, 0, column)) ? 'selected' : ''} ${sameCell(primary, { row: 0, column }) ? 'primary' : ''}`}
                     role="columnheader"
                     aria-label={`${text.header} ${columnName(column)}`}
-                    style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top + columnHeaderHeight, width }}
+                    style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top + columnHeaderHeight, width, height: headerRowHeight }}
                     onPointerDown={(event) => startCellSelection({ row: 0, column }, event)}
                     onPointerEnter={(event) => extendCellSelection({ row: 0, column }, event)}
                     onDoubleClick={() => beginEdit({ row: 0, column })}

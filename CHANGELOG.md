@@ -2,6 +2,19 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.1.13] - 2026-08-11
+
+- Grow the Markdown header row as well as body rows when rendered cell content wraps.
+- Tighten the character-to-pixel width model and auto-fit columns from visible text rather than Markdown decoration or link targets.
+
+## [0.1.12] - 2026-08-11
+
+- Fix excessive body-row heights when narrow Markdown widths are rendered at the grid's minimum column width.
+- Share the effective pixel-width calculation between column virtualization and wrapped-line estimation.
+- Add regression coverage for minimum-width wrapping and tallest-cell row sizing.
+- Publish the default README in English and provide a complete Japanese README through the link at the top.
+- Add a severity-based user acceptance checklist and explicit release criteria for the v1 release candidate.
+
 ## [0.1.11] - 2026-08-11
 
 - Expand pure unit coverage from 16 to 50 tests across parsing, serialization, operations, Unicode width, selection geometry, TSV, and pointer interactions.

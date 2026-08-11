@@ -88,7 +88,7 @@ suite('Markdown table core', () => {
     assert.deepStrictEqual(updated.widths, [5, 3]);
   });
 
-  test('auto-fits columns using Markdown source display width', () => {
+  test('auto-fits columns using visible display width', () => {
     const [table] = parseMarkdownTables('| h |\n| --- |\n| テーブル |');
     const updated = applyOperation(table, { type: 'autoFit' });
     assert.strictEqual(updated.widths[0], 8);
@@ -98,6 +98,12 @@ suite('Markdown table core', () => {
     const [table] = parseMarkdownTables('| h | value |\n| --- | --- |\n| A | 長い値 |');
     const updated = applyOperation(table, { type: 'autoFitColumn', column: 1 });
     assert.deepStrictEqual(updated.widths, [3, 6]);
+  });
+
+  test('does not widen auto-fit columns for Markdown decoration or link targets', () => {
+    const [table] = parseMarkdownTables('| h |\n| --- |\n| **label** |\n| [x](https://example.com/a/long/path) |');
+    const updated = applyOperation(table, { type: 'autoFitColumn', column: 0 });
+    assert.deepStrictEqual(updated.widths, [5]);
   });
 
   test('sorts decorated text stably', () => {

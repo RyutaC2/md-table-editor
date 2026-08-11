@@ -194,7 +194,6 @@ button:disabled { cursor: default; opacity: 0.45; }
   z-index: 19;
   display: flex;
   width: 48px;
-  height: 40px;
   align-items: center;
   justify-content: center;
   border-right: 1px solid var(--grid-line);
@@ -405,7 +404,6 @@ button:disabled { cursor: default; opacity: 0.45; }
 
 .header-cell {
   z-index: 11;
-  height: 40px;
   font-weight: 600;
   background: var(--grid-header);
 }

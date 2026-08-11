@@ -1,9 +1,35 @@
 import type { TableSnapshot } from '../core/types';
+import { displayWidth } from '../core/width';
 import type { CellPosition } from '../shared/protocol';
+
+export const minimumColumnWidth = 96;
+export const characterWidth = 8;
+const columnWidthChrome = 20;
+const bodyRowMinimumHeight = 38;
+const bodyRowLineHeight = 20;
+const bodyRowVerticalPadding = 16;
 
 export interface SelectionRange {
   start: CellPosition;
   end: CellPosition;
+}
+
+export function columnPixelWidth(markdownWidth: number): number {
+  const safeWidth = Number.isFinite(markdownWidth) ? Math.max(3, Math.floor(markdownWidth)) : 3;
+  return Math.max(minimumColumnWidth, safeWidth * characterWidth + columnWidthChrome);
+}
+
+export function estimatedWrappedLines(value: string, markdownWidth: number): number {
+  const availableWidth = columnPixelWidth(markdownWidth) - columnWidthChrome;
+  const charactersPerLine = Math.max(1, Math.floor(availableWidth / characterWidth));
+  return Math.max(1, Math.ceil(displayWidth(value) / charactersPerLine));
+}
+
+export function estimatedBodyRowHeight(row: string[], widths: number[], minimumHeight = bodyRowMinimumHeight): number {
+  const lines = row.reduce((maximum, value, column) => (
+    Math.max(maximum, estimatedWrappedLines(value, widths[column] ?? 3))
+  ), 1);
+  return Math.max(minimumHeight, lines * bodyRowLineHeight + bodyRowVerticalPadding);
 }
 
 export function clampCell(cell: CellPosition, snapshot: TableSnapshot): CellPosition {

@@ -56,10 +56,10 @@ function finiteInteger(value: number, fallback: number): number {
 }
 
 function maximumColumnWidth(snapshot: TableSnapshot, column: number): number {
-  return snapshot.rows.reduce((maximum, row) => Math.max(maximum, displayWidth(row[column] ?? '')), 3);
+  return snapshot.rows.reduce((maximum, row) => Math.max(maximum, displayWidth(displayText(row[column] ?? ''))), 3);
 }
 
-function plainText(value: string): string {
+function displayText(value: string): string {
   return value
     .replace(/!\[([^\]]*)\]\([^)]*\)/gu, '$1')
     .replace(/\[([^\]]+)\]\([^)]*\)/gu, '$1')
@@ -72,7 +72,7 @@ function sortRows(snapshot: TableSnapshot, column: number, direction: 'ascending
   if (column < 0 || column >= snapshot.widths.length || snapshot.rows.length <= 2) {
     return;
   }
-  const body = snapshot.rows.slice(1).map((row, index) => ({ row, index, value: plainText(row[column] ?? '') }));
+  const body = snapshot.rows.slice(1).map((row, index) => ({ row, index, value: displayText(row[column] ?? '') }));
   const nonEmpty = body.filter(({ value }) => value !== '');
   const numeric = nonEmpty.length > 0 && nonEmpty.every(({ value }) => Number.isFinite(Number(value)));
   const collator = new Intl.Collator(undefined, { numeric: false, sensitivity: 'base' });
