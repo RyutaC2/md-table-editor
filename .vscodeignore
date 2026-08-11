@@ -14,6 +14,8 @@ out-unit/**
 AGENTS.md
 AGENTS_DOCS.md
 RELEASE_CHECKLIST.md
+PUBLISHING.md
+SECURITY.md
 esbuild.js
 eslint.config.mjs
 tsconfig.json

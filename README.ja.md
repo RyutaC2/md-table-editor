@@ -108,7 +108,7 @@ npm run compile
 | `npm run test:unit` | Markdown表の純粋ロジックを単体テスト |
 | `npm test` | Desktop版の拡張機能統合テスト |
 | `npm run test:web` | Web版の拡張機能統合テスト |
-| `npm run benchmark` | 50列×500行と超過サイズの解析・直列化・表操作性能を測定 |
+| `npm run benchmark` | 保証サイズと超過サイズのMarkdown処理、およびCSV・XLSX変換性能を測定 |
 | `npm run package` | 配布用ビルド |
 | `npm run package:vsix` | 配布用VSIXを `artifacts/` に生成 |
 | `npm run watch` | TypeScriptとesbuildの監視ビルド |
@@ -116,6 +116,8 @@ npm run compile
 VS Codeでこのリポジトリを開き、F5または `Run Extension` からExtension Development Hostを起動すると動作確認できます。
 
 配布用VSIXは `artifacts/md-table-editor-<version>.vsix` として生成されます。`dist`、`out`、`out-unit`、`artifacts` は生成物専用ディレクトリであり、ソースファイルは配置しません。
+
+公開前は [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) の簡潔な手動シナリオと [Marketplace公開手順](./PUBLISHING.md) を確認してください。
 
 ## 対応環境と制限
 

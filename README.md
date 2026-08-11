@@ -110,7 +110,7 @@ npm run compile
 | `npm run test:unit` | Test the pure Markdown table and grid logic |
 | `npm test` | Run Desktop extension integration tests |
 | `npm run test:web` | Run Web extension integration tests |
-| `npm run benchmark` | Measure parsing, serialization, and table operations at the guaranteed and oversized table sizes |
+| `npm run benchmark` | Measure Markdown operations plus CSV/XLSX conversion at the guaranteed and oversized table sizes |
 | `npm run package` | Create production bundles |
 | `npm run package:vsix` | Generate a distributable VSIX in `artifacts/` |
 | `npm run watch` | Watch TypeScript and esbuild during development |
@@ -118,6 +118,8 @@ npm run compile
 Open this repository in VS Code and start `Run Extension` with F5 to launch an Extension Development Host.
 
 Distributable packages are written to `artifacts/md-table-editor-<version>.vsix`. The `dist`, `out`, `out-unit`, and `artifacts` directories contain generated files only.
+
+Before publishing a release, follow the concise manual scenarios in [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) and the [Marketplace publishing guide](./PUBLISHING.md).
 
 ## Supported environments and limitations
 
