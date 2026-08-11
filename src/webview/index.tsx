@@ -241,6 +241,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const gridRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const text = dictionaries[state.language];
+  const editingSession = editing ? `${editing.cell.row}:${editing.cell.column}` : undefined;
 
   const positionColumnMenu = useCallback((details: HTMLDetailsElement): void => {
     if (!details.open) {
@@ -531,11 +532,11 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (editing && inputRef.current) {
+    if (editingSession !== undefined && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
     }
-  }, [editing]);
+  }, [editingSession]);
 
   useEffect(() => {
     rowVirtualizer.measure();
@@ -629,7 +630,6 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
         <div className="toolbar-group toolbar-history" aria-label="History">
           <ToolbarButton icon="undo" label={text.undo} onClick={() => vscode.postMessage({ type: 'undo' })} />
           <ToolbarButton icon="redo" label={text.redo} onClick={() => vscode.postMessage({ type: 'redo' })} />
-          <span className="toolbar-group-separator" aria-hidden="true" />
           <ToolbarButton icon="autoFit" label={text.autoFit} onClick={() => perform({ type: 'autoFit' })} />
         </div>
         <div className="toolbar-group toolbar-clipboard" aria-label="Clipboard">
@@ -860,7 +860,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
             <button
               type="button"
               className="append-button append-column-button"
-              style={{ left: rowHeaderWidth + tableWidth, top: scrollPosition.top, width: appendColumnWidth, height: bodyOffset }}
+              style={{ left: rowHeaderWidth + tableWidth, top: 0, width: appendColumnWidth, height: bodyOffset + tableBodyHeight }}
               title={text.appendColumn}
               aria-label={text.appendColumn}
               onClick={() => {
@@ -872,11 +872,13 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                   gridRef.current?.focus();
                 });
               }}
-            ><Icon name="add" /></button>
+            >
+              <span className="append-column-button-icon" style={{ top: scrollPosition.top + 17 }}><Icon name="add" /></span>
+            </button>
             <button
               type="button"
               className="append-button append-row-button"
-              style={{ left: 0, top: bodyOffset + tableBodyHeight, width: canvasWidth, height: appendRowHeight }}
+              style={{ left: 0, top: bodyOffset + tableBodyHeight, width: rowHeaderWidth + tableWidth, height: appendRowHeight }}
               title={text.appendRow}
               aria-label={text.appendRow}
               onClick={() => {
@@ -940,6 +942,9 @@ const CellInput = React.forwardRef<HTMLInputElement, {
     onChange={(event) => setEditing({ ...editing, value: event.target.value.replace(/\r\n|\r|\n/gu, ' ') })}
     onBlur={() => { if (!cancelled.current) commit(); }}
     onKeyDown={(event) => {
+      if (event.nativeEvent.isComposing) {
+        return;
+      }
       if (event.key === 'Enter') {
         event.preventDefault(); commit();
       } else if (event.key === 'Tab') {

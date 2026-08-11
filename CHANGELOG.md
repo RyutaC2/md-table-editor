@@ -2,6 +2,13 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.1.8] - 2026-08-11
+
+- Stop reselecting the complete cell input after every character, allowing continuous half-width and IME text entry.
+- Extend the append-column control along the complete table height and stop the append-row control at the table width.
+- Keep the bottom-right intersection between the row and column append controls empty.
+- Remove the divider between Undo, Redo, and the global width-fit action.
+
 ## [0.1.7] - 2026-08-11
 
 - Replace simplified icon drawings with the official Material Symbols Outlined 24px SVG paths from Google.
