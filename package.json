@@ -1,12 +1,12 @@
 {
-  "name": "md-table-editor",
-  "displayName": "Markdown Grid Editor",
+  "name": "markdown-table-gui",
+  "displayName": "Markdown Table GUI",
   "description": "Edit Markdown tables in an Excel-like GUI inside Visual Studio Code.",
   "version": "0.2.8",
   "publisher": "RyutaC2",
   "license": "SEE LICENSE IN LICENSE",
   "pricing": "Free",
-  "icon": "markdown_table_editor.png",
+  "icon": "markdown_table_gui.png",
   "homepage": "https://github.com/RyutaC2/md-table-editor#readme",
   "repository": {
     "type": "git",
@@ -31,10 +31,10 @@
   ],
   "activationEvents": [
     "onLanguage:markdown",
-    "onCommand:md-table-editor.editTable",
-    "onCommand:md-table-editor.quickInsertTable",
-    "onCommand:md-table-editor.insertTable",
-    "onWebviewPanel:md-table-editor.tableEditor"
+    "onCommand:markdown-table-gui.editTable",
+    "onCommand:markdown-table-gui.quickInsertTable",
+    "onCommand:markdown-table-gui.insertTable",
+    "onWebviewPanel:markdown-table-gui.tableEditor"
   ],
   "main": "./dist/extension.js",
   "browser": "./dist/browser/extension.js",
@@ -47,17 +47,17 @@
   "contributes": {
     "commands": [
       {
-        "command": "md-table-editor.editTable",
+        "command": "markdown-table-gui.editTable",
         "title": "%command.editTable%",
         "category": "%extension.category%"
       },
       {
-        "command": "md-table-editor.quickInsertTable",
+        "command": "markdown-table-gui.quickInsertTable",
         "title": "%command.quickInsertTable%",
         "category": "%extension.category%"
       },
       {
-        "command": "md-table-editor.insertTable",
+        "command": "markdown-table-gui.insertTable",
         "title": "%command.insertTable%",
         "category": "%extension.category%"
       }
@@ -65,31 +65,31 @@
     "menus": {
       "commandPalette": [
         {
-          "command": "md-table-editor.editTable",
+          "command": "markdown-table-gui.editTable",
           "when": "false"
         },
         {
-          "command": "md-table-editor.quickInsertTable",
+          "command": "markdown-table-gui.quickInsertTable",
           "when": "false"
         },
         {
-          "command": "md-table-editor.insertTable",
+          "command": "markdown-table-gui.insertTable",
           "when": "false"
         }
       ],
       "editor/context": [
         {
-          "command": "md-table-editor.editTable",
+          "command": "markdown-table-gui.editTable",
           "when": "editorLangId == markdown && mdTableEditor.inTable",
           "group": "1_modification@90"
         },
         {
-          "command": "md-table-editor.quickInsertTable",
+          "command": "markdown-table-gui.quickInsertTable",
           "when": "editorLangId == markdown",
           "group": "1_modification@100"
         },
         {
-          "command": "md-table-editor.insertTable",
+          "command": "markdown-table-gui.insertTable",
           "when": "editorLangId == markdown",
           "group": "1_modification@101"
         }

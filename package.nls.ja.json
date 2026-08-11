@@ -1,5 +1,5 @@
 {
-  "extension.category": "Markdown Grid Editor",
+  "extension.category": "Markdown Table GUI",
   "command.editTable": "テーブルを編集",
   "command.quickInsertTable": "テーブルをクイック挿入（2 × 2）",
   "command.insertTable": "テーブルを挿入"

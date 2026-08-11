@@ -24,7 +24,7 @@ interface TableSession {
   disposables: vscode.Disposable[];
 }
 
-const viewType = 'md-table-editor.tableEditor';
+const viewType = 'markdown-table-gui.tableEditor';
 
 function sessionKey(uri: vscode.Uri, startOffset: number): string {
   return `${uri.toString()}#${startOffset}`;
@@ -462,7 +462,7 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${token}';">
   <link rel="stylesheet" href="${style}">
-  <title>Markdown Grid Editor</title>
+  <title>Markdown Table GUI</title>
 </head>
 <body>
   <div id="root"></div>

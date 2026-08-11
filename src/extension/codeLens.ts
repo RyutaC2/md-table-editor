@@ -14,7 +14,7 @@ export class TableCodeLensProvider implements vscode.CodeLensProvider {
       const position = new vscode.Position(table.startLine, 0);
       return new vscode.CodeLens(new vscode.Range(position, position), {
         title: message('editTable'),
-        command: 'md-table-editor.editTable',
+        command: 'markdown-table-gui.editTable',
         arguments: [document.uri, table.startOffset],
       });
     });

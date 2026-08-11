@@ -10,18 +10,18 @@ function ensure(condition: unknown, message: string): asserts condition {
 export async function run(): Promise<void> {
   mocha.setup({ ui: 'tdd', reporter: undefined, timeout: 5000 });
 
-  suite('Markdown Grid Editor web extension', () => {
+  suite('Markdown Table GUI web extension', () => {
     suiteSetup(async () => {
-      const extension = vscode.extensions.getExtension('RyutaC2.md-table-editor');
+      const extension = vscode.extensions.getExtension('RyutaC2.markdown-table-gui');
       ensure(extension, 'Development extension was not discovered by VS Code for the Web.');
       await extension.activate();
     });
 
     test('registers public commands', async () => {
       const commands = await vscode.commands.getCommands(true);
-      ensure(commands.includes('md-table-editor.editTable'), 'Edit command was not registered.');
-      ensure(commands.includes('md-table-editor.quickInsertTable'), 'Quick insert command was not registered.');
-      ensure(commands.includes('md-table-editor.insertTable'), 'Insert command was not registered.');
+      ensure(commands.includes('markdown-table-gui.editTable'), 'Edit command was not registered.');
+      ensure(commands.includes('markdown-table-gui.quickInsertTable'), 'Quick insert command was not registered.');
+      ensure(commands.includes('markdown-table-gui.insertTable'), 'Insert command was not registered.');
     });
 
     test('provides CodeLens outside code fences', async () => {
@@ -46,7 +46,7 @@ export async function run(): Promise<void> {
         content: '| a | b |\n| --- | --- |\n| 1 | 2 |',
       });
       await vscode.window.showTextDocument(document);
-      const command = () => vscode.commands.executeCommand('md-table-editor.editTable', document.uri, 0);
+      const command = () => vscode.commands.executeCommand('markdown-table-gui.editTable', document.uri, 0);
       await command();
       await vscode.window.showTextDocument(document);
       await command();

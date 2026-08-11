@@ -22,4 +22,4 @@ tsconfig.json
 tsconfig.unit.json
 package-lock.json
 vsc-extension-quickstart.md
-markdown_table_editor.svg
+markdown_table_gui.svg

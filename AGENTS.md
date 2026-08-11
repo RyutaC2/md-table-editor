@@ -1,4 +1,4 @@
-# md-table-editor AI向け指示書
+# markdown-table-gui AI向け指示書
 
 ## 作業開始時の確認
 

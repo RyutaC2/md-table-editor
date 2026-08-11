@@ -11,7 +11,7 @@ export function activate(context: vscode.ExtensionContext): void {
     panels,
     codeLens,
     vscode.languages.registerCodeLensProvider({ language: 'markdown' }, codeLens),
-    vscode.window.registerWebviewPanelSerializer('md-table-editor.tableEditor', panels),
+    vscode.window.registerWebviewPanelSerializer('markdown-table-gui.tableEditor', panels),
     vscode.workspace.onDidChangeTextDocument((event) => {
       if (event.document.languageId === 'markdown') {
         codeLens.refresh();

@@ -18,8 +18,8 @@ function isTableWebviewTab(tab: vscode.Tab): boolean {
   if (!(tab.input instanceof vscode.TabInputWebview)) {
     return false;
   }
-  return tab.input.viewType === 'md-table-editor.tableEditor'
-    || tab.input.viewType.endsWith('-md-table-editor.tableEditor');
+  return tab.input.viewType === 'markdown-table-gui.tableEditor'
+    || tab.input.viewType.endsWith('-markdown-table-gui.tableEditor');
 }
 
 function tableWebviewTabs(): vscode.Tab[] {
@@ -28,18 +28,18 @@ function tableWebviewTabs(): vscode.Tab[] {
     .filter(isTableWebviewTab);
 }
 
-suite('Markdown Grid Editor extension', () => {
+suite('Markdown Table GUI extension', () => {
   suiteSetup(async () => {
-    const extension = vscode.extensions.getExtension('RyutaC2.md-table-editor');
+    const extension = vscode.extensions.getExtension('RyutaC2.markdown-table-gui');
     assert.ok(extension, 'Development extension was not discovered by VS Code.');
     await extension.activate();
   });
 
   test('registers public commands', async () => {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes('md-table-editor.editTable'));
-    assert.ok(commands.includes('md-table-editor.quickInsertTable'));
-    assert.ok(commands.includes('md-table-editor.insertTable'));
+    assert.ok(commands.includes('markdown-table-gui.editTable'));
+    assert.ok(commands.includes('markdown-table-gui.quickInsertTable'));
+    assert.ok(commands.includes('markdown-table-gui.insertTable'));
   });
 
   test('provides one CodeLens for each table outside code fences', async () => {
@@ -62,7 +62,7 @@ suite('Markdown Grid Editor extension', () => {
     await vscode.window.showTextDocument(document);
     const lenses = await vscode.commands.executeCommand<vscode.CodeLens[]>('vscode.executeCodeLensProvider', document.uri);
     assert.strictEqual(lenses.length, 2);
-    assert.ok(lenses.every((lens) => lens.command?.command === 'md-table-editor.editTable'));
+    assert.ok(lenses.every((lens) => lens.command?.command === 'markdown-table-gui.editTable'));
     const expectedTitle = vscode.env.language.toLowerCase().startsWith('ja') ? 'テーブルを編集' : 'Edit Table';
     assert.ok(lenses.every((lens) => lens.command?.title === expectedTitle));
     assert.deepStrictEqual(lenses.map((lens) => lens.range.start.line), [0, 9]);
@@ -79,7 +79,7 @@ suite('Markdown Grid Editor extension', () => {
       content: '| a | b |\n| --- | --- |\n| 1 | 2 |',
     });
     await vscode.window.showTextDocument(document);
-    const command = () => vscode.commands.executeCommand('md-table-editor.editTable', document.uri, 0);
+    const command = () => vscode.commands.executeCommand('markdown-table-gui.editTable', document.uri, 0);
     await command();
     const opened = await waitFor(() => {
       const tabs = tableWebviewTabs();
@@ -102,7 +102,7 @@ suite('Markdown Grid Editor extension', () => {
       content: '| theme | value |\n| --- | --- |\n| current | test |',
     });
     await vscode.window.showTextDocument(document);
-    await vscode.commands.executeCommand('md-table-editor.editTable', document.uri, 0);
+    await vscode.commands.executeCommand('markdown-table-gui.editTable', document.uri, 0);
     const opened = await waitFor(() => {
       const tabs = tableWebviewTabs();
       return tabs.length === 1 ? tabs : undefined;
@@ -131,7 +131,7 @@ suite('Markdown Grid Editor extension', () => {
     this.timeout(5000);
     const document = await vscode.workspace.openTextDocument({ language: 'markdown', content: '# Test' });
     await vscode.window.showTextDocument(document);
-    await vscode.commands.executeCommand('md-table-editor.quickInsertTable');
+    await vscode.commands.executeCommand('markdown-table-gui.quickInsertTable');
     const table = await waitFor(() => parseMarkdownTables(document.getText())[0]);
     assert.strictEqual(table.widths.length, 2);
     assert.strictEqual(table.rows.length, 2);

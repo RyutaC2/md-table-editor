@@ -1,6 +1,6 @@
 # Third-party notices
 
-Markdown Grid Editor bundles the following third-party software. The complete license text used by each bundled package is reproduced below. Google Material Symbols SVG paths are embedded locally in the Webview icon component.
+Markdown Table GUI bundles the following third-party software. The complete license text used by each bundled package is reproduced below. Google Material Symbols SVG paths are embedded locally in the Webview icon component.
 
 ## Google Material Symbols and SheetJS Community Edition
 

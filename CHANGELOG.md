@@ -1,6 +1,6 @@
 # Change Log
 
-All notable changes to Markdown Grid Editor are documented in this file.
+All notable changes to Markdown Table GUI are documented in this file.
 
 ## [0.2.8] - 2026-08-11
 

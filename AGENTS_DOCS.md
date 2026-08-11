@@ -1,13 +1,13 @@
-# Markdown Grid Editor リポジトリ仕様書
+# Markdown Table GUI リポジトリ仕様書
 
-この文書は、VS Code 拡張機能 `Markdown Grid Editor` の仕様、設計意図、実装状態を AI が把握するための一次資料です。作業開始時に必ず確認し、コードと記述が一致しない場合は同じ変更内で更新してください。
+この文書は、VS Code 拡張機能 `Markdown Table GUI` の仕様、設計意図、実装状態を AI が把握するための一次資料です。作業開始時に必ず確認し、コードと記述が一致しない場合は同じ変更内で更新してください。
 
 ## プロジェクト概要
 
 Markdown の表は、パイプ、区切り行、列揃えを人間が維持しながら編集する必要があり、規模が大きくなるほど負担が増えます。本拡張機能は、VS Code 内で Markdown ソースと Excel ライクな GUI を並べて表示し、Markdown 構文を直接操作しなくても表を作成・編集できるようにします。
 
-- Marketplace 表示名: `Markdown Grid Editor`
-- 拡張機能 ID: `md-table-editor`
+- Marketplace 表示名: `Markdown Table GUI`
+- 拡張機能 ID: `markdown-table-gui`
 - publisher: `RyutaC2`
 - 初回リリース: `0.1.0`
 - 現在のバージョン: `0.2.8`
@@ -70,7 +70,7 @@ Markdown の表は、パイプ、区切り行、列揃えを人間が維持し�
 - Markdown 文書内で検出した各テーブルの直上に、CodeLens の `テーブルを編集` / `Edit Table` を表示します。
 - CodeLens が無効な場合の代替として、テーブル内のエディターコンテキストメニューにも GUI 編集コマンドを表示します。
 - Markdown エディターのコンテキストメニューにクイックテーブル挿入と通常のテーブル挿入コマンドを表示します。
-- コマンド ID は `md-table-editor.editTable`、`md-table-editor.quickInsertTable`、`md-table-editor.insertTable` です。コマンドパレットには表示せず、既定キーバインドも設定しません。
+- コマンド ID は `markdown-table-gui.editTable`、`markdown-table-gui.quickInsertTable`、`markdown-table-gui.insertTable` です。コマンドパレットには表示せず、既定キーバインドも設定しません。
 - 編集時は現在の Markdown エディターを左グループに保ち、対象テーブルの Webview を直後の右グループへ開きます。
 - テーブルごとに独立した Webview パネルを使用します。同じテーブルを再度開く場合は既存パネルを表示し、複数の表は右側グループのタブとして扱います。タブ名はヘッダー内容ではなく `table: <対象文書のファイル名>` とします。
 - 開いていたパネルは VS Code 再起動後に復元します。対象文書または表を特定できない場合は復元せず通知します。
@@ -198,7 +198,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - `dist`: Desktop、Web、Webviewのバンドル生成物。直接編集しません。
 - `out`、`out-unit`: Desktop統合テスト、単体テストの生成物。直接編集しません。
 - `artifacts`: バージョン付きVSIXなどの配布成果物。Git管理とVSIXへの同梱対象から除外します。
-- `markdown_table_editor.svg` / `.png`: ユーザー提供のアイコン原稿と、manifestから参照する256×256の配布用PNGです。SVG原稿はVSIXへ同梱しません。
+- `markdown_table_gui.svg` / `.png`: ユーザー提供のアイコン原稿と、manifestから参照する256×256の配布用PNGです。SVG原稿はVSIXへ同梱しません。
 - `scripts`: ビルド・パッケージング用スクリプト。`package-vsix.mjs` は `package.json` のバージョンからVSIX名を生成します。
 - `scripts/generate-third-party-notices.mjs`: 本番依存のバージョンと完全なライセンス本文から `THIRD_PARTY_NOTICES.md` を決定的に生成し、`--check` で同期を検証します。
 - `README.md`: GitHubとMarketplaceで既定表示する英語版README。ファイル先頭に日本語で `README.ja.md` への案内リンクを置きます。
@@ -246,7 +246,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - `npm run benchmark`: 単体テスト用JavaScriptを生成し、保証サイズと超過サイズのコア処理、および保証サイズのCSV・XLSX変換を測定
 - `npm run notices`: 本番依存から第三者ライセンス通知を再生成
 - `npm run check:notices`: 第三者ライセンス通知が本番依存と同期していることを検証
-- `npm run package:vsix`: プロダクションビルドと `artifacts/md-table-editor-<version>.vsix` の生成
+- `npm run package:vsix`: プロダクションビルドと `artifacts/markdown-table-gui-<version>.vsix` の生成
 - 統合テストは開発対象の拡張機能を明示的にactivateしてから、公開コマンドとCodeLens Providerを検証します。Web統合テストは `src/test/webRunner.ts` でMochaブラウザー版のsingletonとテストを単一のCommonJSへバンドルし、Web Extension Hostがサポートする `require('vscode')` だけを外部参照として残します。テスト対象はstable版とし、CLIにローダーを自動選択させます。
 
 ### ローカル検証環境
@@ -280,7 +280,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 ### v1公開前の残作業
 
 - `RELEASE_CHECKLIST.md` の8シナリオを実機で完了し、P0・P1が0件であることを確認します。
-- Marketplace管理画面でpublisher `RyutaC2` の所有と拡張機能ID `RyutaC2.md-table-editor` の利用可否を確認します。
+- Marketplace管理画面でpublisher `RyutaC2` の所有と拡張機能ID `RyutaC2.markdown-table-gui` の利用可否を確認します。
 - Marketplace用の256×256 PNGアイコンはmanifestへ設定済みです。実画面スクリーンショットをREADMEへ追加するか、ユーザーが最終判断します。
 - GitHubのPrivate Vulnerability Reportingを有効化し、受け入れ後にだけバージョンを `1.0.0` へ更新します。具体的な手順は `PUBLISHING.md` を基準にします。
 

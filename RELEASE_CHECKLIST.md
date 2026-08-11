@@ -1,6 +1,6 @@
 # v1 ユーザー受け入れテスト
 
-`artifacts/md-table-editor-0.2.8.vsix` を普段使う VS Code Stableへ新規インストールし、Git管理されたテスト用Markdownで確認してください。自動テストでは保証しにくい操作感と表示を、次の8シナリオに絞って確認します。
+`artifacts/markdown-table-gui-0.2.8.vsix` を普段使う VS Code Stableへ新規インストールし、Git管理されたテスト用Markdownで確認してください。自動テストでは保証しにくい操作感と表示を、次の8シナリオに絞って確認します。
 
 ## 公開判定
 

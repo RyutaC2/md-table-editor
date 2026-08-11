@@ -1,8 +1,8 @@
-# Markdown Grid Editor
+# Markdown Table GUI
 
 Markdown の表を、Visual Studio Code 内で Excel のように作成・編集する拡張機能です。
 
-Markdown テーブルは、セル数が増えるほどパイプや区切り行の手入力・整形が難しくなります。Markdown Grid Editor はソースを左側、GUIグリッドを右側へ表示し、Markdown構文を直接整形しなくても表を編集できるようにします。
+Markdown テーブルは、セル数が増えるほどパイプや区切り行の手入力・整形が難しくなります。Markdown Table GUI はソースを左側、GUIグリッドを右側へ表示し、Markdown構文を直接整形しなくても表を編集できるようにします。
 
 ## 主な機能
 
@@ -116,7 +116,7 @@ npm run compile
 
 VS Codeでこのリポジトリを開き、F5または `Run Extension` からExtension Development Hostを起動すると動作確認できます。
 
-配布用VSIXは `artifacts/md-table-editor-<version>.vsix` として生成されます。`dist`、`out`、`out-unit`、`artifacts` は生成物専用ディレクトリであり、ソースファイルは配置しません。
+配布用VSIXは `artifacts/markdown-table-gui-<version>.vsix` として生成されます。`dist`、`out`、`out-unit`、`artifacts` は生成物専用ディレクトリであり、ソースファイルは配置しません。
 
 公開前は [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) の簡潔な手動シナリオと [Marketplace公開手順](./PUBLISHING.md) を確認してください。
 

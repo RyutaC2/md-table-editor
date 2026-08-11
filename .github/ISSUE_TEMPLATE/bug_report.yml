@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible problem with Markdown Grid Editor
+description: Report a reproducible problem with Markdown Table GUI
 title: "[Bug]: "
 labels:
   - bug
@@ -7,13 +7,13 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping improve Markdown Grid Editor. Do not include credentials, private documents, or vulnerability details. Security issues must be reported through the repository's Security tab.
+        Thanks for helping improve Markdown Table GUI. Do not include credentials, private documents, or vulnerability details. Security issues must be reported through the repository's Security tab.
   - type: input
     id: versions
     attributes:
       label: Environment
       description: Include the extension, VS Code, and OS versions, plus Desktop or Web.
-      placeholder: Markdown Grid Editor x.y.z; VS Code 1.125.0; Windows 11; Desktop
+      placeholder: Markdown Table GUI x.y.z; VS Code 1.125.0; Windows 11; Desktop
     validations:
       required: true
   - type: input

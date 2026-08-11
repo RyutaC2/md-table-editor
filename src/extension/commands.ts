@@ -23,7 +23,7 @@ function tableFromArgument(document: vscode.TextDocument, uri: vscode.Uri | unde
 
 export function registerCommands(context: vscode.ExtensionContext, panels: TablePanelManager): vscode.Disposable[] {
   const edit = vscode.commands.registerCommand(
-    'md-table-editor.editTable',
+    'markdown-table-gui.editTable',
     async (uri?: vscode.Uri, offset?: number) => {
       const editor = activeMarkdownEditor();
       if (!editor) {
@@ -41,7 +41,7 @@ export function registerCommands(context: vscode.ExtensionContext, panels: Table
     },
   );
 
-  const quickInsert = vscode.commands.registerCommand('md-table-editor.quickInsertTable', async () => {
+  const quickInsert = vscode.commands.registerCommand('markdown-table-gui.quickInsertTable', async () => {
     const editor = activeMarkdownEditor();
     if (!editor) {
       void vscode.window.showWarningMessage(message('invalidDocument'));
@@ -50,7 +50,7 @@ export function registerCommands(context: vscode.ExtensionContext, panels: Table
     await insertTable(editor, panels, 2, 2);
   });
 
-  const insert = vscode.commands.registerCommand('md-table-editor.insertTable', async () => {
+  const insert = vscode.commands.registerCommand('markdown-table-gui.insertTable', async () => {
     const editor = activeMarkdownEditor();
     if (!editor) {
       void vscode.window.showWarningMessage(message('invalidDocument'));
