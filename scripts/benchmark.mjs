@@ -5,6 +5,7 @@ const require = createRequire(import.meta.url);
 const { applyOperation } = require('../out-unit/core/operations.js');
 const { parseMarkdownTables } = require('../out-unit/core/parser.js');
 const { serializeTable } = require('../out-unit/core/serializer.js');
+const { readTabularWorkbook, workbookRows, writeTabularFile } = require('../out-unit/core/tabularFiles.js');
 
 function makeSnapshot(rowCount, columnCount, unicode) {
   return {
@@ -42,6 +43,11 @@ function measure(label, samples, action) {
   };
 }
 
+function importTabularFile(data, type) {
+  const workbook = readTabularWorkbook(data, type);
+  return workbookRows(workbook, workbook.SheetNames[0]);
+}
+
 for (const scenario of [
   { name: 'guaranteed-ascii-50x500', rows: 500, columns: 50, samples: 7, unicode: false },
   { name: 'guaranteed-unicode-50x500', rows: 500, columns: 50, samples: 7, unicode: true },
@@ -61,4 +67,17 @@ for (const scenario of [
   ];
   console.log(`\n${scenario.name}: ${scenario.columns} columns × ${scenario.rows} rows, ${(Buffer.byteLength(markdown) / 1024).toFixed(1)} KiB Markdown`);
   console.table(results);
+
+  if (scenario.rows <= 500) {
+    const csv = writeTabularFile(source, 'csv');
+    const xlsx = writeTabularFile(source, 'xlsx');
+    const fileResults = [
+      measure('export-csv', 3, () => writeTabularFile(source, 'csv')),
+      measure('import-csv', 3, () => importTabularFile(csv, 'csv')),
+      measure('export-xlsx', 3, () => writeTabularFile(source, 'xlsx')),
+      measure('import-xlsx', 3, () => importTabularFile(xlsx, 'xlsx')),
+    ];
+    console.log(`CSV ${(csv.byteLength / 1024).toFixed(1)} KiB; XLSX ${(xlsx.byteLength / 1024).toFixed(1)} KiB`);
+    console.table(fileResults);
+  }
 }
