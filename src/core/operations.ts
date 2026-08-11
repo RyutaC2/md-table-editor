@@ -177,6 +177,9 @@ export function applyOperation(current: TableSnapshot, operation: TableOperation
         snapshot.alignments[operation.column] = operation.alignment;
       }
       break;
+    case 'setAllAlignments':
+      snapshot.alignments.fill(operation.alignment);
+      break;
     case 'setWidth':
       if (operation.column >= 0 && operation.column < columns && Number.isFinite(operation.width)) {
         snapshot.widths[operation.column] = Math.max(3, Math.floor(operation.width));

@@ -47,6 +47,7 @@ export type TableOperation =
   | { type: 'deleteColumns'; indexes: number[] }
   | { type: 'moveColumns'; indexes: number[]; target: number }
   | { type: 'setAlignment'; column: number; alignment: Alignment }
+  | { type: 'setAllAlignments'; alignment: Alignment }
   | { type: 'setWidth'; column: number; width: number }
   | { type: 'autoFitColumn'; column: number }
   | { type: 'autoFit' }

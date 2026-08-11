@@ -99,6 +99,11 @@ suite('Markdown table operations edge cases', () => {
     assert.deepStrictEqual(updated.alignments, ['center', 'left', 'right']);
   });
 
+  test('sets the alignment of every column in one operation', () => {
+    const updated = applyOperation(snapshot(), { type: 'setAllAlignments', alignment: 'center' });
+    assert.deepStrictEqual(updated.alignments, ['center', 'center', 'center']);
+  });
+
   test('ignores non-finite widths and floors valid widths', () => {
     assert.deepStrictEqual(applyOperation(snapshot(), { type: 'setWidth', column: 0, width: Number.NaN }).widths, [3, 4, 5]);
     assert.deepStrictEqual(applyOperation(snapshot(), { type: 'setWidth', column: 0, width: Number.POSITIVE_INFINITY }).widths, [3, 4, 5]);

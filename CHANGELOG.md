@@ -10,6 +10,8 @@ All notable changes to Markdown Grid Editor are documented in this file.
 - Show a draggable border around continuous multi-cell selections and move their raw Markdown values without crossing table edges or losing overlapping data.
 - Import and replace the complete current table from UTF-8 CSV or XLSX, choose from multiple XLSX worksheets, and export the complete table to CSV or XLSX.
 - Zoom the complete virtualized grid from 50% to 200% at seven fixed levels while keeping the toolbar at a stable UI size.
+- Rebuild the toolbar in the requested action order with responsive direct and menu layouts, toolbar paste, whole-table alignment, and selection-count row or column insertion.
+- Use the official `content_paste` and `format_align_*` Material Symbols paths alongside the specified import and export icons.
 
 ## [0.1.13] - 2026-08-11
 

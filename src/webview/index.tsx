@@ -79,6 +79,15 @@ interface GridCanvasStyle extends React.CSSProperties {
   '--grid-scale': number;
 }
 
+interface ToolbarAction {
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+  disabled?: boolean;
+  pressed?: boolean;
+}
+
 type Dictionary = Record<string, string>;
 
 declare function acquireVsCodeApi(): VSCodeApi;
@@ -96,7 +105,7 @@ const zoomLevels = [50, 75, 100, 125, 150, 175, 200] as const;
 
 const dictionaries: Record<'en' | 'ja', Dictionary> = {
   en: {
-    loading: 'Loading table…', undo: 'Undo', redo: 'Redo', copy: 'Copy', cut: 'Cut', clearCells: 'Delete cell contents',
+    loading: 'Loading table…', undo: 'Undo', redo: 'Redo', paste: 'Paste', copy: 'Copy', cut: 'Cut', clearCells: 'Delete cell contents',
     rowBefore: 'Row before', rowAfter: 'Row after',
     deleteRow: 'Delete row', columnBefore: 'Column before', columnAfter: 'Column after', deleteColumn: 'Delete column',
     autoFit: 'Auto fit widths', alignment: 'Alignment', none: 'None', left: 'Left', center: 'Center', right: 'Right',
@@ -107,9 +116,10 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     appendRow: 'Add row at end', appendColumn: 'Add column at end',
     columnOptions: 'Column options', selectAll: 'Select entire table', moveSelection: 'Move selected cells',
     importTable: 'Import CSV or XLSX', exportTable: 'Export CSV or XLSX', zoom: 'Zoom',
+    moreActions: 'File and zoom options', alignmentOptions: 'Align all columns', rowOptions: 'Row operations', columnActionOptions: 'Column operations',
   },
   ja: {
-    loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
+    loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', paste: '貼り付け', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
     rowBefore: '前に行を追加', rowAfter: '後に行を追加',
     deleteRow: '行を削除', columnBefore: '前に列を追加', columnAfter: '後に列を追加', deleteColumn: '列を削除',
     autoFit: '横幅を整える', alignment: '配置', none: '指定なし', left: '左', center: '中央', right: '右',
@@ -120,11 +130,12 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     appendRow: '末尾に行を追加', appendColumn: '末尾に列を追加',
     columnOptions: '列の操作', selectAll: '表全体を選択', moveSelection: '選択セルを移動',
     importTable: 'CSV・XLSXをインポート', exportTable: 'CSV・XLSXへエクスポート', zoom: 'ズーム',
+    moreActions: 'ファイルとズームの操作', alignmentOptions: '全列の配置', rowOptions: '行操作', columnActionOptions: '列操作',
   },
 };
 
-function closeColumnMenusOutside(target?: Node): void {
-  document.querySelectorAll<HTMLDetailsElement>('.column-menu[open]').forEach((menu) => {
+function closeMenusOutside(target?: Node): void {
+  document.querySelectorAll<HTMLDetailsElement>('.column-menu[open], .toolbar-popup[open]').forEach((menu) => {
     if (!target || !menu.contains(target)) {
       menu.removeAttribute('open');
     }
@@ -156,10 +167,10 @@ function dragPreview(event: React.DragEvent<HTMLElement>, label: string, count: 
 
 function alignmentIcon(alignment: Alignment): IconName {
   const icons: Record<Alignment, IconName> = {
-    none: 'alignNone',
-    left: 'alignLeft',
-    center: 'alignCenter',
-    right: 'alignRight',
+    none: 'format_align_justify',
+    left: 'format_align_left',
+    center: 'format_align_center',
+    right: 'format_align_right',
   };
   return icons[alignment];
 }
@@ -271,7 +282,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     if (!details.open) {
       return;
     }
-    document.querySelectorAll<HTMLDetailsElement>('.column-menu[open]').forEach((menu) => {
+    document.querySelectorAll<HTMLDetailsElement>('.column-menu[open], .toolbar-popup[open]').forEach((menu) => {
       if (menu !== details) {
         menu.removeAttribute('open');
       }
@@ -507,12 +518,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     }
   };
 
-  const paste = (event: React.ClipboardEvent<HTMLDivElement>): void => {
-    if (editing) {
-      return;
-    }
-    event.preventDefault();
-    const raw = event.clipboardData.getData(customClipboardType) || event.clipboardData.getData('text/plain');
+  const pasteText = useCallback((raw: string): void => {
     if (!raw) {
       return;
     }
@@ -534,7 +540,27 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     const end = { row: requiredRows - 1, column: requiredColumns - 1 };
     setRanges([{ start: primary, end }]);
     sendOperation({ type: 'replace', snapshot: next }, primary, next);
+  }, [primary, sendOperation, snapshot]);
+
+  const paste = (event: React.ClipboardEvent<HTMLDivElement>): void => {
+    if (editing) {
+      return;
+    }
+    event.preventDefault();
+    pasteText(event.clipboardData.getData(customClipboardType) || event.clipboardData.getData('text/plain'));
   };
+
+  const pasteFromToolbar = useCallback(async (): Promise<void> => {
+    try {
+      if (!navigator.clipboard) {
+        throw new Error('Clipboard API is unavailable');
+      }
+      pasteText(await navigator.clipboard.readText());
+      requestAnimationFrame(() => gridRef.current?.focus());
+    } catch {
+      setNotice(text.clipboardFailed);
+    }
+  }, [pasteText, text.clipboardFailed]);
 
   const perform = (operation: TableOperation, selection = primary): void => {
     const optimisticSnapshot = applyOperation(snapshot, operation);
@@ -592,6 +618,77 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     setRanges((current) => gesture.additive ? [...current.slice(0, -1), range] : [range]);
     vscode.postMessage({ type: 'revealCell', cell: next });
   }, [snapshot.rows.length, snapshot.widths.length]);
+
+  const dataRows = selectedRows.filter((row) => row > 0);
+  const rowOperationCount = Math.max(1, selectedRows.length);
+  const columnOperationCount = Math.max(1, selectedColumns.length);
+  const firstSelectedRow = Math.max(1, Math.min(...selectedRows));
+  const afterSelectedRow = Math.max(1, Math.max(...selectedRows) + 1);
+  const firstSelectedColumn = Math.min(...selectedColumns);
+  const afterSelectedColumn = Math.max(...selectedColumns) + 1;
+  const countLabel = (label: string, count: number): string => count > 1 ? `${label} (${count})` : label;
+  const alignmentActions: ToolbarAction[] = (['none', 'left', 'center', 'right'] as Alignment[]).map((alignment) => ({
+    icon: alignmentIcon(alignment),
+    label: text[alignment],
+    pressed: snapshot.alignments.every((current) => current === alignment),
+    onClick: () => perform({ type: 'setAllAlignments', alignment }),
+  }));
+  const rowActions: ToolbarAction[] = [
+    {
+      icon: 'add_row_above',
+      label: countLabel(text.rowBefore, rowOperationCount),
+      onClick: () => perform(
+        { type: 'insertRow', index: firstSelectedRow, count: rowOperationCount },
+        { row: firstSelectedRow, column: primary.column },
+      ),
+    },
+    {
+      icon: 'add_row_below',
+      label: countLabel(text.rowAfter, rowOperationCount),
+      onClick: () => perform(
+        { type: 'insertRow', index: afterSelectedRow, count: rowOperationCount },
+        { row: afterSelectedRow, column: primary.column },
+      ),
+    },
+    {
+      danger: true,
+      disabled: dataRows.length === 0,
+      icon: 'table_rows',
+      label: countLabel(text.deleteRow, dataRows.length),
+      onClick: () => perform(
+        { type: 'deleteRows', indexes: dataRows },
+        { row: Math.max(0, primary.row - dataRows.length), column: primary.column },
+      ),
+    },
+  ];
+  const columnActions: ToolbarAction[] = [
+    {
+      icon: 'add_column_left',
+      label: countLabel(text.columnBefore, columnOperationCount),
+      onClick: () => perform(
+        { type: 'insertColumn', index: firstSelectedColumn, count: columnOperationCount },
+        { row: primary.row, column: firstSelectedColumn },
+      ),
+    },
+    {
+      icon: 'add_column_right',
+      label: countLabel(text.columnAfter, columnOperationCount),
+      onClick: () => perform(
+        { type: 'insertColumn', index: afterSelectedColumn, count: columnOperationCount },
+        { row: primary.row, column: afterSelectedColumn },
+      ),
+    },
+    {
+      danger: true,
+      disabled: snapshot.widths.length <= 1,
+      icon: 'view_column',
+      label: countLabel(text.deleteColumn, selectedColumns.length),
+      onClick: () => perform(
+        { type: 'deleteColumns', indexes: selectedColumns },
+        { row: primary.row, column: Math.max(0, primary.column - selectedColumns.length) },
+      ),
+    },
+  ];
 
   useEffect(() => {
     const receive = (event: MessageEvent<ExtensionMessage>): void => {
@@ -652,7 +749,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
 
   useEffect(() => {
     const pointerDown = (event: PointerEvent): void => {
-      closeColumnMenusOutside(event.target instanceof Node ? event.target : undefined);
+      closeMenusOutside(event.target instanceof Node ? event.target : undefined);
     };
     document.addEventListener('pointerdown', pointerDown, true);
     return () => document.removeEventListener('pointerdown', pointerDown, true);
@@ -898,13 +995,54 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   return (
     <main className="app">
       <nav className="toolbar" aria-label="Table operations">
+        <div className="toolbar-group toolbar-overflow toolbar-compact" aria-label={text.moreActions}>
+          <details className="toolbar-popup">
+            <summary aria-label={text.moreActions} title={text.moreActions}><Icon name="more_horiz" /></summary>
+            <div className="toolbar-popup-items">
+              <ToolbarMenuItem action={{ icon: 'download', label: text.importTable, onClick: () => vscode.postMessage({ type: 'importTable' }) }} />
+              <ToolbarMenuItem action={{ icon: 'upload', label: text.exportTable, onClick: () => vscode.postMessage({ type: 'exportTable' }) }} />
+              <div className="toolbar-popup-separator" />
+              <label className="toolbar-popup-zoom">
+                <span>{text.zoom}</span>
+                <select
+                  aria-label={text.zoom}
+                  value={zoom}
+                  onChange={(event) => {
+                    setZoom(Number(event.target.value));
+                    event.currentTarget.closest('details')?.removeAttribute('open');
+                  }}
+                >
+                  {zoomLevels.map((level) => <option key={level} value={level}>{level}%</option>)}
+                </select>
+              </label>
+            </div>
+          </details>
+        </div>
+        <div className="toolbar-group toolbar-clipboard" aria-label="Clipboard">
+          <ToolbarButton icon="content_paste" label={text.paste} labelVisibility="hidden" onClick={() => void pasteFromToolbar()} />
+          <ToolbarButton icon="content_cut" label={text.cut} labelVisibility="hidden" onClick={() => void copySelection(true)} />
+          <ToolbarButton icon="content_copy" label={text.copy} labelVisibility="hidden" onClick={() => void copySelection(false)} />
+          <ToolbarButton
+            danger
+            icon="delete"
+            label={text.clearCells}
+            labelVisibility="hidden"
+            onClick={() => {
+              replaceSelection('');
+              requestAnimationFrame(() => gridRef.current?.focus());
+            }}
+          />
+        </div>
         <div className="toolbar-group toolbar-history" aria-label="History">
-          <ToolbarButton icon="undo" label={text.undo} onClick={() => vscode.postMessage({ type: 'undo' })} />
-          <ToolbarButton icon="redo" label={text.redo} onClick={() => vscode.postMessage({ type: 'redo' })} />
-          <ToolbarButton icon="autoFit" label={text.autoFit} onClick={() => perform({ type: 'autoFit' })} />
-          <ToolbarButton icon="download" label={text.importTable} onClick={() => vscode.postMessage({ type: 'importTable' })} />
-          <ToolbarButton icon="upload" label={text.exportTable} onClick={() => vscode.postMessage({ type: 'exportTable' })} />
-          <label className="toolbar-zoom" title={text.zoom}>
+          <ToolbarButton icon="undo" label={text.undo} labelVisibility="hidden" onClick={() => vscode.postMessage({ type: 'undo' })} />
+          <ToolbarButton icon="redo" label={text.redo} labelVisibility="hidden" onClick={() => vscode.postMessage({ type: 'redo' })} />
+        </div>
+        <div className="toolbar-group toolbar-files" aria-label={text.moreActions}>
+          <ToolbarButton icon="download" label={text.importTable} labelVisibility="hidden" onClick={() => vscode.postMessage({ type: 'importTable' })} />
+          <ToolbarButton icon="upload" label={text.exportTable} labelVisibility="hidden" onClick={() => vscode.postMessage({ type: 'exportTable' })} />
+        </div>
+        <div className="toolbar-group toolbar-zoom" title={text.zoom}>
+          <label className="toolbar-zoom-control" title={text.zoom}>
             <span className="visually-hidden">{text.zoom}</span>
             <select
               aria-label={text.zoom}
@@ -915,28 +1053,23 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
             </select>
           </label>
         </div>
-        <div className="toolbar-group toolbar-clipboard" aria-label="Clipboard">
-          <ToolbarButton icon="content_copy" label={text.copy} onClick={() => void copySelection(false)} />
-          <ToolbarButton icon="content_cut" label={text.cut} onClick={() => void copySelection(true)} />
-          <ToolbarButton
-            danger
-            icon="delete"
-            label={text.clearCells}
-            onClick={() => {
-              replaceSelection('');
-              requestAnimationFrame(() => gridRef.current?.focus());
-            }}
-          />
+        <div className="toolbar-group toolbar-alignments" aria-label={text.alignmentOptions}>
+          {alignmentActions.map((action) => <ToolbarButton key={action.label} {...action} labelVisibility="hidden" />)}
         </div>
         <div className="toolbar-group toolbar-rows" aria-label="Rows">
-          <ToolbarButton icon="add_row_above" label={text.rowBefore} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row) }, { row: Math.max(1, primary.row), column: primary.column })} />
-          <ToolbarButton icon="add_row_below" label={text.rowAfter} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row + 1) }, { row: Math.max(1, primary.row + 1), column: primary.column })} />
-          <ToolbarButton danger icon="table_rows" label={text.deleteRow} disabled={selectedRows.every((row) => row === 0)} onClick={() => perform({ type: 'deleteRows', indexes: selectedRows }, { row: Math.max(0, primary.row - 1), column: primary.column })} />
+          {rowActions.map((action) => <ToolbarButton key={action.label} {...action} labelVisibility="wide" />)}
         </div>
         <div className="toolbar-group toolbar-columns" aria-label="Columns">
-          <ToolbarButton icon="add_column_left" label={text.columnBefore} onClick={() => perform({ type: 'insertColumn', index: primary.column }, primary)} />
-          <ToolbarButton icon="add_column_right" label={text.columnAfter} onClick={() => perform({ type: 'insertColumn', index: primary.column + 1 }, { row: primary.row, column: primary.column + 1 })} />
-          <ToolbarButton danger icon="view_column" label={text.deleteColumn} disabled={snapshot.widths.length <= 1} onClick={() => perform({ type: 'deleteColumns', indexes: selectedColumns }, { row: primary.row, column: Math.max(0, primary.column - 1) })} />
+          {columnActions.map((action) => <ToolbarButton key={action.label} {...action} labelVisibility="wide" />)}
+        </div>
+        <div className="toolbar-group toolbar-compact toolbar-compact-alignments" aria-label={text.alignmentOptions}>
+          <ToolbarPopup icon="format_align_justify" label={text.alignmentOptions} actions={alignmentActions} />
+        </div>
+        <div className="toolbar-group toolbar-compact toolbar-compact-rows" aria-label={text.rowOptions}>
+          <ToolbarPopup icon="table_rows" label={text.rowOptions} actions={rowActions} />
+        </div>
+        <div className="toolbar-group toolbar-compact toolbar-compact-columns" aria-label={text.columnActionOptions}>
+          <ToolbarPopup icon="view_column" label={text.columnActionOptions} actions={columnActions} align="right" />
         </div>
       </nav>
       {state.oversized && <div className="banner" role="status">{text.large}</div>}
@@ -966,7 +1099,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
             }
           }}
           onScroll={(event) => {
-            closeColumnMenusOutside();
+            closeMenusOutside();
             setScrollPosition({ left: event.currentTarget.scrollLeft, top: event.currentTarget.scrollTop });
           }}
         >
@@ -1267,13 +1400,17 @@ function ToolbarButton({
   disabled = false,
   icon,
   label,
+  labelVisibility,
   onClick,
+  pressed,
 }: {
   danger?: boolean;
   disabled?: boolean;
   icon: IconName;
   label: string;
+  labelVisibility: 'hidden' | 'wide';
   onClick: () => void;
+  pressed?: boolean;
 }): React.JSX.Element {
   return (
     <button
@@ -1283,10 +1420,51 @@ function ToolbarButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      aria-pressed={pressed}
     >
       <Icon name={icon} />
-      <span className="toolbar-button-label">{label}</span>
+      <span className={labelVisibility === 'wide' ? 'toolbar-button-label toolbar-button-label-wide' : 'visually-hidden'}>{label}</span>
     </button>
+  );
+}
+
+function ToolbarMenuItem({ action }: { action: ToolbarAction }): React.JSX.Element {
+  return (
+    <button
+      type="button"
+      className={`toolbar-popup-item${action.danger ? ' danger' : ''}`}
+      disabled={action.disabled}
+      aria-pressed={action.pressed}
+      onClick={(event) => {
+        event.currentTarget.closest('details')?.removeAttribute('open');
+        action.onClick();
+      }}
+    >
+      <Icon name={action.icon} />
+      <span>{action.label}</span>
+      {action.pressed && <Icon name="check" size={16} />}
+    </button>
+  );
+}
+
+function ToolbarPopup({
+  actions,
+  align = 'left',
+  icon,
+  label,
+}: {
+  actions: ToolbarAction[];
+  align?: 'left' | 'right';
+  icon: IconName;
+  label: string;
+}): React.JSX.Element {
+  return (
+    <details className={`toolbar-popup toolbar-popup-${align}`}>
+      <summary aria-label={label} title={label}><Icon name={icon} /></summary>
+      <div className="toolbar-popup-items">
+        {actions.map((action) => <ToolbarMenuItem key={action.label} action={action} />)}
+      </div>
+    </details>
   );
 }
 
