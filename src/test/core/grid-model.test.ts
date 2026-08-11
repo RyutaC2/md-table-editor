@@ -73,6 +73,13 @@ suite('Grid model', () => {
     assert.strictEqual(estimatedBodyRowHeight([''], [3], 40), 40);
   });
 
+  test('scales grid geometry without changing wrapping capacity', () => {
+    assert.strictEqual(columnPixelWidth(3, 0.5), 48);
+    assert.strictEqual(columnPixelWidth(20, 2), 360);
+    assert.strictEqual(estimatedBodyRowHeight(['1234567890'], [3], 38, 0.5), 28);
+    assert.strictEqual(estimatedBodyRowHeight(['1234567890'], [3], 38, 2), 112);
+  });
+
   test('builds row and column header ranges on one fixed axis', () => {
     assert.deepStrictEqual(axisSelectionRange('row', 3, 1, 5, 4), {
       start: { row: 3, column: 0 }, end: { row: 1, column: 3 },

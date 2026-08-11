@@ -75,6 +75,10 @@ interface CellMoveGesture {
   target: { row: number; column: number };
 }
 
+interface GridCanvasStyle extends React.CSSProperties {
+  '--grid-scale': number;
+}
+
 type Dictionary = Record<string, string>;
 
 declare function acquireVsCodeApi(): VSCodeApi;
@@ -88,6 +92,7 @@ const appendColumnWidth = 30;
 const appendRowHeight = 28;
 const selectionDragThreshold = 5;
 const customClipboardType = 'application/x-markdown-grid-editor';
+const zoomLevels = [50, 75, 100, 125, 150, 175, 200] as const;
 
 const dictionaries: Record<'en' | 'ja', Dictionary> = {
   en: {
@@ -101,7 +106,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     clipboardFailed: 'Could not access the clipboard.',
     appendRow: 'Add row at end', appendColumn: 'Add column at end',
     columnOptions: 'Column options', selectAll: 'Select entire table', moveSelection: 'Move selected cells',
-    importTable: 'Import CSV or XLSX', exportTable: 'Export CSV or XLSX',
+    importTable: 'Import CSV or XLSX', exportTable: 'Export CSV or XLSX', zoom: 'Zoom',
   },
   ja: {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
@@ -114,7 +119,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     clipboardFailed: 'クリップボードへアクセスできませんでした。',
     appendRow: '末尾に行を追加', appendColumn: '末尾に列を追加',
     columnOptions: '列の操作', selectAll: '表全体を選択', moveSelection: '選択セルを移動',
-    importTable: 'CSV・XLSXをインポート', exportTable: 'CSV・XLSXへエクスポート',
+    importTable: 'CSV・XLSXをインポート', exportTable: 'CSV・XLSXへエクスポート', zoom: 'ズーム',
   },
 };
 
@@ -227,6 +232,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const [primary, setPrimary] = useState<CellPosition>(initial.selection ?? { row: 0, column: 0 });
   const [anchor, setAnchor] = useState(primary);
   const [ranges, setRanges] = useState<SelectionRange[]>([{ start: primary, end: primary }]);
+  const [zoom, setZoom] = useState(100);
   const [editing, setEditing] = useState<EditingCell>();
   const [isPanning, setIsPanning] = useState(false);
   const [notice, setNotice] = useState<string>();
@@ -248,8 +254,18 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   primaryRef.current = primary;
   const text = dictionaries[state.language];
   const editingSession = editing ? `${editing.cell.row}:${editing.cell.column}` : undefined;
-  const headerRowHeight = estimatedBodyRowHeight(snapshot.rows[0] ?? [], snapshot.widths, markdownHeaderMinimumHeight);
-  const bodyOffset = columnHeaderHeight + headerRowHeight;
+  const gridScale = zoom / 100;
+  const scaledRowHeaderWidth = Math.round(rowHeaderWidth * gridScale);
+  const scaledColumnHeaderHeight = Math.round(columnHeaderHeight * gridScale);
+  const scaledAppendColumnWidth = Math.round(appendColumnWidth * gridScale);
+  const scaledAppendRowHeight = Math.round(appendRowHeight * gridScale);
+  const headerRowHeight = estimatedBodyRowHeight(
+    snapshot.rows[0] ?? [],
+    snapshot.widths,
+    markdownHeaderMinimumHeight,
+    gridScale,
+  );
+  const bodyOffset = scaledColumnHeaderHeight + headerRowHeight;
 
   const positionColumnMenu = useCallback((details: HTMLDetailsElement): void => {
     if (!details.open) {
@@ -288,14 +304,14 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const columnVirtualizer = useVirtualizer({
     count: snapshot.widths.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => columnPixelWidth(snapshot.widths[index]),
+    estimateSize: (index) => columnPixelWidth(snapshot.widths[index], gridScale),
     horizontal: true,
     overscan: 4,
   });
   const rowVirtualizer = useVirtualizer({
     count: Math.max(0, snapshot.rows.length - 1),
     getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => estimatedBodyRowHeight(snapshot.rows[index + 1] ?? [], snapshot.widths),
+    estimateSize: (index) => estimatedBodyRowHeight(snapshot.rows[index + 1] ?? [], snapshot.widths, undefined, gridScale),
     overscan: 8,
   });
 
@@ -619,7 +635,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   useEffect(() => {
     rowVirtualizer.measure();
     columnVirtualizer.measure();
-  }, [snapshot, rowVirtualizer, columnVirtualizer]);
+  }, [snapshot, zoom, rowVirtualizer, columnVirtualizer]);
 
   useEffect(() => {
     const endCellSelection = (): void => {
@@ -654,7 +670,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     const root = document.documentElement;
     root.classList.add('column-resizing');
     const move = (moveEvent: PointerEvent): void => {
-      const width = Math.max(3, Math.round(initial + (moveEvent.clientX - start) / characterWidth));
+      const width = Math.max(3, Math.round(initial + (moveEvent.clientX - start) / (characterWidth * gridScale)));
       if (width !== preview) {
         preview = width;
         setSnapshot((current) => applyOperation(current, { type: 'setWidth', column, width }));
@@ -722,8 +738,14 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const virtualRows = rowVirtualizer.getVirtualItems();
   const tableWidth = columnVirtualizer.getTotalSize();
   const tableBodyHeight = rowVirtualizer.getTotalSize();
-  const canvasWidth = rowHeaderWidth + tableWidth + appendColumnWidth;
-  const canvasHeight = bodyOffset + tableBodyHeight + appendRowHeight;
+  const canvasWidth = scaledRowHeaderWidth + tableWidth + scaledAppendColumnWidth;
+  const canvasHeight = bodyOffset + tableBodyHeight + scaledAppendRowHeight;
+  const gridCanvasStyle: GridCanvasStyle = {
+    width: canvasWidth,
+    height: canvasHeight,
+    fontSize: `${zoom}%`,
+    '--grid-scale': gridScale,
+  };
 
   const selectedCellBounds = useMemo<CellRangeBounds | undefined>(() => {
     if (ranges.length !== 1) {
@@ -734,16 +756,16 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   }, [ranges]);
   const columnStarts = useMemo(() => {
     const starts = [0];
-    snapshot.widths.forEach((width) => starts.push(starts.at(-1)! + columnPixelWidth(width)));
+    snapshot.widths.forEach((width) => starts.push(starts.at(-1)! + columnPixelWidth(width, gridScale)));
     return starts;
-  }, [snapshot.widths]);
+  }, [gridScale, snapshot.widths]);
   const rowStarts = useMemo(() => {
-    const starts = [columnHeaderHeight, bodyOffset];
+    const starts = [scaledColumnHeaderHeight, bodyOffset];
     for (let row = 1; row < snapshot.rows.length; row += 1) {
-      starts.push(starts.at(-1)! + estimatedBodyRowHeight(snapshot.rows[row] ?? [], snapshot.widths));
+      starts.push(starts.at(-1)! + estimatedBodyRowHeight(snapshot.rows[row] ?? [], snapshot.widths, undefined, gridScale));
     }
     return starts;
-  }, [bodyOffset, snapshot.rows, snapshot.widths]);
+  }, [bodyOffset, gridScale, scaledColumnHeaderHeight, snapshot.rows, snapshot.widths]);
   const frameBounds = selectedCellBounds && {
     top: cellMoveTarget?.row ?? selectedCellBounds.top,
     left: cellMoveTarget?.column ?? selectedCellBounds.left,
@@ -751,7 +773,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     width: selectedCellBounds.right - selectedCellBounds.left + 1,
   };
   const selectionFrame = frameBounds && {
-    left: rowHeaderWidth + columnStarts[frameBounds.left],
+    left: scaledRowHeaderWidth + columnStarts[frameBounds.left],
     top: rowStarts[frameBounds.top],
     width: columnStarts[frameBounds.left + frameBounds.width] - columnStarts[frameBounds.left],
     height: rowStarts[frameBounds.top + frameBounds.height] - rowStarts[frameBounds.top],
@@ -882,6 +904,16 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
           <ToolbarButton icon="autoFit" label={text.autoFit} onClick={() => perform({ type: 'autoFit' })} />
           <ToolbarButton icon="download" label={text.importTable} onClick={() => vscode.postMessage({ type: 'importTable' })} />
           <ToolbarButton icon="upload" label={text.exportTable} onClick={() => vscode.postMessage({ type: 'exportTable' })} />
+          <label className="toolbar-zoom" title={text.zoom}>
+            <span className="visually-hidden">{text.zoom}</span>
+            <select
+              aria-label={text.zoom}
+              value={zoom}
+              onChange={(event) => setZoom(Number(event.target.value))}
+            >
+              {zoomLevels.map((level) => <option key={level} value={level}>{level}%</option>)}
+            </select>
+          </label>
         </div>
         <div className="toolbar-group toolbar-clipboard" aria-label="Clipboard">
           <ToolbarButton icon="content_copy" label={text.copy} onClick={() => void copySelection(false)} />
@@ -938,13 +970,18 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
             setScrollPosition({ left: event.currentTarget.scrollLeft, top: event.currentTarget.scrollTop });
           }}
         >
-          <div className="grid-canvas" style={{ width: canvasWidth, height: canvasHeight }}>
+          <div className="grid-canvas" style={gridCanvasStyle}>
             <button
               type="button"
               className="corner"
               aria-label={text.selectAll}
               title={text.selectAll}
-              style={{ left: scrollPosition.left, top: scrollPosition.top }}
+              style={{
+                left: scrollPosition.left,
+                top: scrollPosition.top,
+                width: scaledRowHeaderWidth,
+                height: scaledColumnHeaderHeight,
+              }}
               onClick={() => {
                 const start = { row: 0, column: 0 };
                 const end = { row: snapshot.rows.length - 1, column: snapshot.widths.length - 1 };
@@ -955,7 +992,12 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
             <div
               className="header-row-heading"
               role="rowheader"
-              style={{ left: scrollPosition.left, top: scrollPosition.top + columnHeaderHeight, height: headerRowHeight }}
+              style={{
+                left: scrollPosition.left,
+                top: scrollPosition.top + scaledColumnHeaderHeight,
+                width: scaledRowHeaderWidth,
+                height: headerRowHeight,
+              }}
               onPointerDown={(event) => {
                 if (event.button !== 0) return;
                 const start = { row: 0, column: 0 };
@@ -990,7 +1032,12 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     onDragEnd={clearReorder}
                     onPointerDown={(event) => startHeaderSelection('column', column, event)}
                     onPointerEnter={(event) => extendHeaderSelection('column', column, event)}
-                    style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top, width }}
+                    style={{
+                      left: scaledRowHeaderWidth + virtualColumn.start,
+                      top: scrollPosition.top,
+                      width,
+                      height: scaledColumnHeaderHeight,
+                    }}
                   >
                     <span>{columnName(column)}</span>
                     <details
@@ -1056,7 +1103,12 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     className={`cell header-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('column', column)} ${headerSelected ? 'selected' : ''}${cellMoveTarget && headerSelected ? ' cell-move-source' : ''} ${sameCell(primary, { row: 0, column }) ? 'primary' : ''}`}
                     role="columnheader"
                     aria-label={`${text.header} ${columnName(column)}`}
-                    style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top + columnHeaderHeight, width, height: headerRowHeight }}
+                    style={{
+                      left: scaledRowHeaderWidth + virtualColumn.start,
+                      top: scrollPosition.top + scaledColumnHeaderHeight,
+                      width,
+                      height: headerRowHeight,
+                    }}
                     onPointerDown={(event) => startCellSelection({ row: 0, column }, event)}
                     onPointerEnter={(event) => extendCellSelection({ row: 0, column }, event)}
                     onDoubleClick={() => beginEdit({ row: 0, column })}
@@ -1080,7 +1132,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     className={`row-heading${reorderClass('row', row)}`}
                     role="rowheader"
                     draggable={canReorder}
-                    style={{ left: scrollPosition.left, top, height: virtualRow.size }}
+                    style={{ left: scrollPosition.left, top, width: scaledRowHeaderWidth, height: virtualRow.size }}
                     onDragStart={(event) => {
                       if (!canReorder || headerSelectionGestureRef.current) {
                         event.preventDefault(); return;
@@ -1110,7 +1162,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                         role="gridcell"
                         aria-rowindex={row + 1}
                         aria-colindex={column + 1}
-                        style={{ left: rowHeaderWidth + virtualColumn.start, top, width: virtualColumn.size, height: virtualRow.size }}
+                        style={{ left: scaledRowHeaderWidth + virtualColumn.start, top, width: virtualColumn.size, height: virtualRow.size }}
                         onPointerDown={(event) => startCellSelection(cell, event)}
                         onPointerEnter={(event) => extendCellSelection(cell, event)}
                         onDoubleClick={() => beginEdit(cell)}
@@ -1160,7 +1212,12 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
             <button
               type="button"
               className="append-button append-column-button"
-              style={{ left: rowHeaderWidth + tableWidth, top: 0, width: appendColumnWidth, height: bodyOffset + tableBodyHeight }}
+              style={{
+                left: scaledRowHeaderWidth + tableWidth,
+                top: 0,
+                width: scaledAppendColumnWidth,
+                height: bodyOffset + tableBodyHeight,
+              }}
               title={text.appendColumn}
               aria-label={text.appendColumn}
               onClick={() => {
@@ -1173,12 +1230,17 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                 });
               }}
             >
-              <span className="append-column-button-icon" style={{ top: scrollPosition.top + 17 }}><Icon name="add" /></span>
+              <span className="append-column-button-icon" style={{ top: scrollPosition.top + scaledColumnHeaderHeight / 2 }}><Icon name="add" /></span>
             </button>
             <button
               type="button"
               className="append-button append-row-button"
-              style={{ left: 0, top: bodyOffset + tableBodyHeight, width: rowHeaderWidth + tableWidth, height: appendRowHeight }}
+              style={{
+                left: 0,
+                top: bodyOffset + tableBodyHeight,
+                width: scaledRowHeaderWidth + tableWidth,
+                height: scaledAppendRowHeight,
+              }}
               title={text.appendRow}
               aria-label={text.appendRow}
               onClick={() => {
@@ -1191,7 +1253,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                 });
               }}
             >
-              <span className="append-row-button-icon" style={{ left: scrollPosition.left + 15 }}><Icon name="add" /></span>
+              <span className="append-row-button-icon" style={{ left: scrollPosition.left + scaledRowHeaderWidth / 2 }}><Icon name="add" /></span>
             </button>
           </div>
         </div>

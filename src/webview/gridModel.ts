@@ -16,9 +16,10 @@ export interface SelectionRange {
 
 export type GridAxis = 'column' | 'row';
 
-export function columnPixelWidth(markdownWidth: number): number {
+export function columnPixelWidth(markdownWidth: number, scale = 1): number {
   const safeWidth = Number.isFinite(markdownWidth) ? Math.max(3, Math.floor(markdownWidth)) : 3;
-  return Math.max(minimumColumnWidth, safeWidth * characterWidth + columnWidthChrome);
+  const safeScale = Number.isFinite(scale) ? Math.max(0.5, Math.min(2, scale)) : 1;
+  return Math.round(Math.max(minimumColumnWidth, safeWidth * characterWidth + columnWidthChrome) * safeScale);
 }
 
 export function estimatedWrappedLines(value: string, markdownWidth: number): number {
@@ -27,11 +28,17 @@ export function estimatedWrappedLines(value: string, markdownWidth: number): num
   return Math.max(1, Math.ceil(displayWidth(value) / charactersPerLine));
 }
 
-export function estimatedBodyRowHeight(row: string[], widths: number[], minimumHeight = bodyRowMinimumHeight): number {
+export function estimatedBodyRowHeight(
+  row: string[],
+  widths: number[],
+  minimumHeight = bodyRowMinimumHeight,
+  scale = 1,
+): number {
   const lines = row.reduce((maximum, value, column) => (
     Math.max(maximum, estimatedWrappedLines(value, widths[column] ?? 3))
   ), 1);
-  return Math.max(minimumHeight, lines * bodyRowLineHeight + bodyRowVerticalPadding);
+  const safeScale = Number.isFinite(scale) ? Math.max(0.5, Math.min(2, scale)) : 1;
+  return Math.round(Math.max(minimumHeight, lines * bodyRowLineHeight + bodyRowVerticalPadding) * safeScale);
 }
 
 export function clampCell(cell: CellPosition, snapshot: TableSnapshot): CellPosition {

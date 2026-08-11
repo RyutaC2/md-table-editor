@@ -57,6 +57,7 @@ When the cursor is inside an existing table, the new table is inserted after tha
 | Copy or cut | Ctrl/Cmd+C or X, or the toolbar |
 | Paste | Ctrl/Cmd+V |
 | Import or export | Toolbar; CSV and XLSX only |
+| Zoom the grid | Toolbar; 50%, 75%, 100%, 125%, 150%, 175%, or 200% |
 | Undo or redo | Ctrl/Cmd+Z or Y, or the toolbar |
 | Add or delete rows and columns | Top toolbar; use the `+` controls at the right and bottom edges to append |
 | Align or sort a column | Menu in each column heading |
@@ -68,6 +69,8 @@ Copying a disjoint selection is not supported. When pasting with a disjoint sele
 Import replaces the complete table currently open in the GUI. When an XLSX workbook has multiple worksheets, select one in the VS Code Quick Pick. Export writes the complete current table to one CSV file or one `Table` worksheet. Cell values are imported as strings; spreadsheet formatting, formulas, images, and merged-cell structure are not reproduced.
 
 Cell contents wrap automatically when they exceed the column width. A row expands only as much as required by its tallest cell.
+
+Grid zoom scales the table, row and column headings, cells, resize increments, selection border, and edge-add controls. The toolbar remains at the VS Code UI size so its controls stay usable.
 
 The toolbar changes with the available width: one labeled row at 1500px or wider, two labeled rows from 800px to 1499px, and two icon-only rows at 799px or narrower. Every layout stays left-aligned without a toolbar scrollbar. In both two-row layouts, column actions appear directly below row actions. Action groups use spacing and dividers, while Undo, Redo, and Auto Fit Widths remain together. Copy, cut, and clear-cell actions are also available from the toolbar. The `more_horiz` menu in each column heading provides alignment and sorting, closes after an action or an outside click, stays within the visible grid area, and marks the current alignment. Left, center, and right alignment is reflected immediately in the Markdown source and in header, body, and active editor cells. Columns without an explicit Markdown alignment are displayed left-aligned.
 
