@@ -13,6 +13,7 @@ out-unit/**
 **/*.map
 AGENTS.md
 AGENTS_DOCS.md
+RELEASE_CHECKLIST.md
 esbuild.js
 eslint.config.mjs
 tsconfig.json
