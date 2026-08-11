@@ -13,7 +13,7 @@ v1 の公開条件は、P0・P1 が 0 件、P2 が修正済みまたは既知の
 
 ## 事前準備
 
-- [ ] `artifacts/md-table-editor-0.2.3.vsix` を、普段使っている VS Code Stable へ新規インストールする
+- [ ] `artifacts/md-table-editor-0.2.4.vsix` を、普段使っている VS Code Stable へ新規インストールする
 - [ ] VS Code と OS のバージョン、表示倍率、使用テーマを記録する
 - [ ] Git 管理されたテスト用ワークスペースで確認し、操作前後の差分を比較できるようにする
 - [ ] 可能であれば Windows、macOS、Linux のうち2環境以上と、vscode.dev または github.dev でも確認する
