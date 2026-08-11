@@ -18,6 +18,7 @@ interface TableSession {
   selection?: CellPosition;
   applyingEdit: boolean;
   startEditing: boolean;
+  revealGeneration: number;
   disposables: vscode.Disposable[];
 }
 
@@ -138,6 +139,7 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
       snapshot: snapshot(table),
       applyingEdit: false,
       startEditing,
+      revealGeneration: 0,
       disposables: [],
     };
     session.disposables.push(
@@ -241,6 +243,7 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
   }
 
   private async sendState(session: TableSession, document: vscode.TextDocument, table: MarkdownTable, startEditing: boolean): Promise<void> {
+    session.revealGeneration += 1;
     this.rekey(session, table.startOffset);
     session.tableEndOffset = table.endOffset;
     session.documentVersion = document.version;
@@ -261,14 +264,21 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
   }
 
   private async revealCell(session: TableSession, cell: CellPosition): Promise<void> {
+    const generation = ++session.revealGeneration;
     const document = await vscode.workspace.openTextDocument(session.uri);
+    if (generation !== session.revealGeneration) {
+      return;
+    }
     const table = findTableAtOffset(document.getText(), session.tableStartOffset);
     const range = table?.cellRanges[cell.row]?.[cell.column];
     if (!range) {
       return;
     }
-    session.selection = cell;
     const editor = await vscode.window.showTextDocument(document, { viewColumn: session.sourceColumn, preserveFocus: true, preview: false });
+    if (generation !== session.revealGeneration) {
+      return;
+    }
+    session.selection = cell;
     editor.selection = new vscode.Selection(document.positionAt(range.start), document.positionAt(range.end));
     editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
   }
@@ -286,8 +296,12 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
       for (let row = 0; row < table.cellRanges.length; row += 1) {
         const column = table.cellRanges[row].findIndex((range) => offset >= range.start && offset <= range.end);
         if (column >= 0) {
-          session.selection = { row, column };
-          this.post(session, { type: 'selection', selection: session.selection });
+          const selection = { row, column };
+          if (session.selection?.row !== row || session.selection.column !== column) {
+            session.revealGeneration += 1;
+            session.selection = selection;
+            this.post(session, { type: 'selection', selection });
+          }
           break;
         }
       }

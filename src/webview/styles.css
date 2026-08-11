@@ -154,6 +154,11 @@ button:disabled { cursor: default; opacity: 0.45; }
   scrollbar-color: var(--vscode-scrollbarSlider-background) transparent;
 }
 
+.grid-scroll.panning {
+  cursor: grabbing;
+  user-select: none;
+}
+
 .grid-canvas {
   position: relative;
   min-width: 100%;
@@ -229,15 +234,6 @@ button:disabled { cursor: default; opacity: 0.45; }
   cursor: pointer;
   list-style: none;
   border-radius: 3px;
-}
-
-.column-menu summary::after {
-  position: absolute;
-  right: 1px;
-  bottom: 0;
-  color: var(--vscode-descriptionForeground);
-  font-size: 8px;
-  content: '▼';
 }
 
 .column-menu summary:hover,
@@ -449,7 +445,7 @@ button:disabled { cursor: default; opacity: 0.45; }
   .toolbar-clipboard { padding-left: 10px; border-left: 1px solid var(--grid-line); }
 }
 
-@media (max-width: 899px) {
+@media (max-width: 799px) {
   .toolbar {
     display: flex;
     min-height: 44px;

@@ -8,6 +8,7 @@ import { displayWidth } from '../core/width';
 import type { CellPosition, EditorState, ExtensionMessage, PersistedPanelState, WebviewMessage } from '../shared/protocol';
 import { Icon } from './icons';
 import type { IconName } from './icons';
+import { hasExceededDragThreshold, scrollPositionForPan } from './interaction';
 import './styles.css';
 
 interface VSCodeApi {
@@ -33,6 +34,21 @@ interface DropTarget {
   side: 'before' | 'after';
 }
 
+interface CellSelectionGesture {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  anchor: CellPosition;
+}
+
+interface PanGesture {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  scrollLeft: number;
+  scrollTop: number;
+}
+
 type Dictionary = Record<string, string>;
 
 declare function acquireVsCodeApi(): VSCodeApi;
@@ -47,6 +63,7 @@ const minimumColumnWidth = 96;
 const characterWidth = 9;
 const appendColumnWidth = 30;
 const appendRowHeight = 28;
+const selectionDragThreshold = 5;
 const customClipboardType = 'application/x-markdown-grid-editor';
 
 const dictionaries: Record<'en' | 'ja', Dictionary> = {
@@ -60,6 +77,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     disjointReorder: 'Disjoint rows or columns cannot be reordered.', moveRows: 'Move rows', moveColumns: 'Move columns',
     clipboardFailed: 'Could not access the clipboard.',
     appendRow: 'Add row at end', appendColumn: 'Add column at end',
+    columnOptions: 'Column options',
   },
   ja: {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
@@ -71,6 +89,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     disjointReorder: '不連続な行または列は並べ替えできません。', moveRows: '行を移動', moveColumns: '列を移動',
     clipboardFailed: 'クリップボードへアクセスできませんでした。',
     appendRow: '末尾に行を追加', appendColumn: '末尾に列を追加',
+    columnOptions: '列の操作',
   },
 };
 
@@ -231,7 +250,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const [anchor, setAnchor] = useState(primary);
   const [ranges, setRanges] = useState<SelectionRange[]>([{ start: primary, end: primary }]);
   const [editing, setEditing] = useState<EditingCell>();
-  const [dragging, setDragging] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
   const [notice, setNotice] = useState<string>();
   const [draggedRows, setDraggedRows] = useState<number[]>([]);
   const [draggedColumns, setDraggedColumns] = useState<number[]>([]);
@@ -240,6 +259,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const cellSelectionGestureRef = useRef<CellSelectionGesture | undefined>(undefined);
+  const panGestureRef = useRef<PanGesture | undefined>(undefined);
   const text = dictionaries[state.language];
   const editingSession = editing ? `${editing.cell.row}:${editing.cell.column}` : undefined;
 
@@ -314,6 +335,38 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     }
     vscode.postMessage({ type: 'revealCell', cell: next });
   }, [anchor, snapshot]);
+
+  const startCellSelection = useCallback((cell: CellPosition, event: React.PointerEvent): void => {
+    if (event.button !== 0) {
+      return;
+    }
+    const next = clampCell(cell, snapshot);
+    cellSelectionGestureRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      anchor: event.shiftKey ? anchor : next,
+    };
+    chooseCell(next, event);
+  }, [anchor, chooseCell, snapshot]);
+
+  const extendCellSelection = useCallback((cell: CellPosition, event: React.PointerEvent): void => {
+    const gesture = cellSelectionGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId || (event.buttons & 1) === 0) {
+      return;
+    }
+    if (!hasExceededDragThreshold(
+      { x: gesture.startX, y: gesture.startY },
+      { x: event.clientX, y: event.clientY },
+      selectionDragThreshold,
+    )) {
+      return;
+    }
+    const next = clampCell(cell, snapshot);
+    setPrimary(next);
+    setRanges((current) => [...current.slice(0, -1), { start: gesture.anchor, end: next }]);
+    vscode.postMessage({ type: 'revealCell', cell: next });
+  }, [snapshot]);
 
   const beginEdit = useCallback((cell: CellPosition, replace?: string) => {
     const original = snapshot.rows[cell.row]?.[cell.column] ?? '';
@@ -544,9 +597,15 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   }, [snapshot, rowVirtualizer, columnVirtualizer]);
 
   useEffect(() => {
-    const pointerUp = (): void => setDragging(false);
-    window.addEventListener('pointerup', pointerUp);
-    return () => window.removeEventListener('pointerup', pointerUp);
+    const endCellSelection = (): void => {
+      cellSelectionGestureRef.current = undefined;
+    };
+    window.addEventListener('pointerup', endCellSelection);
+    window.addEventListener('pointercancel', endCellSelection);
+    return () => {
+      window.removeEventListener('pointerup', endCellSelection);
+      window.removeEventListener('pointercancel', endCellSelection);
+    };
   }, []);
 
   useEffect(() => {
@@ -558,6 +617,9 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   }, []);
 
   const resizeColumn = (column: number, event: React.PointerEvent): void => {
+    if (event.button !== 0) {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     const start = event.clientX;
@@ -624,6 +686,49 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const canvasWidth = rowHeaderWidth + tableWidth + appendColumnWidth;
   const canvasHeight = bodyOffset + tableBodyHeight + appendRowHeight;
 
+  const startPan = (event: React.PointerEvent<HTMLDivElement>): void => {
+    if (event.button !== 1) {
+      return;
+    }
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    panGestureRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      scrollLeft: event.currentTarget.scrollLeft,
+      scrollTop: event.currentTarget.scrollTop,
+    };
+    setIsPanning(true);
+  };
+
+  const movePan = (event: React.PointerEvent<HTMLDivElement>): void => {
+    const gesture = panGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) {
+      return;
+    }
+    event.preventDefault();
+    const position = scrollPositionForPan(
+      { left: gesture.scrollLeft, top: gesture.scrollTop },
+      { x: gesture.startX, y: gesture.startY },
+      { x: event.clientX, y: event.clientY },
+    );
+    event.currentTarget.scrollLeft = position.left;
+    event.currentTarget.scrollTop = position.top;
+  };
+
+  const endPan = (event: React.PointerEvent<HTMLDivElement>): void => {
+    const gesture = panGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) {
+      return;
+    }
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    panGestureRef.current = undefined;
+    setIsPanning(false);
+  };
+
   return (
     <main className="app">
       <nav className="toolbar" aria-label="Table operations">
@@ -672,7 +777,16 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
       >
         <div
           ref={scrollRef}
-          className="grid-scroll"
+          className={`grid-scroll${isPanning ? ' panning' : ''}`}
+          onPointerDown={startPan}
+          onPointerMove={movePan}
+          onPointerUp={endPan}
+          onPointerCancel={endPan}
+          onAuxClick={(event) => {
+            if (event.button === 1) {
+              event.preventDefault();
+            }
+          }}
           onScroll={(event) => {
             closeColumnMenusOutside();
             setScrollPosition({ left: event.currentTarget.scrollLeft, top: event.currentTarget.scrollTop });
@@ -684,7 +798,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
               className="header-row-heading"
               role="rowheader"
               style={{ left: scrollPosition.left, top: scrollPosition.top + columnHeaderHeight }}
-              onPointerDown={() => {
+              onPointerDown={(event) => {
+                if (event.button !== 0) return;
                 const start = { row: 0, column: 0 };
                 const end = { row: 0, column: snapshot.widths.length - 1 };
                 setPrimary(start); setAnchor(start); setRanges([{ start, end }]);
@@ -711,6 +826,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     onDrop={(event) => completeDrop(event, 'column', column)}
                     onDragEnd={clearReorder}
                     onPointerDown={(event) => {
+                      if (event.button !== 0) return;
                       const start = { row: 0, column };
                       const end = { row: snapshot.rows.length - 1, column };
                       setPrimary(start); setAnchor(start); setRanges(event.ctrlKey || event.metaKey ? [...ranges, { start, end }] : [{ start, end }]);
@@ -725,7 +841,10 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                       onDragStart={(event) => event.stopPropagation()}
                       onPointerDown={(event) => event.stopPropagation()}
                     >
-                      <summary aria-label={`${text.alignment} ${columnName(column)}`}><Icon name={alignmentIcon(snapshot.alignments[column])} size={18} /></summary>
+                      <summary
+                        aria-label={`${text.columnOptions} ${columnName(column)}`}
+                        title={`${text.columnOptions} ${columnName(column)}`}
+                      ><Icon name="more_horiz" size={20} /></summary>
                       <div className="column-menu-items">
                         {(['none', 'left', 'center', 'right'] as Alignment[]).map((alignment) => (
                           <button
@@ -778,8 +897,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     role="columnheader"
                     aria-label={`${text.header} ${columnName(column)}`}
                     style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top + columnHeaderHeight, width }}
-                    onPointerDown={(event) => { setDragging(true); chooseCell({ row: 0, column }, event); }}
-                    onPointerEnter={() => dragging && chooseCell({ row: 0, column }, { shiftKey: true })}
+                    onPointerDown={(event) => startCellSelection({ row: 0, column }, event)}
+                    onPointerEnter={(event) => extendCellSelection({ row: 0, column }, event)}
                     onDoubleClick={() => beginEdit({ row: 0, column })}
                     onDragOver={(event) => draggedColumns.length > 0 && updateDropTarget(event, 'column', column)}
                     onDrop={(event) => draggedColumns.length > 0 && completeDrop(event, 'column', column)}
@@ -813,6 +932,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     onDrop={(event) => completeDrop(event, 'row', row)}
                     onDragEnd={clearReorder}
                     onPointerDown={(event) => {
+                      if (event.button !== 0) return;
                       const start = { row, column: 0 };
                       const end = { row, column: snapshot.widths.length - 1 };
                       setPrimary(start); setAnchor(start); setRanges(event.ctrlKey || event.metaKey ? [...ranges, { start, end }] : [{ start, end }]);
@@ -830,8 +950,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                         aria-rowindex={row + 1}
                         aria-colindex={column + 1}
                         style={{ left: rowHeaderWidth + virtualColumn.start, top, width: virtualColumn.size, height: virtualRow.size }}
-                        onPointerDown={(event) => { setDragging(true); chooseCell(cell, event); }}
-                        onPointerEnter={() => dragging && chooseCell(cell, { shiftKey: true })}
+                        onPointerDown={(event) => startCellSelection(cell, event)}
+                        onPointerEnter={(event) => extendCellSelection(cell, event)}
                         onDoubleClick={() => beginEdit(cell)}
                         onDragOver={(event) => {
                           if (draggedColumns.length > 0) {

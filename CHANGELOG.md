@@ -2,6 +2,13 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.1.9] - 2026-08-11
+
+- Keep the labeled two-row toolbar down to 800px and switch to icon-only controls at 799px and below.
+- Add middle-button drag panning for navigating tables that overflow in either direction.
+- Use Google's official Material Symbols Outlined `more_horiz` icon for the column menu trigger.
+- Stabilize single-click cell selection with a drag threshold, left-button filtering, latest-request selection syncing, and redundant source-event suppression.
+
 ## [0.1.8] - 2026-08-11
 
 - Stop reselecting the complete cell input after every character, allowing continuous half-width and IME text entry.

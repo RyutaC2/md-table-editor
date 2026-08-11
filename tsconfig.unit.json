@@ -7,5 +7,5 @@
     "rootDir": "src",
     "sourceMap": false
   },
-  "include": ["src/core/**/*.ts", "src/test/core/**/*.ts"]
+  "include": ["src/core/**/*.ts", "src/webview/interaction.ts", "src/test/core/**/*.ts"]
 }
