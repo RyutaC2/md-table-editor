@@ -281,6 +281,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 - `RELEASE_CHECKLIST.md` に基づくユーザーGUI確認を完了し、公開を停止する問題がない状態で `1.0.0` を公開しました。
 - 公開先は `RyutaC2.markdown-table-gui` で、正式ページは [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=RyutaC2.markdown-table-gui) です。
+- リリースコミット `2dd4bd8` に注釈付きタグ `v1.0.0` を付け、[GitHub Release](https://github.com/RyutaC2/md-table-editor/releases/tag/v1.0.0)へMarketplaceと同じVSIXを添付しています。
 - Marketplace用の256×256 PNGアイコンはmanifestへ設定済みです。
 - 公開に使用したVSIXとハッシュ、今後の更新手順は `PUBLISHING.md` を基準にします。
 

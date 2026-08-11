@@ -10,6 +10,7 @@
 - 配布元VSIX: `artifacts/markdown-table-gui-1.0.0.vsix`
 - SHA-256: `fd3e3e7da412826dbd7e5ac4771f59ce6f36db1e7a2d30609d696568997425bc`
 - Gitタグ: `v1.0.0`
+- GitHub Release: [Markdown Table GUI v1.0.0](https://github.com/RyutaC2/md-table-editor/releases/tag/v1.0.0)
 
 ## 初回公開時の確認項目
 
