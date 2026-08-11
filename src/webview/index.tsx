@@ -1002,19 +1002,17 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
               <ToolbarMenuItem action={{ icon: 'download', label: text.importTable, onClick: () => vscode.postMessage({ type: 'importTable' }) }} />
               <ToolbarMenuItem action={{ icon: 'upload', label: text.exportTable, onClick: () => vscode.postMessage({ type: 'exportTable' }) }} />
               <div className="toolbar-popup-separator" />
-              <label className="toolbar-popup-zoom">
+              <div className="toolbar-popup-zoom">
                 <span>{text.zoom}</span>
-                <select
-                  aria-label={text.zoom}
-                  value={zoom}
-                  onChange={(event) => {
-                    setZoom(Number(event.target.value));
-                    event.currentTarget.closest('details')?.removeAttribute('open');
+                <ZoomControl
+                  label={text.zoom}
+                  zoom={zoom}
+                  onChange={(level) => {
+                    setZoom(level);
+                    document.querySelector<HTMLDetailsElement>('.toolbar-overflow .toolbar-popup[open]')?.removeAttribute('open');
                   }}
-                >
-                  {zoomLevels.map((level) => <option key={level} value={level}>{level}%</option>)}
-                </select>
-              </label>
+                />
+              </div>
             </div>
           </details>
         </div>
@@ -1041,17 +1039,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
           <ToolbarButton icon="download" label={text.importTable} labelVisibility="hidden" onClick={() => vscode.postMessage({ type: 'importTable' })} />
           <ToolbarButton icon="upload" label={text.exportTable} labelVisibility="hidden" onClick={() => vscode.postMessage({ type: 'exportTable' })} />
         </div>
-        <div className="toolbar-group toolbar-zoom" title={text.zoom}>
-          <label className="toolbar-zoom-control" title={text.zoom}>
-            <span className="visually-hidden">{text.zoom}</span>
-            <select
-              aria-label={text.zoom}
-              value={zoom}
-              onChange={(event) => setZoom(Number(event.target.value))}
-            >
-              {zoomLevels.map((level) => <option key={level} value={level}>{level}%</option>)}
-            </select>
-          </label>
+        <div className="toolbar-group toolbar-zoom" aria-label={text.zoom}>
+          <ZoomControl label={text.zoom} zoom={zoom} onChange={setZoom} />
         </div>
         <div className="toolbar-group toolbar-alignments" aria-label={text.alignmentOptions}>
           {alignmentActions.map((action) => <ToolbarButton key={action.label} {...action} labelVisibility="hidden" />)}
@@ -1061,15 +1050,6 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
         </div>
         <div className="toolbar-group toolbar-columns" aria-label="Columns">
           {columnActions.map((action) => <ToolbarButton key={action.label} {...action} labelVisibility="wide" />)}
-        </div>
-        <div className="toolbar-group toolbar-compact toolbar-compact-alignments" aria-label={text.alignmentOptions}>
-          <ToolbarPopup icon="format_align_justify" label={text.alignmentOptions} actions={alignmentActions} />
-        </div>
-        <div className="toolbar-group toolbar-compact toolbar-compact-rows" aria-label={text.rowOptions}>
-          <ToolbarPopup icon="table_rows" label={text.rowOptions} actions={rowActions} />
-        </div>
-        <div className="toolbar-group toolbar-compact toolbar-compact-columns" aria-label={text.columnActionOptions}>
-          <ToolbarPopup icon="view_column" label={text.columnActionOptions} actions={columnActions} align="right" />
         </div>
       </nav>
       {state.oversized && <div className="banner" role="status">{text.large}</div>}
@@ -1447,24 +1427,23 @@ function ToolbarMenuItem({ action }: { action: ToolbarAction }): React.JSX.Eleme
   );
 }
 
-function ToolbarPopup({
-  actions,
-  align = 'left',
-  icon,
+function ZoomControl({
   label,
+  onChange,
+  zoom,
 }: {
-  actions: ToolbarAction[];
-  align?: 'left' | 'right';
-  icon: IconName;
   label: string;
+  onChange: (zoom: number) => void;
+  zoom: number;
 }): React.JSX.Element {
   return (
-    <details className={`toolbar-popup toolbar-popup-${align}`}>
-      <summary aria-label={label} title={label}><Icon name={icon} /></summary>
-      <div className="toolbar-popup-items">
-        {actions.map((action) => <ToolbarMenuItem key={action.label} action={action} />)}
-      </div>
-    </details>
+    <label className="toolbar-zoom-control" title={`${label}: ${zoom}%`}>
+      <span className="visually-hidden">{label}</span>
+      <select aria-label={label} value={zoom} onChange={(event) => onChange(Number(event.target.value))}>
+        {zoomLevels.map((level) => <option key={level} value={level}>{level}%</option>)}
+      </select>
+      <Icon name="expand_more" size={16} />
+    </label>
   );
 }
 

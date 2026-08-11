@@ -136,14 +136,49 @@ button:disabled { cursor: default; opacity: 0.45; }
 
 .toolbar-button-label-wide { display: none; }
 
-.toolbar-zoom-control select,
-.toolbar-zoom select {
+.toolbar-zoom-control {
+  position: relative;
+  display: inline-flex;
+  width: 82px;
   height: 30px;
-  padding: 3px 6px;
+  align-items: center;
   color: var(--vscode-dropdown-foreground);
-  background: var(--vscode-dropdown-background);
+  background: color-mix(in srgb, var(--vscode-dropdown-background) 88%, var(--vscode-button-secondaryBackground, var(--grid-header)));
   border: 1px solid var(--vscode-dropdown-border, var(--grid-line));
-  border-radius: 4px;
+  border-radius: 999px;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.toolbar-zoom-control:hover {
+  background: color-mix(in srgb, var(--vscode-dropdown-background) 76%, var(--vscode-button-secondaryHoverBackground, var(--grid-header)));
+  border-color: color-mix(in srgb, var(--vscode-focusBorder) 62%, var(--grid-line));
+}
+
+.toolbar-zoom-control:focus-within {
+  border-color: var(--vscode-focusBorder);
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+.toolbar-zoom-control select {
+  width: 100%;
+  height: 100%;
+  padding: 3px 25px 3px 9px;
+  color: inherit;
+  font-weight: 600;
+  text-align: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  cursor: pointer;
+}
+
+.toolbar-zoom-control > .icon {
+  position: absolute;
+  right: 7px;
+  color: var(--vscode-descriptionForeground);
+  pointer-events: none;
 }
 
 .toolbar-popup {
@@ -175,13 +210,15 @@ button:disabled { cursor: default; opacity: 0.45; }
   top: 34px;
   left: 0;
   display: grid;
-  min-width: 190px;
+  min-width: 240px;
+  max-width: min(280px, calc(100vw - 12px));
   gap: 2px;
   padding: 5px;
   color: var(--vscode-menu-foreground);
   background: var(--vscode-menu-background);
   border: 1px solid var(--vscode-menu-border);
   box-shadow: 0 8px 24px var(--vscode-widget-shadow);
+  white-space: normal;
 }
 
 .toolbar-popup-right .toolbar-popup-items { right: 0; left: auto; }
@@ -197,6 +234,11 @@ button:disabled { cursor: default; opacity: 0.45; }
   text-align: left;
   background: transparent;
   border: 0;
+}
+
+.toolbar-popup-item span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .toolbar-popup-item:hover,
@@ -650,47 +692,48 @@ button:disabled { cursor: default; opacity: 0.45; }
   .toolbar-button-label-wide { display: inline; }
 }
 
-@media (max-width: 1499px) {
+@media (max-width: 1099px) {
   .toolbar {
     min-height: 80px;
     grid-template-areas:
-      'clipboard history files zoom'
-      'alignments rows columns .';
+      'clipboard history rows zoom'
+      'alignments files columns .';
     grid-template-columns: repeat(4, max-content);
     grid-template-rows: repeat(2, 30px);
     gap: 6px 8px;
   }
+
+  .toolbar-alignments {
+    padding-left: 0;
+    border-left: 0;
+  }
 }
 
-@media (max-width: 1049px) {
+@media (max-width: 699px) {
   .toolbar {
     grid-template-areas:
-      'overflow clipboard history'
-      'compact-alignments compact-rows compact-columns';
-    grid-template-columns: repeat(3, max-content);
+      'clipboard rows . .'
+      'overflow alignments history columns';
+    grid-template-columns: repeat(4, max-content);
   }
 
   .toolbar-files,
-  .toolbar-zoom,
-  .toolbar-alignments,
-  .toolbar-rows,
-  .toolbar-columns { display: none; }
+  .toolbar-zoom { display: none; }
 
   .toolbar-compact { display: flex; }
   .toolbar-overflow { grid-area: overflow; }
-  .toolbar-compact-alignments { grid-area: compact-alignments; }
-  .toolbar-compact-rows { grid-area: compact-rows; }
-  .toolbar-compact-columns { grid-area: compact-columns; }
 
-  .toolbar-clipboard,
-  .toolbar-history,
-  .toolbar-compact-rows,
-  .toolbar-compact-columns {
+  .toolbar-rows,
+  .toolbar-columns {
     padding-left: 8px;
     border-left: 1px solid var(--grid-line);
   }
 
-  .toolbar-compact-alignments { padding-left: 0; border-left: 0; }
+  .toolbar-history,
+  .toolbar-alignments {
+    padding-left: 0;
+    border-left: 0;
+  }
 }
 
 @media (max-width: 499px) {
