@@ -533,28 +533,22 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   return (
     <main className="app">
       <nav className="toolbar" aria-label="Table operations">
-        <div className="toolbar-row">
-          <div className="toolbar-group" aria-label="History">
-            <ToolbarButton icon="undo" label={text.undo} onClick={() => vscode.postMessage({ type: 'undo' })} />
-            <ToolbarButton icon="redo" label={text.redo} onClick={() => vscode.postMessage({ type: 'redo' })} />
-          </div>
-          <div className="toolbar-divider" />
-          <div className="toolbar-group" aria-label="Rows">
-            <ToolbarButton icon="rowBefore" label={text.rowBefore} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row) }, { row: Math.max(1, primary.row), column: primary.column })} />
-            <ToolbarButton icon="rowAfter" label={text.rowAfter} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row + 1) }, { row: Math.max(1, primary.row + 1), column: primary.column })} />
-            <ToolbarButton danger icon="deleteRow" label={text.deleteRow} disabled={selectedRows.every((row) => row === 0)} onClick={() => perform({ type: 'deleteRows', indexes: selectedRows }, { row: Math.max(0, primary.row - 1), column: primary.column })} />
-          </div>
+        <div className="toolbar-group toolbar-history" aria-label="History">
+          <ToolbarButton icon="undo" label={text.undo} onClick={() => vscode.postMessage({ type: 'undo' })} />
+          <ToolbarButton icon="redo" label={text.redo} onClick={() => vscode.postMessage({ type: 'redo' })} />
         </div>
-        <div className="toolbar-row">
-          <div className="toolbar-group" aria-label="Columns">
-            <ToolbarButton icon="columnBefore" label={text.columnBefore} onClick={() => perform({ type: 'insertColumn', index: primary.column }, primary)} />
-            <ToolbarButton icon="columnAfter" label={text.columnAfter} onClick={() => perform({ type: 'insertColumn', index: primary.column + 1 }, { row: primary.row, column: primary.column + 1 })} />
-            <ToolbarButton danger icon="deleteColumn" label={text.deleteColumn} disabled={snapshot.widths.length <= 1} onClick={() => perform({ type: 'deleteColumns', indexes: selectedColumns }, { row: primary.row, column: Math.max(0, primary.column - 1) })} />
-          </div>
-          <div className="toolbar-divider" />
-          <div className="toolbar-group" aria-label="Display">
-            <ToolbarButton icon="autoFit" label={text.autoFit} onClick={() => perform({ type: 'autoFit' })} />
-          </div>
+        <div className="toolbar-group toolbar-rows" aria-label="Rows">
+          <ToolbarButton icon="add_row_above" label={text.rowBefore} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row) }, { row: Math.max(1, primary.row), column: primary.column })} />
+          <ToolbarButton icon="add_row_below" label={text.rowAfter} onClick={() => perform({ type: 'insertRow', index: Math.max(1, primary.row + 1) }, { row: Math.max(1, primary.row + 1), column: primary.column })} />
+          <ToolbarButton danger icon="table_rows" label={text.deleteRow} disabled={selectedRows.every((row) => row === 0)} onClick={() => perform({ type: 'deleteRows', indexes: selectedRows }, { row: Math.max(0, primary.row - 1), column: primary.column })} />
+        </div>
+        <div className="toolbar-group toolbar-columns" aria-label="Columns">
+          <ToolbarButton icon="add_column_left" label={text.columnBefore} onClick={() => perform({ type: 'insertColumn', index: primary.column }, primary)} />
+          <ToolbarButton icon="add_column_right" label={text.columnAfter} onClick={() => perform({ type: 'insertColumn', index: primary.column + 1 }, { row: primary.row, column: primary.column + 1 })} />
+          <ToolbarButton danger icon="view_column" label={text.deleteColumn} disabled={snapshot.widths.length <= 1} onClick={() => perform({ type: 'deleteColumns', indexes: selectedColumns }, { row: primary.row, column: Math.max(0, primary.column - 1) })} />
+        </div>
+        <div className="toolbar-group toolbar-display" aria-label="Display">
+          <ToolbarButton icon="autoFit" label={text.autoFit} onClick={() => perform({ type: 'autoFit' })} />
         </div>
       </nav>
       {state.oversized && <div className="banner" role="status">{text.large}</div>}

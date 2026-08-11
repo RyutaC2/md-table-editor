@@ -2,6 +2,20 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.1.4] - 2026-08-11
+
+- Output packaged VSIX files to the dedicated `artifacts/` directory.
+- Generate the VSIX filename from the current package version.
+- Upload VSIX files from `artifacts/` in GitHub Actions.
+
+## [0.1.3] - 2026-08-11
+
+- Render an open column menu above the sticky corner and row headers.
+- Switch the toolbar between one labeled row, two labeled rows, and one icon-only row based on the Webview width.
+- Reorder toolbar actions as history, rows, columns, and width adjustment.
+- Use the requested Material Symbols for row and column insertion, deletion, undo, and redo.
+- Show row and column deletion icons in the VS Code error color.
+
 ## [0.1.2] - 2026-08-11
 
 - Fix single-column auto-fit being reverted by a competing no-op resize update.

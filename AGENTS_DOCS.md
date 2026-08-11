@@ -10,7 +10,7 @@ Markdown の表は、パイプ、区切り行、列揃えを人間が維持し�
 - 拡張機能 ID: `md-table-editor`
 - publisher: `RyutaC2`
 - 初回リリース: `0.1.0`
-- 現在のバージョン: `0.1.2`
+- 現在のバージョン: `0.1.4`
 - ライセンス: MIT
 - 対応環境: VS Code Desktop（Windows、macOS、Linux）および Web（vscode.dev、github.dev）
 - 表示言語: 日本語、英語。その他の言語では英語へフォールバックします。
@@ -90,8 +90,10 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 - 仮想化された列・行・セルは通常のドキュメントフローへ入れず、グリッドキャンバス上へ座標指定で絶対配置します。これにより仮想化対象の要素が縦方向へ積み重なって表示される問題を防ぎます。
 - スクロール時はグリッドのスクロール位置を使って、左上の角、列見出し、ヘッダー行、行見出しを表示領域へ追従させます。セル本体は通常どおりスクロールします。
-- ツールバーは常に2段で表示し、上段を履歴・行、下段を列・表示の操作群に分けます。スクロールバーは表示せず、方向を区別できるアイコンとラベルを併用します。表示幅が不足する場合はラベルを省略せず、ボタン内で省略表示しつつ `title` と `aria-label` で完全な操作名を提供します。
+- ツールバーは表示幅1100px以上でラベル付き1段、560～1099pxでラベル付き2段、559px以下でアイコンのみ1段へ切り替えます。操作順は履歴、行、列、横幅調整とし、スクロールバーは表示しません。アイコンのみの場合も `title` と `aria-label` で完全な操作名を提供します。
+- 行列の追加には `add_row_above`、`add_row_below`、`add_column_left`、`add_column_right`、削除には赤色の `table_rows` と `view_column`、履歴には `undo` と `redo` のMaterial Symbolsを使用します。
 - 列メニューは配置またはソートを実行した時点で閉じます。メニューのトリガーアイコンは現在の列配置に合わせ、メニュー内の選択済み配置にはチェックを表示します。
+- 列メニューを開いている列見出しは、固定された左上角、行番号、ヘッダーセルより高いスタッキング順へ移し、メニュー項目が背面へ隠れないようにします。
 - アイコンはGoogle Material Symbolsを元にした必要最小限のSVGパスを `src/webview/icons.tsx` へ同梱します。外部フォントやネットワークへの依存を避け、WebviewのCSPとオフライン動作を維持します。Material SymbolsのライセンスはApache 2.0であり、配布時の表示は `THIRD_PARTY_NOTICES.md` に記録します。
 - UI変更時は、選択状態、フォーカスリング、disabled状態、VS Codeテーマ変数、high contrast、reduced motionを維持します。
 
@@ -129,7 +131,10 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - `src/extension`: コマンド、CodeLens、文書同期、Webview 管理など VS Code 側処理
 - `src/webview`: React グリッド、状態管理、Webview メッセージ処理
 - `src/test`: 純粋ロジックおよび VS Code 統合テスト
-- `dist`、`out`: 生成物。直接編集しません。
+- `dist`: Desktop、Web、Webviewのバンドル生成物。直接編集しません。
+- `out`、`out-unit`: Desktop統合テスト、単体テストの生成物。直接編集しません。
+- `artifacts`: バージョン付きVSIXなどの配布成果物。Git管理とVSIXへの同梱対象から除外します。
+- `scripts`: ビルド・パッケージング用スクリプト。`package-vsix.mjs` は `package.json` のバージョンからVSIX名を生成します。
 
 ## テストと受け入れ条件
 
@@ -141,7 +146,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 
 ## 現在の実装状態
 
-初回リリース `0.1.0` の機能実装に加え、現在の `0.1.2` では単一列の自動幅調整の競合修正、2段ツールバー、方向別アイコン、視覚的なドラッグプレビューと挿入位置、操作後に閉じる列メニューを実装済みです。Desktop/Web用ビルド、表解析・変換、CodeLens、編集・挿入、パネル管理、文書同期、仮想化グリッド、選択・編集、TSV、行列操作、配置、ソート、列幅、Undo/Redo、安全なMarkdown表示、座標配置によるUI、Material Symbols由来のローカルアイコンを実装済みです。純粋ロジックの単体テスト、Desktop/Web統合テスト設定、GitHub Actions、VSIX生成も用意しています。Marketplaceへの実公開だけは作業対象外です。
+初回リリース `0.1.0` の機能実装に加え、現在の `0.1.4` では単一列の自動幅調整、レスポンシブツールバー、指定されたMaterial Symbols、視覚的なドラッグプレビュー、前面に表示される列メニュー、`artifacts/` への配布物分離を実装済みです。Desktop/Web用ビルド、表解析・変換、CodeLens、編集・挿入、パネル管理、文書同期、仮想化グリッド、選択・編集、TSV、行列操作、配置、ソート、列幅、Undo/Redo、安全なMarkdown表示、座標配置によるUIを実装済みです。純粋ロジックの単体テスト、Desktop/Web統合テスト設定、GitHub Actions、VSIX生成も用意しています。Marketplaceへの実公開だけは作業対象外です。
 
 ### 実装上の補足
 
@@ -157,7 +162,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - `npm run test:unit`: VS Code非依存ロジックの単体テスト
 - `npm test`: Desktop Extension Host統合テスト
 - `npm run test:web`: Web Extension Host統合テスト
-- `npm run package:vsix`: プロダクションビルドとVSIX生成
+- `npm run package:vsix`: プロダクションビルドと `artifacts/md-table-editor-<version>.vsix` の生成
 - 統合テストは開発対象の拡張機能を明示的にactivateしてから、公開コマンドとCodeLens Providerを検証します。Web統合テストは `src/test/webRunner.ts` でMochaブラウザー版のsingletonとテストを単一のCommonJSへバンドルし、Web Extension Hostがサポートする `require('vscode')` だけを外部参照として残します。テスト対象はstable版とし、CLIにローダーを自動選択させます。
 
 ### ローカル検証環境

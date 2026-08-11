@@ -5,7 +5,9 @@
 .vscode-test.mjs
 .gitignore
 src/**
+scripts/**
 dist/web-test/**
+artifacts/**
 out/**
 out-unit/**
 **/*.map
