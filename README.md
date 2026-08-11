@@ -9,7 +9,7 @@ As a Markdown table grows, manually maintaining its pipes, delimiter row, and sp
 ## Features
 
 - Detect GFM Markdown tables
-- Show an `Edit in GUI` CodeLens above each table
+- Show an `Edit Table` CodeLens above each table
 - Edit existing tables or insert new tables from the Markdown editor context menu
 - Use a virtualized grid in both VS Code Desktop and VS Code for the Web
 - Select individual cells, rectangular ranges, disjoint ranges, rows, and columns
@@ -27,7 +27,7 @@ As a Markdown table grows, manually maintaining its pipes, delimiter row, and sp
 ### Edit an existing table
 
 1. Open a Markdown file in VS Code.
-2. Select `Edit in GUI` above the target table. If CodeLens is disabled, right-click inside the table and select `Edit Table in GUI`.
+2. Select `Edit Table` above the target table. If CodeLens is disabled, right-click inside the table and select the same command.
 3. The Markdown source remains on the left and the graphical grid opens on the right.
 4. Confirming a cell edit immediately updates the source on the left.
 5. Save the file normally with Ctrl/Cmd+S.
@@ -64,7 +64,7 @@ When the cursor is inside an existing table, the new table is inserted after tha
 | Add or delete rows and columns | Top toolbar; use the `+` controls at the right and bottom edges to append |
 | Align or sort a column | Menu in each column heading |
 | Resize a column | Drag the right edge of its heading; double-click to auto-fit that column |
-| Auto-fit widths | Use `fit_width` at the toolbar's far right or the auto-fit item in a column menu |
+| Fit column widths | Use `Fit all column widths` at the toolbar's far right or `Fit column width` in a column menu |
 | Pan a large table | Hold the middle mouse button and drag over the grid |
 
 Copying a disjoint selection is not supported. When pasting with a disjoint selection active, the primary cell is used as the paste origin.

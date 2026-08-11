@@ -110,7 +110,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     loading: 'Loading table…', undo: 'Undo', redo: 'Redo', paste: 'Paste', copy: 'Copy', cut: 'Cut', clearCells: 'Delete cell contents',
     rowBefore: 'Row before', rowAfter: 'Row after',
     deleteRow: 'Delete row', columnBefore: 'Column before', columnAfter: 'Column after', deleteColumn: 'Delete column',
-    autoFit: 'Auto fit all widths', autoFitColumn: 'Auto fit this column', alignment: 'Alignment', none: 'None', left: 'Left', center: 'Center', right: 'Right',
+    autoFit: 'Fit all column widths', autoFitColumn: 'Fit column width', alignment: 'Alignment', none: 'None', left: 'Left', center: 'Center', right: 'Right',
     alignAllNone: 'Clear alignment for all columns (display left-aligned)', alignAllLeft: 'Align all columns left', alignAllCenter: 'Align all columns center', alignAllRight: 'Align all columns right',
     ascending: 'Sort ascending', descending: 'Sort descending', large: 'Large table: virtualization is enabled and no data is truncated.',
     disjointCopy: 'Copying disjoint ranges is not supported.', header: 'Header', empty: 'Empty table',
@@ -125,7 +125,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', paste: '貼り付け', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
     rowBefore: '前に行を追加', rowAfter: '後に行を追加',
     deleteRow: '行を削除', columnBefore: '前に列を追加', columnAfter: '後に列を追加', deleteColumn: '列を削除',
-    autoFit: 'すべての列幅を自動調整', autoFitColumn: 'この列幅を自動調整', alignment: '配置', none: '指定なし', left: '左寄せ', center: '中央寄せ', right: '右寄せ',
+    autoFit: 'すべての列幅を調整', autoFitColumn: '列幅を調整', alignment: '配置', none: '指定なし', left: '左寄せ', center: '中央寄せ', right: '右寄せ',
     alignAllNone: 'すべての列の配置指定を解除（GUIでは左寄せ）', alignAllLeft: 'すべての列を左寄せ', alignAllCenter: 'すべての列を中央寄せ', alignAllRight: 'すべての列を右寄せ',
     ascending: '昇順で並べ替え', descending: '降順で並べ替え', large: '大きなテーブルです。データを省略せず仮想化して表示しています。',
     disjointCopy: '不連続範囲はコピーできません。', header: 'ヘッダー', empty: '空のテーブル',
@@ -1267,7 +1267,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     <span
                       className="resize-handle"
                       draggable={false}
-                      title={text.autoFit}
+                      title={text.autoFitColumn}
                       onPointerDown={(event) => resizeColumn(column, event)}
                       onDoubleClick={(event) => {
                         event.preventDefault();

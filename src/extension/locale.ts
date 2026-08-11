@@ -25,7 +25,7 @@ export type MessageKey =
 
 const messages: Record<'en' | 'ja', Record<MessageKey, string>> = {
   en: {
-    editTable: 'Edit in GUI',
+    editTable: 'Edit Table',
     quickInsertTable: 'Quick Insert Markdown Table',
     insertTable: 'Insert Markdown Table',
     selectRows: 'Select the number of rows (including the header)',
@@ -48,9 +48,9 @@ const messages: Record<'en' | 'ja', Record<MessageKey, string>> = {
     unsupportedTableFile: 'Choose a file with a .csv or .xlsx extension.',
   },
   ja: {
-    editTable: 'GUIで編集',
-    quickInsertTable: 'Markdownテーブルをクイック挿入',
-    insertTable: 'Markdownテーブルを挿入',
+    editTable: 'テーブルを編集',
+    quickInsertTable: 'テーブルをクイック挿入',
+    insertTable: 'テーブルを挿入',
     selectRows: '行数を選択（ヘッダーを含む）',
     selectColumns: '列数を選択',
     rows: '行',

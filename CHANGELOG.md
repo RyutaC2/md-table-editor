@@ -7,6 +7,8 @@ All notable changes to Markdown Grid Editor are documented in this file.
 - Remove the unused leading space from the zoom control while retaining a stable width for every zoom level.
 - Give whole-table alignment icons explicit hover and accessibility labels that describe both the scope and resulting alignment.
 - Remove blue outlines from selected row, column, and corner headings while retaining selection fill and cell-range borders.
+- Rename the table-opening CodeLens and context command to `Edit Table` / `テーブルを編集`, and shorten width actions to `Fit column width` / `列幅を調整` and their all-column equivalents.
+- Localize the two Japanese editor context commands as `テーブルをクイック挿入（2 × 2）` and `テーブルを挿入`.
 
 ## [0.2.3] - 2026-08-11
 

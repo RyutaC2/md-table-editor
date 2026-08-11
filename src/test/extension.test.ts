@@ -63,6 +63,8 @@ suite('Markdown Grid Editor extension', () => {
     const lenses = await vscode.commands.executeCommand<vscode.CodeLens[]>('vscode.executeCodeLensProvider', document.uri);
     assert.strictEqual(lenses.length, 2);
     assert.ok(lenses.every((lens) => lens.command?.command === 'md-table-editor.editTable'));
+    const expectedTitle = vscode.env.language.toLowerCase().startsWith('ja') ? 'テーブルを編集' : 'Edit Table';
+    assert.ok(lenses.every((lens) => lens.command?.title === expectedTitle));
     assert.deepStrictEqual(lenses.map((lens) => lens.range.start.line), [0, 9]);
     const uriArgument = lenses[0].command?.arguments?.[0];
     assert.ok(uriArgument instanceof vscode.Uri);

@@ -32,6 +32,8 @@ export async function run(): Promise<void> {
       await vscode.window.showTextDocument(document);
       const lenses = await vscode.commands.executeCommand<vscode.CodeLens[]>('vscode.executeCodeLensProvider', document.uri);
       ensure(lenses.length === 1, `Expected one CodeLens, received ${lenses.length}.`);
+      const expectedTitle = vscode.env.language.toLowerCase().startsWith('ja') ? 'テーブルを編集' : 'Edit Table';
+      ensure(lenses[0].command?.title === expectedTitle, 'CodeLens used an unexpected title.');
       const uriArgument = lenses[0].command?.arguments?.[0];
       ensure(uriArgument instanceof vscode.Uri, 'CodeLens did not include the document URI.');
       ensure(uriArgument.toString() === document.uri.toString(), 'CodeLens referenced a different document.');
