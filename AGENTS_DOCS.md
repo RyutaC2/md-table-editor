@@ -15,6 +15,7 @@ Markdown の表は、パイプ、区切り行、列揃えを人間が維持し�
 - 対応環境: VS Code Desktop（Windows、macOS、Linux）および Web（vscode.dev、github.dev）
 - 表示言語: 日本語、英語。その他の言語では英語へフォールバックします。
 - テレメトリー: 収集しません。
+- Restricted Mode・仮想ワークスペース: 完全対応。ワークスペース内コードを実行せず、ファイル操作はVS Code APIを使用します。
 
 ## 要件定義と実装承認
 
@@ -199,6 +200,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - `out`、`out-unit`: Desktop統合テスト、単体テストの生成物。直接編集しません。
 - `artifacts`: バージョン付きVSIXなどの配布成果物。Git管理とVSIXへの同梱対象から除外します。
 - `scripts`: ビルド・パッケージング用スクリプト。`package-vsix.mjs` は `package.json` のバージョンからVSIX名を生成します。
+- `scripts/generate-third-party-notices.mjs`: 本番依存のバージョンと完全なライセンス本文から `THIRD_PARTY_NOTICES.md` を決定的に生成し、`--check` で同期を検証します。
 - `README.md`: GitHubとMarketplaceで既定表示する英語版README。ファイル先頭に日本語で `README.ja.md` への案内リンクを置きます。
 - `README.ja.md`: 英語版READMEと同じ利用者・開発者向け情報を保持する日本語版です。
 - `RELEASE_CHECKLIST.md`: v1公開前に実環境で確認するユーザー受け入れテスト、重要度、合否基準を記録します。VSIXには同梱しません。
@@ -229,6 +231,7 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - 列仮想化とヘッダー・本文行高計算は `columnPixelWidth` を共有します。最小列幅64pxと1文字7px、左右16pxの表示余白、境界線1pxを同じ寸法モデルへ揃え、有効文字容量から折り返し数を計算します。Markdown幅3文字をそのまま除数にして行高だけが過剰になる状態や、自動調整後に右側の余白が過剰になる状態を避けます。
 - Webview画像はHTTPSまたはワークスペース相対パスだけを表示し、リンクはCtrl/Cmd+クリックかつHTTPSの場合だけVS Codeへ開くよう依頼します。
 - TypeScript 6とMarkdownIt 15の宣言ファイル境界に対応するため `skipLibCheck` を有効にしています。プロジェクト自身のソースにはstrict型チェックを継続します。
+- 開発・CIの基準はNode.js 22とし、`@types/node` も22系へ揃えます。VSIX本体の共有コードはNode.js固有APIへ依存しません。
 
 ### 開発コマンド
 
@@ -237,6 +240,8 @@ VS Code 組み込みプレビューと GitHub の双方で表として扱われ�
 - `npm test`: Desktop Extension Host統合テスト
 - `npm run test:web`: Web Extension Host統合テスト
 - `npm run benchmark`: 単体テスト用JavaScriptを生成し、保証サイズと超過サイズのコア処理を測定
+- `npm run notices`: 本番依存から第三者ライセンス通知を再生成
+- `npm run check:notices`: 第三者ライセンス通知が本番依存と同期していることを検証
 - `npm run package:vsix`: プロダクションビルドと `artifacts/md-table-editor-<version>.vsix` の生成
 - 統合テストは開発対象の拡張機能を明示的にactivateしてから、公開コマンドとCodeLens Providerを検証します。Web統合テストは `src/test/webRunner.ts` でMochaブラウザー版のsingletonとテストを単一のCommonJSへバンドルし、Web Extension Hostがサポートする `require('vscode')` だけを外部参照として残します。テスト対象はstable版とし、CLIにローダーを自動選択させます。
 

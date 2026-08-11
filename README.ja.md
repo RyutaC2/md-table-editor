@@ -121,6 +121,7 @@ VS Codeでこのリポジトリを開き、F5または `Run Extension` からExt
 
 - VS Code `1.125.0` 以上
 - Windows、macOS、Linux、vscode.dev、github.dev
+- Restricted Modeと仮想ワークスペースへ完全対応し、ワークスペース内コードの実行やNode.jsのファイルシステムAPIは行いません。
 - 50列×500行を性能保証対象とし、それを超える表も省略せず編集します。
 - フィルター、数式、オートフィル、セル結合、複数行セル、raw HTML描画には対応していません。
 - テレメトリーは収集しません。
@@ -129,4 +130,4 @@ VS Codeでこのリポジトリを開き、F5または `Run Extension` からExt
 
 [MIT License](./LICENSE)
 
-UIアイコンにはGoogle公式リポジトリのMaterial Symbols Outlined 24px SVGパス（Weight 400、Fill 0）をローカル同梱しています。アイコンの形状はVS Codeテーマによって変化せず、色はVS Codeのテーマ色へ追従します。第三者ライセンスは [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) に記載しています。
+UIアイコンにはGoogle公式リポジトリのMaterial Symbols Outlined 24px SVGパス（Weight 400、Fill 0）をローカル同梱しています。アイコンの形状はVS Codeテーマによって変化せず、色はVS Codeのテーマ色へ追従します。依存パッケージ名、バージョン、著作権表示、同梱する完全なライセンス本文は [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) に記載しています。

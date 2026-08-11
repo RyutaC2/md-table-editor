@@ -6,6 +6,7 @@ All notable changes to Markdown Grid Editor are documented in this file.
 
 - Fix regular table insertion so every advertised size from 1×1 through 20×20 is created without being truncated to 8×8.
 - Localize the initial loading message and active cell editor label, including the A0-style cell reference for screen readers.
+- Declare full support for Restricted Mode and virtual workspaces, and validate complete bundled dependency license notices during production packaging.
 
 ## [0.2.5] - 2026-08-11
 

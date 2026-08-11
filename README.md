@@ -123,6 +123,7 @@ Distributable packages are written to `artifacts/md-table-editor-<version>.vsix`
 
 - VS Code `1.125.0` or later
 - Windows, macOS, Linux, vscode.dev, and github.dev
+- Restricted Mode and virtual workspaces are fully supported; the extension does not execute workspace code or use Node.js file-system APIs
 - Performance is guaranteed for tables up to 50 columns × 500 rows; larger tables remain editable without truncation
 - Filters, formulas, autofill, merged cells, multiline cells, and raw HTML rendering are not supported
 - No telemetry is collected
@@ -131,4 +132,4 @@ Distributable packages are written to `artifacts/md-table-editor-<version>.vsix`
 
 [MIT License](./LICENSE)
 
-The UI includes local copies of SVG paths from Google's official Material Symbols Outlined 24px set at Weight 400 and Fill 0. Icon shapes do not change with the VS Code theme, while their colors follow VS Code theme colors. Third-party license information is available in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+The UI includes local copies of SVG paths from Google's official Material Symbols Outlined 24px set at Weight 400 and Fill 0. Icon shapes do not change with the VS Code theme, while their colors follow VS Code theme colors. Package names, versions, copyright notices, and complete bundled license texts are available in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
