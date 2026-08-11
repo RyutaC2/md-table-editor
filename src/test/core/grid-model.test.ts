@@ -68,30 +68,30 @@ suite('Grid model', () => {
   });
 
   test('uses the effective minimum column width when estimating wrapped lines', () => {
-    assert.strictEqual(columnPixelWidth(3), 96);
-    assert.strictEqual(columnPixelWidth(20), 180);
-    assert.strictEqual(estimatedWrappedLines('123456789', 3), 1);
+    assert.strictEqual(columnPixelWidth(3), 64);
+    assert.strictEqual(columnPixelWidth(20), 157);
+    assert.strictEqual(estimatedWrappedLines('123456789', 3), 2);
     assert.strictEqual(estimatedWrappedLines('1234567890', 3), 2);
-    assert.strictEqual(estimatedWrappedLines('1234567890123456789012345', 3), 3);
+    assert.strictEqual(estimatedWrappedLines('1234567890123456789012345', 3), 5);
   });
 
   test('sizes a body row from the tallest cell without excessive minimum-width wrapping', () => {
-    assert.strictEqual(estimatedBodyRowHeight(['short', '1234567890'], [3, 3]), 55);
-    assert.strictEqual(estimatedBodyRowHeight(['1234567890123456789012345', 'short'], [3, 20]), 73);
-    assert.strictEqual(estimatedBodyRowHeight(['', ''], [3, 3]), 38);
+    assert.strictEqual(estimatedBodyRowHeight(['short', '1234567890'], [3, 3]), 51);
+    assert.strictEqual(estimatedBodyRowHeight(['1234567890123456789012345', 'short'], [3, 20]), 105);
+    assert.strictEqual(estimatedBodyRowHeight(['', ''], [3, 3]), 33);
     assert.strictEqual(estimatedBodyRowHeight([''], [3], 40), 40);
   });
 
   test('estimates wrapping from rendered Markdown text instead of hidden link destinations', () => {
     assert.strictEqual(estimatedWrappedLines('[short](https://example.com/a/very/long/path/that/is/not/rendered)', 3), 1);
-    assert.strictEqual(estimatedBodyRowHeight(['[short](https://example.com/a/very/long/path/that/is/not/rendered)'], [3]), 38);
+    assert.strictEqual(estimatedBodyRowHeight(['[short](https://example.com/a/very/long/path/that/is/not/rendered)'], [3]), 33);
   });
 
   test('scales grid geometry without changing wrapping capacity', () => {
-    assert.strictEqual(columnPixelWidth(3, 0.5), 48);
-    assert.strictEqual(columnPixelWidth(20, 2), 360);
-    assert.strictEqual(estimatedBodyRowHeight(['1234567890'], [3], 38, 0.5), 28);
-    assert.strictEqual(estimatedBodyRowHeight(['1234567890'], [3], 38, 2), 109);
+    assert.strictEqual(columnPixelWidth(3, 0.5), 32);
+    assert.strictEqual(columnPixelWidth(20, 2), 314);
+    assert.strictEqual(estimatedBodyRowHeight(['1234567890'], [3], 38, 0.5), 26);
+    assert.strictEqual(estimatedBodyRowHeight(['1234567890'], [3], 38, 2), 101);
   });
 
   test('builds row and column header ranges on one fixed axis', () => {

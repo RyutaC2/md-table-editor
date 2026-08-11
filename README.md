@@ -71,7 +71,7 @@ Copying a disjoint selection is not supported. When pasting with a disjoint sele
 
 Import replaces the complete table currently open in the GUI. When an XLSX workbook has multiple worksheets, select one in the VS Code Quick Pick. Export writes the complete current table to one CSV file or one `Table` worksheet. Cell values are imported as strings; spreadsheet formatting, formulas, images, and merged-cell structure are not reproduced.
 
-Cell contents wrap automatically when they exceed the column width. A row expands only as much as required by its tallest rendered cell; hidden Markdown link destinations do not add blank vertical space.
+Cell contents wrap automatically when they exceed the column width. A row expands only as much as required by its tallest rendered cell. Cell padding, wrap estimation, and auto-fit width use one compact sizing model, while hidden Markdown link destinations do not add blank vertical space.
 
 Grid zoom scales the table, row and column headings, cells, resize increments, selection border, and edge-add controls. The toolbar remains at the VS Code UI size so its controls stay usable. Alignment icon tooltips identify that the action applies to every column and describe the resulting alignment.
 

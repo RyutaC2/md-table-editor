@@ -2,12 +2,12 @@ import type { TableSnapshot } from '../core/types';
 import { displayWidth, visibleMarkdownText } from '../core/width';
 import type { CellPosition } from '../shared/protocol';
 
-export const minimumColumnWidth = 96;
-export const characterWidth = 8;
-const columnWidthChrome = 20;
-const bodyRowMinimumHeight = 38;
+export const minimumColumnWidth = 64;
+export const characterWidth = 7;
+const columnWidthChrome = 17;
+const bodyRowMinimumHeight = 33;
 const bodyRowLineHeight = 18;
-const bodyRowVerticalPadding = 18;
+const bodyRowVerticalPadding = 14;
 
 export interface SelectionRange {
   start: CellPosition;
