@@ -19,6 +19,13 @@ export interface TableSnapshot {
   format: TableFormat;
 }
 
+export interface CellRangeBounds {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
 export interface MarkdownTable extends TableSnapshot {
   startOffset: number;
   endOffset: number;
@@ -32,6 +39,7 @@ export interface MarkdownTable extends TableSnapshot {
 export type TableOperation =
   | { type: 'replace'; snapshot: TableSnapshot }
   | { type: 'setCells'; changes: Array<{ row: number; column: number; value: string }> }
+  | { type: 'moveCells'; source: CellRangeBounds; target: { row: number; column: number } }
   | { type: 'insertRow'; index: number; count?: number }
   | { type: 'deleteRows'; indexes: number[] }
   | { type: 'moveRows'; indexes: number[]; target: number }

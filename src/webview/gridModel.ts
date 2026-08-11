@@ -73,6 +73,20 @@ export function rangeSelectsWholeAxis(
     : index >= bounds.left && index <= bounds.right && bounds.top === 0 && bounds.bottom === rowCount - 1;
 }
 
+export function nearestBoundedIndex(starts: number[], desiredStart: number, maximumIndex: number): number {
+  const last = Math.max(0, Math.min(maximumIndex, starts.length - 1));
+  let nearest = 0;
+  let distance = Math.abs((starts[0] ?? 0) - desiredStart);
+  for (let index = 1; index <= last; index += 1) {
+    const nextDistance = Math.abs(starts[index] - desiredStart);
+    if (nextDistance < distance) {
+      nearest = index;
+      distance = nextDistance;
+    }
+  }
+  return nearest;
+}
+
 export function rangeBounds(range: SelectionRange): { top: number; bottom: number; left: number; right: number } {
   return {
     top: Math.min(range.start.row, range.end.row),

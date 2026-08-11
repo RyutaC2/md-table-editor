@@ -9,6 +9,7 @@ import {
   estimatedBodyRowHeight,
   estimatedWrappedLines,
   isCellSelected,
+  nearestBoundedIndex,
   parseTsv,
   rangeBounds,
   rangeSelectsWholeAxis,
@@ -87,5 +88,12 @@ suite('Grid model', () => {
     assert.strictEqual(rangeSelectsWholeAxis(wholeRow, 'row', 2, 5, 4), true);
     assert.strictEqual(rangeSelectsWholeAxis(wholeRow, 'column', 1, 5, 4), false);
     assert.strictEqual(rangeSelectsWholeAxis(wholeColumn, 'column', 2, 5, 4), true);
+  });
+
+  test('finds the nearest valid cell start without crossing the table edge', () => {
+    const starts = [0, 80, 200, 260];
+    assert.strictEqual(nearestBoundedIndex(starts, 190, 2), 2);
+    assert.strictEqual(nearestBoundedIndex(starts, 500, 2), 2);
+    assert.strictEqual(nearestBoundedIndex(starts, -100, 2), 0);
   });
 });

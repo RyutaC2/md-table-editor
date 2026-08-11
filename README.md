@@ -13,6 +13,7 @@ As a Markdown table grows, manually maintaining its pipes, delimiter row, and sp
 - Edit existing tables or insert new tables from the Markdown editor context menu
 - Use a virtualized grid in both VS Code Desktop and VS Code for the Web
 - Select individual cells, rectangular ranges, disjoint ranges, rows, and columns
+- Move a continuous multi-cell rectangle by dragging its selection border without allowing data to cross table edges
 - Copy, cut, and paste TSV data, automatically expanding the destination table when necessary
 - Add, delete, and drag rows or columns, with quick-add controls at the table edges
 - Set column alignment, perform stable sorting, resize columns by dragging, and auto-fit widths
@@ -44,6 +45,7 @@ When the cursor is inside an existing table, the new table is inserted after tha
 | --- | --- |
 | Move between cells | Arrow keys |
 | Extend a selection | Shift+Arrow, Shift+Click, or drag |
+| Move selected cells | Drag the border around a continuous multi-cell selection |
 | Create a disjoint selection | Ctrl/Cmd+Click |
 | Edit the existing value | Enter, F2, or double-click |
 | Replace the value and edit | Type while a cell is selected |

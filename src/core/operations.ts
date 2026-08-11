@@ -103,6 +103,31 @@ export function applyOperation(current: TableSnapshot, operation: TableOperation
         }
       }
       break;
+    case 'moveCells': {
+      const { source, target } = operation;
+      const coordinates = [source.top, source.bottom, source.left, source.right, target.row, target.column];
+      const valid = coordinates.every(Number.isInteger)
+        && source.top >= 0 && source.top <= source.bottom && source.bottom < snapshot.rows.length
+        && source.left >= 0 && source.left <= source.right && source.right < columns;
+      const height = source.bottom - source.top + 1;
+      const width = source.right - source.left + 1;
+      if (!valid || target.row < 0 || target.column < 0
+        || target.row + height > snapshot.rows.length || target.column + width > columns) {
+        break;
+      }
+      const moved = snapshot.rows
+        .slice(source.top, source.bottom + 1)
+        .map((row) => row.slice(source.left, source.right + 1));
+      for (let row = source.top; row <= source.bottom; row += 1) {
+        for (let column = source.left; column <= source.right; column += 1) {
+          snapshot.rows[row][column] = '';
+        }
+      }
+      moved.forEach((row, rowOffset) => row.forEach((value, columnOffset) => {
+        snapshot.rows[target.row + rowOffset][target.column + columnOffset] = value;
+      }));
+      break;
+    }
     case 'insertRow': {
       const count = Math.max(1, finiteInteger(operation.count ?? 1, 1));
       const index = Math.max(1, Math.min(snapshot.rows.length, finiteInteger(operation.index, snapshot.rows.length)));

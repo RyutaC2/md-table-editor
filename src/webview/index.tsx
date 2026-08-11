@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { applyOperation, cloneSnapshot } from '../core/operations';
-import type { Alignment, TableOperation, TableSnapshot } from '../core/types';
+import type { Alignment, CellRangeBounds, TableOperation, TableSnapshot } from '../core/types';
 import type { CellPosition, EditorState, ExtensionMessage, PersistedPanelState, WebviewMessage } from '../shared/protocol';
 import { Icon } from './icons';
 import type { IconName } from './icons';
@@ -16,6 +16,7 @@ import {
   contiguous,
   estimatedBodyRowHeight,
   isCellSelected,
+  nearestBoundedIndex,
   parseTsv,
   rangeSelectsWholeAxis,
   rangeBounds,
@@ -66,6 +67,14 @@ interface HeaderSelectionGesture {
   additive: boolean;
 }
 
+interface CellMoveGesture {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  source: CellRangeBounds;
+  target: { row: number; column: number };
+}
+
 type Dictionary = Record<string, string>;
 
 declare function acquireVsCodeApi(): VSCodeApi;
@@ -91,7 +100,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     disjointReorder: 'Disjoint rows or columns cannot be reordered.', moveRows: 'Move rows', moveColumns: 'Move columns',
     clipboardFailed: 'Could not access the clipboard.',
     appendRow: 'Add row at end', appendColumn: 'Add column at end',
-    columnOptions: 'Column options', selectAll: 'Select entire table',
+    columnOptions: 'Column options', selectAll: 'Select entire table', moveSelection: 'Move selected cells',
   },
   ja: {
     loading: 'テーブルを読み込んでいます…', undo: '元に戻す', redo: 'やり直す', copy: 'コピー', cut: '切り取り', clearCells: 'セル内容を削除',
@@ -103,7 +112,7 @@ const dictionaries: Record<'en' | 'ja', Dictionary> = {
     disjointReorder: '不連続な行または列は並べ替えできません。', moveRows: '行を移動', moveColumns: '列を移動',
     clipboardFailed: 'クリップボードへアクセスできませんでした。',
     appendRow: '末尾に行を追加', appendColumn: '末尾に列を追加',
-    columnOptions: '列の操作', selectAll: '表全体を選択',
+    columnOptions: '列の操作', selectAll: '表全体を選択', moveSelection: '選択セルを移動',
   },
 };
 
@@ -222,12 +231,14 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const [draggedRows, setDraggedRows] = useState<number[]>([]);
   const [draggedColumns, setDraggedColumns] = useState<number[]>([]);
   const [dropTarget, setDropTarget] = useState<DropTarget>();
+  const [cellMoveTarget, setCellMoveTarget] = useState<{ row: number; column: number }>();
   const [scrollPosition, setScrollPosition] = useState({ left: 0, top: 0 });
   const scrollRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const cellSelectionGestureRef = useRef<CellSelectionGesture | undefined>(undefined);
   const headerSelectionGestureRef = useRef<HeaderSelectionGesture | undefined>(undefined);
+  const cellMoveGestureRef = useRef<CellMoveGesture | undefined>(undefined);
   const panGestureRef = useRef<PanGesture | undefined>(undefined);
   const snapshotRef = useRef(snapshot);
   const primaryRef = useRef(primary);
@@ -712,6 +723,111 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
   const canvasWidth = rowHeaderWidth + tableWidth + appendColumnWidth;
   const canvasHeight = bodyOffset + tableBodyHeight + appendRowHeight;
 
+  const selectedCellBounds = useMemo<CellRangeBounds | undefined>(() => {
+    if (ranges.length !== 1) {
+      return undefined;
+    }
+    const bounds = rangeBounds(ranges[0]);
+    return (bounds.bottom - bounds.top + 1) * (bounds.right - bounds.left + 1) > 1 ? bounds : undefined;
+  }, [ranges]);
+  const columnStarts = useMemo(() => {
+    const starts = [0];
+    snapshot.widths.forEach((width) => starts.push(starts.at(-1)! + columnPixelWidth(width)));
+    return starts;
+  }, [snapshot.widths]);
+  const rowStarts = useMemo(() => {
+    const starts = [columnHeaderHeight, bodyOffset];
+    for (let row = 1; row < snapshot.rows.length; row += 1) {
+      starts.push(starts.at(-1)! + estimatedBodyRowHeight(snapshot.rows[row] ?? [], snapshot.widths));
+    }
+    return starts;
+  }, [bodyOffset, snapshot.rows, snapshot.widths]);
+  const frameBounds = selectedCellBounds && {
+    top: cellMoveTarget?.row ?? selectedCellBounds.top,
+    left: cellMoveTarget?.column ?? selectedCellBounds.left,
+    height: selectedCellBounds.bottom - selectedCellBounds.top + 1,
+    width: selectedCellBounds.right - selectedCellBounds.left + 1,
+  };
+  const selectionFrame = frameBounds && {
+    left: rowHeaderWidth + columnStarts[frameBounds.left],
+    top: rowStarts[frameBounds.top],
+    width: columnStarts[frameBounds.left + frameBounds.width] - columnStarts[frameBounds.left],
+    height: rowStarts[frameBounds.top + frameBounds.height] - rowStarts[frameBounds.top],
+  };
+
+  const startCellMove = (event: React.PointerEvent<HTMLSpanElement>): void => {
+    if (event.button !== 0 || !selectedCellBounds) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const target = { row: selectedCellBounds.top, column: selectedCellBounds.left };
+    cellMoveGestureRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      source: selectedCellBounds,
+      target,
+    };
+    setCellMoveTarget(target);
+  };
+
+  const previewCellMove = (event: React.PointerEvent<HTMLSpanElement>): void => {
+    const gesture = cellMoveGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) {
+      return;
+    }
+    event.preventDefault();
+    const height = gesture.source.bottom - gesture.source.top + 1;
+    const width = gesture.source.right - gesture.source.left + 1;
+    const target = {
+      row: nearestBoundedIndex(
+        rowStarts,
+        rowStarts[gesture.source.top] + event.clientY - gesture.startY,
+        snapshot.rows.length - height,
+      ),
+      column: nearestBoundedIndex(
+        columnStarts,
+        columnStarts[gesture.source.left] + event.clientX - gesture.startX,
+        snapshot.widths.length - width,
+      ),
+    };
+    gesture.target = target;
+    setCellMoveTarget(target);
+  };
+
+  const endCellMove = (event: React.PointerEvent<HTMLSpanElement>, commit: boolean): void => {
+    const gesture = cellMoveGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) {
+      return;
+    }
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    cellMoveGestureRef.current = undefined;
+    setCellMoveTarget(undefined);
+    if (!commit || (gesture.target.row === gesture.source.top && gesture.target.column === gesture.source.left)) {
+      return;
+    }
+    const operation: TableOperation = { type: 'moveCells', source: gesture.source, target: gesture.target };
+    const optimisticSnapshot = applyOperation(snapshot, operation);
+    const primaryOffset = {
+      row: Math.max(0, Math.min(gesture.source.bottom - gesture.source.top, primary.row - gesture.source.top)),
+      column: Math.max(0, Math.min(gesture.source.right - gesture.source.left, primary.column - gesture.source.left)),
+    };
+    const nextPrimary = { row: gesture.target.row + primaryOffset.row, column: gesture.target.column + primaryOffset.column };
+    const nextEnd = {
+      row: gesture.target.row + gesture.source.bottom - gesture.source.top,
+      column: gesture.target.column + gesture.source.right - gesture.source.left,
+    };
+    setPrimary(nextPrimary);
+    setAnchor({ row: gesture.target.row, column: gesture.target.column });
+    setRanges([{ start: { row: gesture.target.row, column: gesture.target.column }, end: nextEnd }]);
+    sendOperation(operation, nextPrimary, optimisticSnapshot);
+    requestAnimationFrame(() => gridRef.current?.focus());
+  };
+
   const startPan = (event: React.PointerEvent<HTMLDivElement>): void => {
     if (event.button !== 1) {
       return;
@@ -847,6 +963,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
               const column = virtualColumn.index;
               const width = virtualColumn.size;
               const canReorder = wholeAxisSelected('column', column) && contiguous(selectedColumns);
+              const headerSelected = ranges.some((range) => isCellSelected(range, 0, column));
               return (
                 <React.Fragment key={virtualColumn.key}>
                   <div
@@ -932,7 +1049,7 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     />
                   </div>
                   <div
-                    className={`cell header-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('column', column)} ${ranges.some((range) => isCellSelected(range, 0, column)) ? 'selected' : ''} ${sameCell(primary, { row: 0, column }) ? 'primary' : ''}`}
+                    className={`cell header-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('column', column)} ${headerSelected ? 'selected' : ''}${cellMoveTarget && headerSelected ? ' cell-move-source' : ''} ${sameCell(primary, { row: 0, column }) ? 'primary' : ''}`}
                     role="columnheader"
                     aria-label={`${text.header} ${columnName(column)}`}
                     style={{ left: rowHeaderWidth + virtualColumn.start, top: scrollPosition.top + columnHeaderHeight, width, height: headerRowHeight }}
@@ -981,10 +1098,11 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                     const column = virtualColumn.index;
                     const cell = { row, column };
                     const isEditing = editing && sameCell(editing.cell, cell);
+                    const cellSelected = ranges.some((range) => isCellSelected(range, row, column));
                     return (
                       <div
                         key={`${row}:${column}`}
-                        className={`cell body-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('row', row)}${reorderClass('column', column)} ${ranges.some((range) => isCellSelected(range, row, column)) ? 'selected' : ''} ${sameCell(primary, cell) ? 'primary' : ''}`}
+                        className={`cell body-cell${cellAlignmentClass(snapshot.alignments[column])}${reorderClass('row', row)}${reorderClass('column', column)} ${cellSelected ? 'selected' : ''}${cellMoveTarget && cellSelected ? ' cell-move-source' : ''} ${sameCell(primary, cell) ? 'primary' : ''}`}
                         role="gridcell"
                         aria-rowindex={row + 1}
                         aria-colindex={column + 1}
@@ -1016,6 +1134,25 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
                 </React.Fragment>
               );
             })}
+            {selectionFrame && (
+              <div
+                className={`selection-frame${cellMoveTarget ? ' moving' : ''}`}
+                style={selectionFrame}
+              >
+                {(['top', 'right', 'bottom', 'left'] as const).map((edge) => (
+                  <span
+                    key={edge}
+                    className={`selection-frame-edge selection-frame-${edge}`}
+                    aria-hidden="true"
+                    title={text.moveSelection}
+                    onPointerDown={startCellMove}
+                    onPointerMove={previewCellMove}
+                    onPointerUp={(event) => endCellMove(event, true)}
+                    onPointerCancel={(event) => endCellMove(event, false)}
+                  />
+                ))}
+              </div>
+            )}
             <button
               type="button"
               className="append-button append-column-button"

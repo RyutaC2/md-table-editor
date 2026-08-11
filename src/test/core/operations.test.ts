@@ -39,6 +39,30 @@ suite('Markdown table operations edge cases', () => {
     assert.strictEqual(updated.rows[0][0], 'h1');
   });
 
+  test('moves a cell rectangle without losing overlapping values', () => {
+    const updated = applyOperation(snapshot(), {
+      type: 'moveCells',
+      source: { top: 1, bottom: 2, left: 0, right: 1 },
+      target: { row: 2, column: 1 },
+    });
+    assert.deepStrictEqual(updated.rows, [
+      ['h1', 'h2', 'h3'],
+      ['', '', 'x'],
+      ['', 'a', '10'],
+      ['c', 'b', ''],
+    ]);
+  });
+
+  test('rejects cell moves that would cross a table edge', () => {
+    const source = snapshot();
+    const updated = applyOperation(source, {
+      type: 'moveCells',
+      source: { top: 1, bottom: 2, left: 1, right: 2 },
+      target: { row: 3, column: 2 },
+    });
+    assert.deepStrictEqual(updated, source);
+  });
+
   test('keeps the header while inserting and deleting rows at bounded indexes', () => {
     const inserted = applyOperation(snapshot(), { type: 'insertRow', index: Number.NaN, count: Number.NaN });
     assert.strictEqual(inserted.rows.length, 5);

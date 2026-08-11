@@ -7,6 +7,7 @@ All notable changes to Markdown Grid Editor are documented in this file.
 - Add a no-dialog 2 × 2 quick insert command and change custom insertion to separate 1–20 row and column choices.
 - Number the Markdown header as row 0, select continuous row or column ranges on the first heading drag, and reorder the selected block on a second drag.
 - Select the complete table by clicking the top-left grid corner.
+- Show a draggable border around continuous multi-cell selections and move their raw Markdown values without crossing table edges or losing overlapping data.
 
 ## [0.1.13] - 2026-08-11
 
