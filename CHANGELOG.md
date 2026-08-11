@@ -2,6 +2,10 @@
 
 All notable changes to Markdown Grid Editor are documented in this file.
 
+## [0.2.0] - 2026-08-11
+
+- Add a no-dialog 2 × 2 quick insert command and change custom insertion to separate 1–20 row and column choices.
+
 ## [0.1.13] - 2026-08-11
 
 - Grow the Markdown header row as well as body rows when rendered cell content wraps.

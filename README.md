@@ -32,9 +32,9 @@ As a Markdown table grows, manually maintaining its pipes, delimiter row, and sp
 
 ### Insert a new table
 
-1. Right-click in the Markdown editor and select `Insert Markdown Table`.
-2. Choose a size from 1–8 columns and 1–8 rows in the Quick Pick. The row count includes the header row.
-3. An empty table is inserted and its top-left header cell opens in edit mode in the grid.
+1. Right-click in the Markdown editor.
+2. Select `Quick Insert Markdown Table (2 × 2)` to immediately create a two-column table with a header and one data row. Alternatively, select `Insert Markdown Table`, then choose 1–20 rows followed by 1–20 columns. The row count includes the header row.
+3. The empty table is inserted and its top-left header cell opens in edit mode in the grid.
 
 When the cursor is inside an existing table, the new table is inserted after that complete table. Otherwise, it is inserted after the line containing the cursor.
 

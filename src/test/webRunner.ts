@@ -20,6 +20,7 @@ export async function run(): Promise<void> {
     test('registers public commands', async () => {
       const commands = await vscode.commands.getCommands(true);
       ensure(commands.includes('md-table-editor.editTable'), 'Edit command was not registered.');
+      ensure(commands.includes('md-table-editor.quickInsertTable'), 'Quick insert command was not registered.');
       ensure(commands.includes('md-table-editor.insertTable'), 'Insert command was not registered.');
     });
 

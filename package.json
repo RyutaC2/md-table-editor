@@ -2,7 +2,7 @@
   "name": "md-table-editor",
   "displayName": "Markdown Grid Editor",
   "description": "Edit Markdown tables in an Excel-like GUI inside Visual Studio Code.",
-  "version": "0.1.13",
+  "version": "0.2.0",
   "publisher": "RyutaC2",
   "license": "MIT",
   "homepage": "https://github.com/RyutaC2/md-table-editor#readme",
@@ -21,6 +21,7 @@
   "activationEvents": [
     "onLanguage:markdown",
     "onCommand:md-table-editor.editTable",
+    "onCommand:md-table-editor.quickInsertTable",
     "onCommand:md-table-editor.insertTable",
     "onWebviewPanel:md-table-editor.tableEditor"
   ],
@@ -34,6 +35,11 @@
         "category": "%extension.category%"
       },
       {
+        "command": "md-table-editor.quickInsertTable",
+        "title": "%command.quickInsertTable%",
+        "category": "%extension.category%"
+      },
+      {
         "command": "md-table-editor.insertTable",
         "title": "%command.insertTable%",
         "category": "%extension.category%"
@@ -42,6 +48,7 @@
     "menus": {
       "commandPalette": [
         { "command": "md-table-editor.editTable", "when": "false" },
+        { "command": "md-table-editor.quickInsertTable", "when": "false" },
         { "command": "md-table-editor.insertTable", "when": "false" }
       ],
       "editor/context": [
@@ -51,9 +58,14 @@
           "group": "1_modification@90"
         },
         {
-          "command": "md-table-editor.insertTable",
+          "command": "md-table-editor.quickInsertTable",
           "when": "editorLangId == markdown",
           "group": "1_modification@100"
+        },
+        {
+          "command": "md-table-editor.insertTable",
+          "when": "editorLangId == markdown",
+          "group": "1_modification@101"
         }
       ]
     }

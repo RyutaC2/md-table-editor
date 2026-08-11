@@ -5,9 +5,8 @@ import type { MarkdownTable } from '../core/types';
 import { message } from './locale';
 import type { TablePanelManager } from './panelManager';
 
-interface SizeItem extends vscode.QuickPickItem {
-  columns: number;
-  rows: number;
+interface CountItem extends vscode.QuickPickItem {
+  count: number;
 }
 
 function activeMarkdownEditor(): vscode.TextEditor | undefined {
@@ -42,66 +41,82 @@ export function registerCommands(context: vscode.ExtensionContext, panels: Table
     },
   );
 
+  const quickInsert = vscode.commands.registerCommand('md-table-editor.quickInsertTable', async () => {
+    const editor = activeMarkdownEditor();
+    if (!editor) {
+      void vscode.window.showWarningMessage(message('invalidDocument'));
+      return;
+    }
+    await insertTable(editor, panels, 2, 2);
+  });
+
   const insert = vscode.commands.registerCommand('md-table-editor.insertTable', async () => {
     const editor = activeMarkdownEditor();
     if (!editor) {
       void vscode.window.showWarningMessage(message('invalidDocument'));
       return;
     }
-    const selected = await vscode.window.showQuickPick(sizeItems(), {
-      title: message('insertTable'),
-      placeHolder: '3 × 3',
-      matchOnDescription: true,
+    const rows = await vscode.window.showQuickPick(countItems(message('rows')), {
+      title: message('selectRows'),
+      placeHolder: '2',
     });
-    if (!selected) {
+    if (!rows) {
       return;
     }
-
-    const document = editor.document;
-    const source = document.getText();
-    const cursorOffset = document.offsetAt(editor.selection.active);
-    const containingTable = findTableAtOffset(source, cursorOffset);
-    const line = document.lineAt(editor.selection.active.line);
-    const insertionOffset = containingTable?.endOffset ?? document.offsetAt(line.range.end);
-    const eol = document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
-    const before = insertionOffset === 0
-      ? ''
-      : source.slice(0, insertionOffset).endsWith(eol + eol)
-        ? ''
-        : source.slice(0, insertionOffset).endsWith(eol) ? eol : eol + eol;
-    const after = insertionOffset === source.length
-      ? ''
-      : source.slice(insertionOffset).startsWith(eol + eol)
-        ? ''
-        : source.slice(insertionOffset).startsWith(eol) ? eol : eol + eol;
-    const markdown = createTableMarkdown(selected.columns, selected.rows, eol);
-    const edit = new vscode.WorkspaceEdit();
-    edit.insert(document.uri, document.positionAt(insertionOffset), before + markdown + after);
-    if (!await vscode.workspace.applyEdit(edit)) {
+    const columns = await vscode.window.showQuickPick(countItems(message('columns')), {
+      title: message('selectColumns'),
+      placeHolder: '2',
+    });
+    if (!columns) {
       return;
     }
-    const updated = await vscode.workspace.openTextDocument(document.uri);
-    const table = findTableAtOffset(updated.getText(), insertionOffset + before.length);
-    if (table) {
-      await panels.open(updated, table, true);
-    }
+    await insertTable(editor, panels, columns.count, rows.count);
   });
 
-  context.subscriptions.push(edit, insert);
-  return [edit, insert];
+  context.subscriptions.push(edit, quickInsert, insert);
+  return [edit, quickInsert, insert];
 }
 
-function sizeItems(): SizeItem[] {
-  const items: SizeItem[] = [];
-  for (let rows = 1; rows <= 8; rows += 1) {
-    for (let columns = 1; columns <= 8; columns += 1) {
-      items.push({
-        label: `${columns} × ${rows}`,
-        description: columns === 3 && rows === 3 ? message('recommended') : undefined,
-        columns,
-        rows,
-      });
-    }
+async function insertTable(
+  editor: vscode.TextEditor,
+  panels: TablePanelManager,
+  columns: number,
+  rows: number,
+): Promise<void> {
+  const document = editor.document;
+  const source = document.getText();
+  const cursorOffset = document.offsetAt(editor.selection.active);
+  const containingTable = findTableAtOffset(source, cursorOffset);
+  const line = document.lineAt(editor.selection.active.line);
+  const insertionOffset = containingTable?.endOffset ?? document.offsetAt(line.range.end);
+  const eol = document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
+  const before = insertionOffset === 0
+    ? ''
+    : source.slice(0, insertionOffset).endsWith(eol + eol)
+      ? ''
+      : source.slice(0, insertionOffset).endsWith(eol) ? eol : eol + eol;
+  const after = insertionOffset === source.length
+    ? ''
+    : source.slice(insertionOffset).startsWith(eol + eol)
+      ? ''
+      : source.slice(insertionOffset).startsWith(eol) ? eol : eol + eol;
+  const markdown = createTableMarkdown(columns, rows, eol);
+  const workspaceEdit = new vscode.WorkspaceEdit();
+  workspaceEdit.insert(document.uri, document.positionAt(insertionOffset), before + markdown + after);
+  if (!await vscode.workspace.applyEdit(workspaceEdit)) {
+    return;
   }
-  return items.sort((left, right) => Number(right.columns === 3 && right.rows === 3) - Number(left.columns === 3 && left.rows === 3));
+  const updated = await vscode.workspace.openTextDocument(document.uri);
+  const table = findTableAtOffset(updated.getText(), insertionOffset + before.length);
+  if (table) {
+    await panels.open(updated, table, true);
+  }
+}
+
+function countItems(unit: string): CountItem[] {
+  return Array.from({ length: 20 }, (_, index) => ({
+    label: String(index + 1),
+    description: unit,
+    count: index + 1,
+  }));
 }
