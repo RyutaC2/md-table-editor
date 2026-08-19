@@ -40,16 +40,25 @@ export async function run(): Promise<void> {
       ensure(lenses[0].command?.arguments?.[1] === 0, 'CodeLens did not include the table offset.');
     });
 
-    test('opens the table Webview command repeatedly without error', async () => {
-      const document = await vscode.workspace.openTextDocument({
+    test('keeps one table Webview while switching tables', async () => {
+      const firstDocument = await vscode.workspace.openTextDocument({
         language: 'markdown',
         content: '| a | b |\n| --- | --- |\n| 1 | 2 |',
       });
-      await vscode.window.showTextDocument(document);
-      const command = () => vscode.commands.executeCommand('markdown-table-gui.editTable', document.uri, 0);
-      await command();
-      await vscode.window.showTextDocument(document);
-      await command();
+      const secondDocument = await vscode.workspace.openTextDocument({
+        language: 'markdown',
+        content: '| c | d |\n| --- | --- |\n| 3 | 4 |',
+      });
+      await vscode.window.showTextDocument(firstDocument);
+      await vscode.commands.executeCommand('markdown-table-gui.editTable', firstDocument.uri, 0);
+      await vscode.window.showTextDocument(secondDocument);
+      await vscode.commands.executeCommand('markdown-table-gui.editTable', secondDocument.uri, 0);
+      const webviewTabs = vscode.window.tabGroups.all
+        .flatMap((group) => [...group.tabs])
+        .filter((tab) => tab.input instanceof vscode.TabInputWebview
+          && (tab.input.viewType === 'markdown-table-gui.tableEditor'
+            || tab.input.viewType.endsWith('-markdown-table-gui.tableEditor')));
+      ensure(webviewTabs.length === 1, `Expected one table Webview, received ${webviewTabs.length}.`);
     });
   });
 

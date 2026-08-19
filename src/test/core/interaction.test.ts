@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import {
   editCommitMovement,
   hasExceededDragThreshold,
+  nextTabCell,
   scrollPositionForPan,
   shouldAutoEditCell,
   visibleCellAlignment,
@@ -20,6 +21,13 @@ suite('Grid pointer interaction', () => {
     assert.deepStrictEqual(editCommitMovement('Enter', true), { row: -1, column: 0 });
     assert.deepStrictEqual(editCommitMovement('Tab', false), { row: 0, column: 1 });
     assert.deepStrictEqual(editCommitMovement('Tab', true), { row: 0, column: -1 });
+  });
+
+  test('wraps forward Tab from the last column to the first column of the next row', () => {
+    assert.deepStrictEqual(nextTabCell({ row: 1, column: 1 }, 3, 3, false), { row: 1, column: 2 });
+    assert.deepStrictEqual(nextTabCell({ row: 1, column: 2 }, 3, 3, false), { row: 2, column: 0 });
+    assert.deepStrictEqual(nextTabCell({ row: 2, column: 2 }, 3, 3, false), { row: 2, column: 2 });
+    assert.deepStrictEqual(nextTabCell({ row: 1, column: 0 }, 3, 3, true), { row: 1, column: 0 });
   });
 
   test('starts a selection drag only after reaching the movement threshold', () => {

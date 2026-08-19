@@ -27,7 +27,7 @@ import {
 } from './gridModel';
 import type { SelectionRange } from './gridModel';
 import type { GridAxis } from './gridModel';
-import { editCommitMovement, hasExceededDragThreshold, scrollPositionForPan, shouldAutoEditCell, visibleCellAlignment } from './interaction';
+import { editCommitMovement, hasExceededDragThreshold, nextTabCell, scrollPositionForPan, shouldAutoEditCell, visibleCellAlignment } from './interaction';
 import type { GridMovement } from './interaction';
 import './styles.css';
 
@@ -52,6 +52,7 @@ interface SelectionModifiers {
 interface CommitEditOptions {
   destination?: CellPosition;
   movement?: GridMovement;
+  tabShiftKey?: boolean;
   selectionModifiers?: SelectionModifiers;
   continueEditing?: boolean;
   sourceCell?: CellPosition;
@@ -444,10 +445,12 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
     const movement = options?.movement ?? { row: 0, column: 0 };
     const next = options?.destination
       ? clampCell(options.destination, snapshot)
-      : clampCell({
-        row: activeEdit.cell.row + movement.row,
-        column: activeEdit.cell.column + movement.column,
-      }, snapshot);
+      : options?.tabShiftKey !== undefined
+        ? nextTabCell(activeEdit.cell, snapshot.rows.length, snapshot.widths.length, options.tabShiftKey)
+        : clampCell({
+          row: activeEdit.cell.row + movement.row,
+          column: activeEdit.cell.column + movement.column,
+        }, snapshot);
     if (activeEdit.value !== activeEdit.original) {
       sendOperation({ type: 'setCells', changes: [{ ...activeEdit.cell, value: activeEdit.value }] }, next);
     }
@@ -553,7 +556,8 @@ function TableEditor({ initial }: { initial: EditorState }): React.JSX.Element {
       movePrimary(movement[event.key][0], movement[event.key][1], event.shiftKey);
     } else if (event.key === 'Tab') {
       event.preventDefault();
-      movePrimary(0, event.shiftKey ? -1 : 1, false);
+      const next = nextTabCell(primary, snapshot.rows.length, snapshot.widths.length, event.shiftKey);
+      movePrimary(next.row - primary.row, next.column - primary.column, false);
     } else if (event.key === 'Enter' || event.key === 'F2') {
       event.preventDefault();
       beginEdit(primary);
@@ -1642,7 +1646,7 @@ const CellInput = React.forwardRef<HTMLInputElement, {
         });
       } else if (event.key === 'Tab') {
         event.preventDefault(); commit({
-          movement: editCommitMovement('Tab', event.shiftKey),
+          tabShiftKey: event.shiftKey,
           continueEditing: true,
           sourceCell: editing.cell,
         });

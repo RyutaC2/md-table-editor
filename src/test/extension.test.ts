@@ -28,6 +28,12 @@ function tableWebviewTabs(): vscode.Tab[] {
     .filter(isTableWebviewTab);
 }
 
+function textTab(uri: vscode.Uri): vscode.Tab | undefined {
+  return vscode.window.tabGroups.all
+    .flatMap((group) => [...group.tabs])
+    .find((tab) => tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === uri.toString());
+}
+
 suite('Markdown Table GUI extension', () => {
   suiteSetup(async () => {
     const extension = vscode.extensions.getExtension('RyutaC2.markdown-table-gui');
@@ -72,27 +78,59 @@ suite('Markdown Table GUI extension', () => {
     assert.strictEqual(lenses[0].command?.arguments?.[1], 0);
   });
 
-  test('opens one Webview tab per table and reuses the existing panel', async function () {
+  test('reuses the only Webview tab when another table starts editing', async function () {
     this.timeout(5000);
-    const document = await vscode.workspace.openTextDocument({
+    const firstDocument = await vscode.workspace.openTextDocument({
       language: 'markdown',
       content: '| a | b |\n| --- | --- |\n| 1 | 2 |',
     });
-    await vscode.window.showTextDocument(document);
-    const command = () => vscode.commands.executeCommand('markdown-table-gui.editTable', document.uri, 0);
-    await command();
+    const secondDocument = await vscode.workspace.openTextDocument({
+      language: 'markdown',
+      content: '| c | d |\n| --- | --- |\n| 3 | 4 |',
+    });
+    await vscode.window.showTextDocument(firstDocument);
+    await vscode.commands.executeCommand('markdown-table-gui.editTable', firstDocument.uri, 0);
     const opened = await waitFor(() => {
       const tabs = tableWebviewTabs();
       return tabs.length === 1 ? tabs : undefined;
     });
     assert.strictEqual(opened.length, 1);
-    const fileName = document.fileName.split(/[\\/]/u).at(-1);
-    assert.strictEqual(opened[0].label, `table: ${fileName}`);
+    const firstFileName = firstDocument.fileName.split(/[\\/]/u).at(-1);
+    assert.strictEqual(opened[0].label, `table: ${firstFileName}`);
 
-    await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
-    await command();
+    await vscode.window.showTextDocument(secondDocument, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
+    await vscode.commands.executeCommand('markdown-table-gui.editTable', secondDocument.uri, 0);
+    const switched = await waitFor(() => {
+      const tabs = tableWebviewTabs();
+      const secondFileName = secondDocument.fileName.split(/[\\/]/u).at(-1);
+      return tabs.length === 1 && tabs[0].label === `table: ${secondFileName}` ? tabs : undefined;
+    });
+    assert.strictEqual(switched.length, 1);
+
+    await vscode.window.showTextDocument(secondDocument, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
+    await vscode.commands.executeCommand('markdown-table-gui.editTable', secondDocument.uri, 0);
     await waitFor(() => tableWebviewTabs().length === 1 ? true : undefined);
-    assert.strictEqual(await vscode.window.tabGroups.close(opened), true);
+    assert.strictEqual(await vscode.window.tabGroups.close(switched), true);
+  });
+
+  test('closes the Webview when its source file closes', async function () {
+    this.timeout(5000);
+    const extension = vscode.extensions.getExtension('RyutaC2.markdown-table-gui');
+    assert.ok(extension);
+    const uri = vscode.Uri.joinPath(extension.extensionUri, `.md-table-gui-close-test-${Date.now()}.md`);
+    await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode('| a | b |\n| --- | --- |\n| 1 | 2 |'));
+    try {
+      const document = await vscode.workspace.openTextDocument(uri);
+      await vscode.window.showTextDocument(document);
+      await vscode.commands.executeCommand('markdown-table-gui.editTable', document.uri, 0);
+      await waitFor(() => tableWebviewTabs().length === 1 ? true : undefined);
+      const sourceTab = textTab(uri);
+      assert.ok(sourceTab, 'The source text tab was not found.');
+      assert.strictEqual(await vscode.window.tabGroups.close(sourceTab), true);
+      await waitFor(() => tableWebviewTabs().length === 0 ? true : undefined);
+    } finally {
+      await vscode.workspace.fs.delete(uri);
+    }
   });
 
   test('keeps the Webview open across built-in light, dark, and high-contrast themes', async function () {

@@ -72,13 +72,19 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
   constructor(private readonly context: vscode.ExtensionContext) {
     this.disposables.push(
       vscode.workspace.onDidChangeTextDocument((event) => this.onDocumentChanged(event)),
+      vscode.workspace.onDidCloseTextDocument((document) => this.onDocumentClosed(document)),
+      vscode.window.tabGroups.onDidChangeTabs((event) => this.onTabsChanged(event)),
       vscode.window.onDidChangeTextEditorSelection((event) => this.onSourceSelection(event)),
     );
   }
 
   async open(document: vscode.TextDocument, table: MarkdownTable, startEditing = false): Promise<void> {
-    const existing = this.findSession(document.uri, table.startOffset);
+    const existing = this.sessions.values().next().value as TableSession | undefined;
     if (existing) {
+      if (!this.sessionTargets(existing, document.uri, table.startOffset)) {
+        this.retarget(existing, document, table, startEditing);
+        existing.panel.webview.html = this.html(existing.panel.webview);
+      }
       existing.panel.reveal(existing.panel.viewColumn, false);
       await this.sendState(existing, document, table, startEditing);
       return;
@@ -104,9 +110,17 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
   }
 
   async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PersistedPanelState): Promise<void> {
+    if (this.sessions.size > 0) {
+      panel.dispose();
+      return;
+    }
     try {
       const uri = vscode.Uri.parse(state.uri);
       const document = await vscode.workspace.openTextDocument(uri);
+      if (this.sessions.size > 0) {
+        panel.dispose();
+        return;
+      }
       const table = findTableAtOffset(document.getText(), state.tableStartOffset)
         ?? this.nearestTable(document.getText(), state.tableStartOffset);
       if (!table) {
@@ -332,6 +346,29 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
     }
   }
 
+  private onDocumentClosed(document: vscode.TextDocument): void {
+    for (const session of this.sessions.values()) {
+      if (session.uri.toString() === document.uri.toString()) {
+        session.panel.dispose();
+      }
+    }
+  }
+
+  private onTabsChanged(event: vscode.TabChangeEvent): void {
+    const closedUris = event.closed.flatMap((tab) => tab.input instanceof vscode.TabInputText ? [tab.input.uri] : []);
+    for (const session of this.sessions.values()) {
+      if (closedUris.some((uri) => uri.toString() === session.uri.toString()) && !this.hasOpenTextTab(session.uri)) {
+        session.panel.dispose();
+      }
+    }
+  }
+
+  private hasOpenTextTab(uri: vscode.Uri): boolean {
+    return vscode.window.tabGroups.all.some((group) => group.tabs.some((tab) =>
+      tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === uri.toString(),
+    ));
+  }
+
   private async refreshSession(session: TableSession, document: vscode.TextDocument): Promise<void> {
     const table = findTableAtOffset(document.getText(), session.tableStartOffset);
     if (!table) {
@@ -424,12 +461,36 @@ export class TablePanelManager implements vscode.Disposable, vscode.WebviewPanel
       .sort((left, right) => Math.abs(left.startOffset - offset) - Math.abs(right.startOffset - offset))[0];
   }
 
-  private findSession(uri: vscode.Uri, offset: number): TableSession | undefined {
-    return [...this.sessions.values()].find((session) =>
-      session.uri.toString() === uri.toString()
+  private sessionTargets(session: TableSession, uri: vscode.Uri, offset: number): boolean {
+    return session.uri.toString() === uri.toString()
       && offset >= session.tableStartOffset
-      && offset <= session.tableEndOffset,
-    );
+      && offset <= session.tableEndOffset;
+  }
+
+  private retarget(
+    session: TableSession,
+    document: vscode.TextDocument,
+    table: MarkdownTable,
+    startEditing: boolean,
+  ): void {
+    const timer = this.updateTimers.get(session.key);
+    if (timer) {
+      clearTimeout(timer);
+      this.updateTimers.delete(session.key);
+    }
+    this.sessions.delete(session.key);
+    session.key = sessionKey(document.uri, table.startOffset);
+    session.uri = document.uri;
+    session.tableStartOffset = table.startOffset;
+    session.tableEndOffset = table.endOffset;
+    session.sourceColumn = vscode.window.activeTextEditor?.viewColumn ?? vscode.ViewColumn.One;
+    session.documentVersion = document.version;
+    session.snapshot = snapshot(table);
+    session.selection = undefined;
+    session.applyingEdit = false;
+    session.startEditing = startEditing;
+    session.revealGeneration += 1;
+    this.sessions.set(session.key, session);
   }
 
   private rekey(session: TableSession, startOffset: number): void {

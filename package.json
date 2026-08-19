@@ -2,7 +2,7 @@
   "name": "markdown-table-gui",
   "displayName": "Markdown Table GUI",
   "description": "Edit Markdown tables in an Excel-like GUI inside Visual Studio Code.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "RyutaC2",
   "license": "SEE LICENSE IN LICENSE",
   "pricing": "Free",

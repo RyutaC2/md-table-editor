@@ -2,6 +2,12 @@
 
 All notable changes to Markdown Table GUI are documented in this file.
 
+## [1.0.1] - 2026-08-19
+
+- Continue forward Tab navigation at the first column of the next row after reaching the rightmost column.
+- Close the graphical table editor automatically when its source Markdown file closes.
+- Reuse one graphical editor tab and switch its table when editing starts for a different table.
+
 ## [1.0.0] - 2026-08-11
 
 - Publish the first stable release as `Markdown Table GUI` with the Marketplace identifier `RyutaC2.markdown-table-gui`.

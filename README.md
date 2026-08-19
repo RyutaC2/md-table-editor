@@ -37,6 +37,7 @@ Install [Markdown Table GUI from Visual Studio Marketplace](https://marketplace.
 5. Save the file normally with Ctrl/Cmd+S.
 
 The editor tab is named `table: <filename>` so it remains tied to the source document even when header cells change.
+Only one graphical editor tab is kept open. Starting to edit another table switches that tab to the new target, and closing the source Markdown file closes the graphical editor automatically.
 
 ### Insert a new table
 
@@ -55,7 +56,7 @@ When the cursor is inside an existing table, the new table is inserted after tha
 | Move selected cells | Drag the border around a single cell or continuous multi-cell selection |
 | Create a disjoint selection | Ctrl/Cmd+Click |
 | Replace the value and edit | Type while a cell is selected |
-| Confirm, move, and continue editing | Enter: down; Shift+Enter: up; Tab: right; Shift+Tab: left |
+| Confirm, move, and continue editing | Enter: down; Shift+Enter: up; Tab: right, then the first cell of the next row; Shift+Tab: left |
 | Cancel an edit | Esc |
 | Clear cell contents | Delete, Backspace, or the toolbar's delete-cell-content action |
 | Select the complete table | Ctrl/Cmd+A or click the top-left corner |
@@ -72,7 +73,7 @@ When the cursor is inside an existing table, the new table is inserted after tha
 
 Copying a disjoint selection is not supported. When pasting with a disjoint selection active, the primary cell is used as the paste origin.
 
-A plain click selects the cell and immediately opens its editor. Clicking another cell while editing confirms the current value and starts editing the clicked cell in the same action. Enter and Tab also keep the destination cell in edit mode. Drag, Shift, and Ctrl/Cmd gestures remain selection operations and do not start editing. At a table edge, keyboard confirmation remains on the nearest valid cell.
+A plain click selects the cell and immediately opens its editor. Clicking another cell while editing confirms the current value and starts editing the clicked cell in the same action. Enter and Tab also keep the destination cell in edit mode. Forward Tab wraps from the rightmost cell to the first cell of the next row; at the final cell it remains in place. Drag, Shift, and Ctrl/Cmd gestures remain selection operations and do not start editing. Other keyboard movement remains on the nearest valid cell at a table edge.
 
 Import replaces the complete table currently open in the GUI. When an XLSX workbook has multiple worksheets, select one in the VS Code Quick Pick. Export writes the complete current table to one CSV file or one `Table` worksheet. Cell values are imported as strings; spreadsheet formatting, formulas, images, and merged-cell structure are not reproduced.
 
